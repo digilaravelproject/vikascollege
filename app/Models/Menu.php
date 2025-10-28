@@ -22,4 +22,11 @@ class Menu extends Model
             ->where('status', 1)
             ->orderBy('order');
     }
+    // Convenience to eager load deeper levels up to 3 (main->child->subchild->subsub)
+    public function childrenRecursive()
+    {
+        return $this->children()->with(['children' => function ($q) {
+            $q->with(['children']);
+        }]);
+    }
 }

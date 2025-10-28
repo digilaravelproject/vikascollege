@@ -19,16 +19,15 @@
     {{-- Menu --}}
     @include('partials.menu')
 
-    {{-- Hero Banner --}}
-    @include('partials.hero-banner')
+
 
     {{-- Main Content --}}
-    <main class="py-10">
+    <main class="">
         @yield('content')
     </main>
 
     <footer class="bg-[#013954] text-white text-center py-6 mt-10">
-        <p class="text-sm mb-0">&copy; {{ date('Y') }} {{ setting('college_name') }}. All rights reserved.</p>
+        <p class="mb-0 text-sm">&copy; {{ date('Y') }} {{ setting('college_name') }}. All rights reserved.</p>
     </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
 
