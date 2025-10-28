@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -21,11 +20,30 @@ class RolePermissionController extends Controller
         }
     }
 
-    public function assign(Request $request): RedirectResponse
+    // ✅ Auto + Bulk assign (single method handles both)
+    public function assign(Request $request)
     {
         try {
-            $permissions = $request->input('permissions', []);
+            // --- Case 1: Auto toggle update ---
+            if ($request->has('auto')) {
+                $role = Role::find($request->role_id);
+                $permission = Permission::find($request->permission_id);
 
+                if (!$role || !$permission) {
+                    return response()->json(['success' => false, 'message' => 'Invalid data.'], 400);
+                }
+
+                if ($request->status) {
+                    $role->givePermissionTo($permission);
+                } else {
+                    $role->revokePermissionTo($permission);
+                }
+
+                return response()->json(['success' => true]);
+            }
+
+            // --- Case 2: Bulk Save ---
+            $permissions = $request->input('permissions', []);
             $roles = Role::all();
             $permissions_all = Permission::all();
 
@@ -43,10 +61,9 @@ class RolePermissionController extends Controller
 
             return redirect()->back()->with('success', 'Permissions updated successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to update permissions: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-
 
     public function createRole(Request $request)
     {

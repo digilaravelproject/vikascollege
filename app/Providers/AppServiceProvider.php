@@ -21,12 +21,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $menus = Menu::where('status', 1)
-            ->whereNull('parent_id')
-            ->with('children')
-            ->orderBy('order')
-            ->get();
+        // $menus = Menu::where('status', 1)
+        //     ->whereNull('parent_id')
+        //     ->with('children')
+        //     ->orderBy('order')
+        //     ->get();
 
-        View::share('menus', $menus);
+        // View::share('menus', $menus);
     }
 }

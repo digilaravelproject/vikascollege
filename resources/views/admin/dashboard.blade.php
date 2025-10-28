@@ -1,87 +1,127 @@
 @extends('layouts.admin.app')
 
-@section('title', 'Admin Dashboard')
-
-@section('page_title', 'Admin Dashboard')
+@section('title', 'Dashboard')
 
 @section('content')
-    <div class="row g-3">
-        <!-- Total Students Card -->
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 text-white bg-primary rounded-3">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title text-uppercase"><i class="bi bi-people-fill me-2"></i> Total Students</h6>
-                        <h3 class="card-text fw-bold">1,234</h3>
-                    </div>
-                    <i class="bi bi-people-fill fs-1 opacity-25"></i>
+    <div class="space-y-8">
+
+        <!-- Page Header -->
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+            <p class="text-sm text-gray-500">Welcome back, Admin 👋</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Students -->
+            <div
+                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Total Students</p>
+                    <h2 class="text-3xl font-bold text-blue-600 mt-1">1,234</h2>
+                </div>
+                <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
+                    <i class="bi bi-people-fill text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- Faculty -->
+            <div
+                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Total Faculty</p>
+                    <h2 class="text-3xl font-bold text-green-600 mt-1">56</h2>
+                </div>
+                <div class="p-3 bg-green-100 text-green-600 rounded-full">
+                    <i class="bi bi-person-badge-fill text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- Courses -->
+            <div
+                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Total Courses</p>
+                    <h2 class="text-3xl font-bold text-yellow-600 mt-1">32</h2>
+                </div>
+                <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full">
+                    <i class="bi bi-book-fill text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- Events -->
+            <div
+                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Upcoming Events</p>
+                    <h2 class="text-3xl font-bold text-purple-600 mt-1">5</h2>
+                </div>
+                <div class="p-3 bg-purple-100 text-purple-600 rounded-full">
+                    <i class="bi bi-calendar-event text-2xl"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Total Faculty Card -->
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 text-white bg-success rounded-3">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title text-uppercase"><i class="bi bi-person-badge-fill me-2"></i> Total Faculty
-                        </h6>
-                        <h3 class="card-text fw-bold">56</h3>
-                    </div>
-                    <i class="bi bi-person-badge-fill fs-1 opacity-25"></i>
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Enrollment Trends -->
+            <div class="bg-white rounded-2xl shadow border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-700">Enrollment Trends</h2>
+                    <span class="text-xs text-gray-400">Last 6 Months</span>
+                </div>
+                <div class="h-60 flex items-center justify-center text-gray-400">
+                    <span class="text-sm">[ Chart Placeholder ]</span>
+                </div>
+            </div>
+
+            <!-- Department Distribution -->
+            <div class="bg-white rounded-2xl shadow border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-700">Department Distribution</h2>
+                    <span class="text-xs text-gray-400">Current Semester</span>
+                </div>
+                <div class="h-60 flex items-center justify-center text-gray-400">
+                    <span class="text-sm">[ Chart Placeholder ]</span>
                 </div>
             </div>
         </div>
 
-        <!-- Total Courses Card -->
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 text-white bg-warning rounded-3">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title text-uppercase"><i class="bi bi-book-fill me-2"></i> Total Courses</h6>
-                        <h3 class="card-text fw-bold">32</h3>
-                    </div>
-                    <i class="bi bi-book-fill fs-1 opacity-25"></i>
-                </div>
+        <!-- Recent Enrollments Table -->
+        <div class="bg-white rounded-2xl shadow border border-gray-100 overflow-hidden">
+            <div class="flex justify-between items-center border-b p-4">
+                <h2 class="text-lg font-semibold text-gray-700">Recent Enrollments</h2>
+                <a href="#" class="text-sm text-blue-600 hover:underline">View All</a>
             </div>
-        </div>
-    </div>
-
-    <!-- Recent Enrollments Table -->
-    <div class="card mt-4 shadow-sm rounded-3 border-0">
-        <div class="card-header bg-white fw-bold">
-            Recent Enrollments
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table mb-0 align-middle">
-                    <thead class="table-light">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-100">
+                    <thead class="bg-gray-50 text-gray-600 text-sm">
                         <tr>
-                            <th>Student</th>
-                            <th>Course</th>
-                            <th>Date</th>
+                            <th class="px-6 py-3 text-left font-medium">Student</th>
+                            <th class="px-6 py-3 text-left font-medium">Course</th>
+                            <th class="px-6 py-3 text-left font-medium">Date</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>John Doe</td>
-                            <td>Physics</td>
-                            <td>2025-10-27</td>
+                    <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-3">John Doe</td>
+                            <td class="px-6 py-3">Physics</td>
+                            <td class="px-6 py-3">2025-10-27</td>
                         </tr>
-                        <tr>
-                            <td>Jane Smith</td>
-                            <td>Math</td>
-                            <td>2025-10-26</td>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-3">Jane Smith</td>
+                            <td class="px-6 py-3">Mathematics</td>
+                            <td class="px-6 py-3">2025-10-26</td>
                         </tr>
-                        <tr>
-                            <td>Robert Brown</td>
-                            <td>Chemistry</td>
-                            <td>2025-10-25</td>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-3">Robert Brown</td>
+                            <td class="px-6 py-3">Chemistry</td>
+                            <td class="px-6 py-3">2025-10-25</td>
                         </tr>
-                        <tr>
-                            <td>Mary Johnson</td>
-                            <td>Biology</td>
-                            <td>2025-10-24</td>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-3">Mary Johnson</td>
+                            <td class="px-6 py-3">Biology</td>
+                            <td class="px-6 py-3">2025-10-24</td>
                         </tr>
                     </tbody>
                 </table>

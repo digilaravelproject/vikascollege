@@ -1,49 +1,36 @@
 @extends('layouts.admin.app')
+@section('title', 'Edit Menu')
 
 @section('content')
-    <h1>{{ isset($menu) ? 'Edit' : 'Create' }} Menu</h1>
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-bold text-gray-800">Edit Menu</h1>
+            <a href="{{ route('admin.menus.index') }}"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg shadow">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
 
-    <form action="{{ isset($menu) ? route('admin.menus.update', $menu->id) : route('admin.menus.store') }}" method="POST">
-        @csrf
-        @if(isset($menu))
-            @method('PUT')
+        @if ($errors->any())
+            <div class="p-4 rounded-lg bg-red-100 text-red-700 text-sm">
+                <ul class="list-disc pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
-        <div class="mb-3">
-            <label>Title</label>
-            <input type="text" name="title" value="{{ $menu->title ?? old('title') }}" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label>URL</label>
-            <input type="text" name="url" value="{{ $menu->url ?? old('url') }}" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label>Parent Menu</label>
-            <select name="parent_id" class="form-control">
-                <option value="">None</option>
-                @foreach($menus as $m)
-                    <option value="{{ $m->id }}" {{ (isset($menu) && $menu->parent_id == $m->id) ? 'selected' : '' }}>
-                        {{ $m->title }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label>Order</label>
-            <input type="number" name="order" value="{{ $menu->order ?? 0 }}" class="form-control">
-        </div>
-
-        <div class="mb-3">
-            <label>Status</label>
-            <select name="status" class="form-control">
-                <option value="1" {{ (isset($menu) && $menu->status) ? 'selected' : '' }}>Active</option>
-                <option value="0" {{ (isset($menu) && !$menu->status) ? 'selected' : '' }}>Inactive</option>
-            </select>
-        </div>
-
-        <button class="btn btn-success">Save</button>
-    </form>
+        <form action="{{ route('admin.menus.update', $menu->id) }}" method="POST" class="space-y-6">
+            @csrf
+            @method('PUT')
+            @include('admin.menus.form', ['menu' => $menu])
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow">
+                    <i class="bi bi-pencil-square"></i> Update Menu
+                </button>
+            </div>
+        </form>
+    </div>
 @endsection

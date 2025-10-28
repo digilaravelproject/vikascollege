@@ -18,6 +18,8 @@ class Menu extends Model
     // Children
     public function children()
     {
-        return $this->hasMany(Menu::class, 'parent_id')->orderBy('order');
+        return $this->hasMany(Menu::class, 'parent_id')
+            ->where('status', 1)
+            ->orderBy('order');
     }
 }
