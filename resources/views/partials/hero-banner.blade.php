@@ -1,7 +1,15 @@
 <!-- 🔹 Marquee Section -->
-<section class="w-full bg-[#013954] text-white overflow-hidden">
+<section class="w-full bg-[#013954] text-white overflow-hidden flex items-center">
+    <!-- Announcement Ribbon -->
     <div
-        class="flex whitespace-nowrap py-3 text-sm sm:text-base font-medium tracking-wide animate-[marquee_25s_linear_infinite]">
+        class="flex items-center px-6 py-3 text-sm font-bold tracking-wide text-black uppercase bg-yellow-400 announcement-label sm:text-base">
+        Announcement
+    </div>
+
+
+    <!-- Marquee Text -->
+    <div
+        class="flex whitespace-nowrap py-3 text-sm sm:text-base font-medium tracking-wide animate-[marquee_30s_linear_infinite]">
         <span class="inline-block mx-8">
             🚀 Welcome to our website! Enjoy amazing deals and latest updates every week!
         </span>
@@ -14,7 +22,7 @@
     </div>
 </section>
 @if(setting('banner_image'))
-    <section class="relative w-full overflow-hidden  banner-image">
+    <section class="relative w-full overflow-hidden banner-image">
         <!-- Banner Image -->
         <img src="{{ asset('storage/' . setting('banner_image')) }}" alt="Banner"
             class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center transition-transform duration-700 hover:scale-105">
@@ -54,6 +62,18 @@
     .banner-image {
 
         font-family: 'Montserrat', sans-serif;
+    }
+
+    /* 🔸 Ribbon Arrow Shape */
+    .announcement-label {
+        position: relative;
+        clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%);
+        z-index: 10;
+    }
+
+    /* Optional: subtle shadow for depth */
+    .announcement-label {
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
     }
 
     @keyframes marquee {

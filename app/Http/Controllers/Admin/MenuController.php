@@ -7,18 +7,23 @@ use Illuminate\Http\Request;
 use App\Models\Menu;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Exception;
 use Illuminate\Support\Facades\Route;
+use Exception;
 
 class MenuController extends Controller
 {
     /**
-     * Display all menus.
+     * Display all menus in hierarchical order.
      */
     public function index()
     {
         try {
-            $menus = Menu::with('parent')->orderBy('order')->get();
+            // Load all menus with parent-child relationship (recursive)
+            $menus = Menu::with('parent')
+                ->orderBy('parent_id')
+                ->orderBy('order')
+                ->get();
+
             return view('admin.menus.index', compact('menus'));
         } catch (Exception $e) {
             Log::error('Menu Index Error: ' . $e->getMessage());
@@ -29,34 +34,20 @@ class MenuController extends Controller
     /**
      * Show form for creating a new menu.
      */
-
     public function create()
     {
         try {
-            $menus = Menu::whereNull('parent_id')->get();
+            // Fetch all menus for parent selection (nested)
+            $menus = Menu::with('childrenRecursive')
+                ->whereNull('parent_id')
+                ->orderBy('order')
+                ->get();
 
-            // Fetch all named routes
-            $routes = collect(Route::getRoutes())
-                ->map(function ($route) {
-                    return [
-                        'name' => $route->getName(),
-                        'uri'  => $route->uri(),
-                    ];
-                })
-                ->filter(function ($r) {
-                    // Sirf wo routes jinke naam hain
-                    if (!$r['name']) {
-                        return false;
-                    }
-
-                    // Parameterized routes hatao (jinme {something} hai)
-                    return !preg_match('/\{.*?\}/', $r['uri']);
-                })
-                ->values();
-
+            // Fetch all named routes for linking
+            $routes = $this->getValidRoutes();
 
             return view('admin.menus.create', compact('menus', 'routes'));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Menu Create View Error: ' . $e->getMessage());
             return back()->with('error', 'Something went wrong while loading the create form.');
         }
@@ -78,7 +69,10 @@ class MenuController extends Controller
         try {
             $validated['status'] = $request->has('status') ? 1 : 0;
             Menu::create($validated);
-            return redirect()->route('admin.menus.index')->with('success', 'Menu created successfully!');
+
+            return redirect()
+                ->route('admin.menus.index')
+                ->with('success', 'Menu created successfully!');
         } catch (Exception $e) {
             Log::error('Menu Store Error: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to create menu. Please try again.');
@@ -91,38 +85,19 @@ class MenuController extends Controller
     public function edit(Menu $menu)
     {
         try {
-            $menus = Menu::whereNull('parent_id')
+            $menus = Menu::with('childrenRecursive')
+                ->whereNull('parent_id')
                 ->where('id', '!=', $menu->id)
+                ->orderBy('order')
                 ->get();
-            // Fetch all named routes
-            $routes = collect(Route::getRoutes())
-                ->map(function ($route) {
-                    return [
-                        'name' => $route->getName(),
-                        'uri'  => $route->uri(),
-                    ];
-                })
-                ->filter(function ($r) {
-                    // Sirf wo routes jinke naam hain
-                    if (!$r['name']) {
-                        return false;
-                    }
 
-                    // Parameterized routes hatao (jinme {something} hai)
-                    return !preg_match('/\{.*?\}/', $r['uri']);
-                })
-                ->values();
-
-            $routes_old = collect(Route::getRoutes())->map(function ($route) {
-                return [
-                    'name' => $route->getName(),
-                    'uri' => $route->uri(),
-                ];
-            })->filter(fn($r) => $r['name']);
+            $routes = $this->getValidRoutes();
 
             return view('admin.menus.edit', compact('menu', 'menus', 'routes'));
         } catch (ModelNotFoundException $e) {
-            return redirect()->route('admin.menus.index')->with('error', 'Menu not found.');
+            return redirect()
+                ->route('admin.menus.index')
+                ->with('error', 'Menu not found.');
         } catch (Exception $e) {
             Log::error('Menu Edit Error: ' . $e->getMessage());
             return back()->with('error', 'Unable to load the edit form.');
@@ -137,7 +112,7 @@ class MenuController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'url' => 'nullable|string|max:255',
-            'parent_id' => 'nullable|exists:menus,id',
+            'parent_id' => 'nullable|exists:menus,id|not_in:' . $menu->id,
             'order' => 'nullable|integer|min:0',
             'status' => 'nullable|boolean',
         ]);
@@ -145,7 +120,10 @@ class MenuController extends Controller
         try {
             $validated['status'] = $request->has('status') ? 1 : 0;
             $menu->update($validated);
-            return redirect()->route('admin.menus.index')->with('success', 'Menu updated successfully!');
+
+            return redirect()
+                ->route('admin.menus.index')
+                ->with('success', 'Menu updated successfully!');
         } catch (Exception $e) {
             Log::error('Menu Update Error: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to update menu. Please try again.');
@@ -158,8 +136,13 @@ class MenuController extends Controller
     public function destroy(Menu $menu)
     {
         try {
+            // Also delete child menus if they exist
+            $menu->children()->delete();
             $menu->delete();
-            return redirect()->route('admin.menus.index')->with('success', 'Menu deleted successfully!');
+
+            return redirect()
+                ->route('admin.menus.index')
+                ->with('success', 'Menu deleted successfully!');
         } catch (Exception $e) {
             Log::error('Menu Delete Error: ' . $e->getMessage());
             return back()->with('error', 'Failed to delete menu. Please try again.');
@@ -178,5 +161,41 @@ class MenuController extends Controller
             Log::error('Menu Toggle Status Error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to update status.']);
         }
+    }
+
+    /**
+     * Helper to fetch all valid named routes (no parameters).
+     */
+    private function getValidRoutes()
+    {
+        return collect(Route::getRoutes())
+            ->map(function ($route) {
+                return [
+                    'name' => $route->getName(),
+                    'uri'  => $route->uri(),
+                    'parameters' => $route->parameterNames(), // <-- Add this
+                ];
+            })
+            ->filter(function ($r) {
+                // Sirf named routes rakho (parameters allowed)
+                return !empty($r['name']);
+            })
+            ->values();
+    }
+
+    private function getValidRoutes_old()
+    {
+        return collect(Route::getRoutes())
+            ->map(function ($route) {
+                return [
+                    'name' => $route->getName(),
+                    'uri'  => $route->uri(),
+                ];
+            })
+            ->filter(function ($r) {
+                if (!$r['name']) return false;
+                return !preg_match('/\{.*?\}/', $r['uri']);
+            })
+            ->values();
     }
 }

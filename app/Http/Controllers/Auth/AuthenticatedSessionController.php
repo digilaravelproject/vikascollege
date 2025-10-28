@@ -21,6 +21,8 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     * @param Request $request  The incoming HTTP request containing form input and uploaded files.
+     * @return RedirectResponse
      */
     public function store(LoginRequest $request): RedirectResponse
     {

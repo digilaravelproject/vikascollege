@@ -6,47 +6,66 @@ use App\Http\Controllers\Controller;
 use App\Models\TrustSection;
 use App\Models\TrustSectionImage;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
+use Throwable;
 
 class TrustSectionController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of all trust sections.
+     *
+     * @return View
+     */
+    public function index(): View
     {
         $sections = TrustSection::orderBy('id')->get();
         return view('admin.trust.index', compact('sections'));
     }
 
-    public function create()
+    /**
+     * Show the form for creating a new trust section.
+     *
+     * @return View
+     */
+    public function create(): View
     {
         return view('admin.trust.create');
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created trust section in the database.
+     *
+     * @param Request $request  The incoming HTTP request containing form input and uploaded files.
+     * @return RedirectResponse
+     */
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:trust_sections,slug',
             'content' => 'nullable|string',
-            'pdf' => 'nullable|mimes:pdf|max:10240',
+            'pdf' => 'nullable|file|mimes:pdf|max:10240',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
         try {
             $trustSection = TrustSection::create([
-                'title' => $request->title,
-                'slug' => Str::slug($request->slug),
-                'content' => $request->content,
+                'title' => $validated['title'],
+                'slug' => Str::slug($validated['slug']),
+                'content' => $validated['content'] ?? null,
             ]);
 
-            // Handle PDF
+            // Handle PDF upload
             if ($request->hasFile('pdf')) {
-                $trustSection->update([
-                    'pdf_path' => $request->file('pdf')->store('trust/pdfs', 'public')
-                ]);
+                $pdfPath = $request->file('pdf')->store('trust/pdfs', 'public');
+                $trustSection->update(['pdf_path' => $pdfPath]);
             }
 
-            // Handle multiple images
+            // Handle multiple image uploads
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $file) {
                     $path = $file->store('trust/images', 'public');
@@ -57,47 +76,60 @@ class TrustSectionController extends Controller
                 }
             }
 
-            return redirect()->route('admin.trust.index')->with('success', 'Section created successfully!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.trust.index')
+                ->with('success', 'Section created successfully.');
+        } catch (Throwable $e) {
+            Log::error('Error creating Trust Section: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withInput()->with('error', 'An unexpected error occurred while creating the section.');
         }
     }
 
-    public function edit(TrustSection $trustSection)
+    /**
+     * Show the form for editing an existing trust section.
+     *
+     * @param TrustSection $trustSection  The trust section instance to edit.
+     * @return View
+     */
+    public function edit(TrustSection $trustSection): View
     {
         return view('admin.trust.edit', compact('trustSection'));
     }
-    public function update(Request $request, TrustSection $trustSection)
+
+    /**
+     * Update an existing trust section in storage.
+     *
+     * @param Request $request       The incoming HTTP request containing updated input and uploaded files.
+     * @param TrustSection $trustSection  The trust section instance being updated.
+     * @return RedirectResponse
+     */
+    public function update(Request $request, TrustSection $trustSection): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:trust_sections,slug,' . $trustSection->id,
             'content' => 'nullable|string',
-            'pdf' => 'nullable|mimes:pdf|max:10240',
+            'pdf' => 'nullable|file|mimes:pdf|max:10240',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
         try {
-            // Clean BOM/Invisible chars from content
-            $content = $request->input('content');
-
             $trustSection->update([
-                'title' => $request->title,
-                'slug' => Str::slug($request->slug),
-                'content' => $content,
+                'title' => $validated['title'],
+                'slug' => Str::slug($validated['slug']),
+                'content' => $validated['content'] ?? null,
             ]);
 
-            // Handle PDF
+            // Handle PDF replacement
             if ($request->hasFile('pdf')) {
-                if ($trustSection->pdf_path) {
+                if ($trustSection->pdf_path && Storage::disk('public')->exists($trustSection->pdf_path)) {
                     Storage::disk('public')->delete($trustSection->pdf_path);
                 }
-                $trustSection->update([
-                    'pdf_path' => $request->file('pdf')->store('trust/pdfs', 'public')
-                ]);
+                $pdfPath = $request->file('pdf')->store('trust/pdfs', 'public');
+                $trustSection->update(['pdf_path' => $pdfPath]);
             }
 
-            // Handle multiple images
+            // Handle image uploads
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $file) {
                     $path = $file->store('trust/images', 'public');
@@ -108,69 +140,55 @@ class TrustSectionController extends Controller
                 }
             }
 
-            return redirect()->route('admin.trust.index')->with('success', 'Section updated successfully!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.trust.index')
+                ->with('success', 'Section updated successfully.');
+        } catch (Throwable $e) {
+            Log::error('Error updating Trust Section: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withInput()->with('error', 'An unexpected error occurred while updating the section.');
         }
     }
 
-    public function update_old(Request $request, TrustSection $trustSection)
+    /**
+     * Delete a specific image associated with a trust section.
+     *
+     * @param TrustSectionImage $image  The image instance to delete.
+     * @return RedirectResponse
+     */
+    public function destroyImage(TrustSectionImage $image): RedirectResponse
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:trust_sections,slug,' . $trustSection->id,
-            'content' => 'nullable|string',
-            'pdf' => 'nullable|mimes:pdf|max:10240',
-            'images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
-        ]);
-
         try {
-            $trustSection->update([
-                'title' => $request->title,
-                'slug' => Str::slug($request->slug),
-                'content' => $request->content,
-            ]);
-
-            // Handle PDF
-            if ($request->hasFile('pdf')) {
-                if ($trustSection->pdf_path) {
-                    Storage::disk('public')->delete($trustSection->pdf_path);
-                }
-                $trustSection->update([
-                    'pdf_path' => $request->file('pdf')->store('trust/pdfs', 'public')
-                ]);
+            if (Storage::disk('public')->exists($image->image_path)) {
+                Storage::disk('public')->delete($image->image_path);
             }
 
-            // Handle multiple images
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $file) {
-                    $path = $file->store('trust/images', 'public');
-                    TrustSectionImage::create([
-                        'trust_section_id' => $trustSection->id,
-                        'image_path' => $path,
-                    ]);
-                }
-            }
+            $image->delete();
 
-            return redirect()->route('admin.trust.index')->with('success', 'Section updated successfully!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return back()->with('success', 'Image deleted successfully.');
+        } catch (Throwable $e) {
+            Log::error('Error deleting Trust Section image: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->with('error', 'Failed to delete image.');
         }
     }
 
-    public function destroyImage(TrustSectionImage $image)
+    /**
+     * Remove the attached PDF file from a trust section.
+     *
+     * @param TrustSection $trustSection  The trust section instance whose PDF will be removed.
+     * @return RedirectResponse
+     */
+    public function removePdf(TrustSection $trustSection): RedirectResponse
     {
-        Storage::disk('public')->delete($image->image_path);
-        $image->delete();
-        return back()->with('success', 'Image deleted successfully!');
-    }
+        try {
+            if ($trustSection->pdf_path && Storage::disk('public')->exists($trustSection->pdf_path)) {
+                Storage::disk('public')->delete($trustSection->pdf_path);
+                $trustSection->update(['pdf_path' => null]);
+            }
 
-    public function removePdf(TrustSection $trustSection)
-    {
-        if ($trustSection->pdf_path) {
-            Storage::disk('public')->delete($trustSection->pdf_path);
-            $trustSection->update(['pdf_path' => null]);
+            return back()->with('success', 'PDF removed successfully.');
+        } catch (Throwable $e) {
+            Log::error('Error removing Trust Section PDF: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->with('error', 'Failed to remove PDF.');
         }
-        return back()->with('success', 'PDF removed successfully!');
     }
 }
