@@ -45,7 +45,13 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
         Route::get('/edit/{page}', [PageBuilderController::class, 'edit'])->name('edit');
         Route::post('/update/{page}', [PageBuilderController::class, 'update'])->name('update');
         Route::delete('/delete/{page}', [PageBuilderController::class, 'destroy'])->name('delete');
+
+        // Builder routes
         Route::get('/builder/{page}', [PageBuilderController::class, 'builder'])->name('builder');
         Route::post('/builder/save/{page}', [PageBuilderController::class, 'saveBuilder'])->name('builder.save');
+
+        // AJAX upload/delete
+        Route::post('/builder/upload/{page}', [PageBuilderController::class, 'uploadMedia'])->name('builder.upload');
+        Route::post('/builder/upload-delete', [PageBuilderController::class, 'deleteUploadedMedia'])->name('builder.upload.delete');
     });
 });

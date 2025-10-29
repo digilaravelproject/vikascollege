@@ -1,60 +1,68 @@
 @extends('layouts.app')
 
-@section('title', $page->title)
+@section('title', $activeSection->title)
 
 @section('content')
-    <div class="max-w-5xl px-4 py-10 mx-auto">
-        <h1 class="mb-6 text-3xl font-bold text-gray-800">{{ $page->title }}</h1>
+    <section class="container px-4 py-10 mx-auto">
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-4">
 
-        @if($page->image)
-            <img src="{{ asset('storage/' . $page->image) }}" alt="{{ $page->title }}"
-                class="object-cover w-full mb-6 rounded-lg shadow max-h-96">
-        @endif
-
-        <div class="prose prose-blue max-w-none">
-            {!! $page->content !!}
-        </div>
-        {{-- <div class="prose prose-blue max-w-none">
+            {{-- Sidebar --}}
             @php
-            $blocks = json_decode($page->content, true);
+                function renderMenu($menus, $activeSection)
+                {
+                    $html = '<ul class="space-y-1">';
+
+                    foreach ($menus as $menu) {
+                        $isActive = ($activeSection->id ?? 0) === ($menu->page->id ?? 0);
+                        $url = $menu->link;
+
+                        $html .= '<li>';
+                        $html .= '<a href="' . $url . '" class="block px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ' .
+                            ($isActive ? 'bg-[#013954] text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-[#013954]') . '">' .
+                            $menu->title . '</a>';
+
+                        if ($menu->childrenRecursive->count()) {
+                            $html .= renderMenu($menu->childrenRecursive, $activeSection); // recursion
+                        }
+
+                        $html .= '</li>';
+                    }
+
+                    $html .= '</ul>';
+                    return $html;
+                }
             @endphp
 
-            @if(is_array($blocks))
-            @foreach($blocks as $block)
-            @switch($block['type'])
-            @case('heading')
-            <h2 class="my-4 text-2xl font-bold">{{ $block['content'] ?? '' }}</h2>
-            @break
+            {{-- Render the menu --}}
+            <aside class="space-y-2 md:sticky md:top-24 h-fit">
+                <h2 class="pb-2 mb-4 text-lg font-semibold text-gray-800 border-b">
+                    {{ $topParent->title ?? 'Sections' }}
+                </h2>
 
-            @case('text')
-            <p class="mb-4 text-gray-700">{{ $block['content'] ?? '' }}</p>
-            @break
+                {!! renderMenu($menus, $activeSection) !!}
 
-            @case('image')
-            <img src="{{ $block['src'] ?? '' }}" class="mb-6 rounded-lg shadow" />
-            @break
+            </aside>
 
-            @case('video')
-            <div class="my-4">
-                <iframe src="{{ $block['src'] ?? '' }}" class="w-full h-64 rounded-lg"></iframe>
-            </div>
-            @break
 
-            @case('pdf')
-            <iframe src="{{ $block['src'] ?? '' }}" class="w-full mb-6 border rounded-lg h-96"></iframe>
-            @break
-            @endswitch
-            @endforeach
-            @endif
-        </div> --}}
 
-        @if($page->pdf)
-            <div class="mt-8">
-                <a href="{{ asset('storage/' . $page->pdf) }}" target="_blank"
-                    class="inline-flex items-center px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
-                    📄 View Attached PDF
-                </a>
-            </div>
-        @endif
-    </div>
+            {{-- Main Content --}}
+            <main class="p-6 space-y-6 bg-white shadow-md rounded-2xl md:col-span-3">
+                @php
+                    $blocks = json_decode($activeSection->content, true);
+                @endphp
+
+                @if(is_array($blocks))
+                    @foreach($blocks as $block)
+                        <x-page-block :block="$block" />
+                    @endforeach
+                @endif
+
+                @if($activeSection->pdf_path)
+                    <div class="mt-8">
+                        <x-pdf-viewer :src="asset('storage/' . $activeSection->pdf_path)" />
+                    </div>
+                @endif
+            </main>
+        </div>
+    </section>
 @endsection

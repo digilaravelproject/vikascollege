@@ -36,7 +36,7 @@
                                 <!-- Submenu / Mega Menu -->
 
                                 @if($menu->children->count() >= 6)
-                                <div x-show="openSub" @mouseenter="openSub = true" @mouseleave="openSub = false" x-transition class="fixed left-0 z-40 w-full text-gray-800 shadow-lg rounded-b-xl">
+                                <div x-show="openSub" @mouseenter="openSub = true" @mouseleave="openSub = false" x-transition class="fixed left-0 z-40 w-full text-gray-800 rounded-b-xl">
                                         <!-- ADVANCED MEGA MENU (from first version) -->
                                      <div class="mx-auto overflow-hidden text-gray-800 bg-white rounded-b-lg shadow-lg max-w-7xl">
 

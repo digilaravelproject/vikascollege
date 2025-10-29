@@ -1,10 +1,10 @@
 @props(['menuItem', 'level' => 0, 'selected' => null])
 
-<option value="{{ $menuItem->id }}" {{ $selected == $menuItem->id ? 'selected' : '' }}>
-    {{ str_repeat('— ', $level) . $menuItem->title }}
+<option value="{{ $menuItem->slug }}" {{ $selected == $menuItem->id ? 'selected' : '' }}>
+    {{ str_repeat('--', $level) }} {{ $menuItem->title }}
 </option>
 
-@if($menuItem->childrenRecursive && $menuItem->childrenRecursive->count())
+@if($menuItem->childrenRecursive)
     @foreach($menuItem->childrenRecursive as $child)
         @include('admin.menus.partials.parent-options', [
             'menuItem' => $child,

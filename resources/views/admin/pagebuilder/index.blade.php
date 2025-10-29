@@ -36,11 +36,11 @@
                             <a href="{{ route('admin.pagebuilder.edit', $page) }}"
                                 class="text-blue-600 hover:underline">Edit</a>
 
-                            {{-- <!-- Page Builder button -->
+                            <!-- Page Builder button -->
                             <a href="{{ route('admin.pagebuilder.builder', $page) }}"
                                 class="font-semibold text-indigo-600 hover:underline">
                                 🧱 Builder
-                            </a> --}}
+                            </a>
 
                             <!-- Delete button -->
                             <form action="{{ route('admin.pagebuilder.delete', $page) }}" method="POST" class="inline">

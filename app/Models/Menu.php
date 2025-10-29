@@ -6,7 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * Class Menu
+ *
+ * @package App\Models
+ * @property int $id
+ * @property string $title
+ * @property string|null $url
+ * @property int|null $parent_id
+ * @property int $order
+ * @property bool $status
+ * @property \App\Models\Page|null $page
+ * @property \Illuminate\Database\Eloquent\Collection|\App\Models\Menu[] $children
+ */
 class Menu extends Model
 {
     protected $fillable = [
@@ -24,26 +38,25 @@ class Menu extends Model
      */
 
     /**
-     * Ensure menu title is always returned in uppercase.
+     * Always return title in Title Case (more readable than uppercase).
      *
      * @param  string|null  $value
      * @return string
      */
     public function getTitleAttribute(?string $value): string
     {
-        return strtoupper($value ?? '');
+        return ucwords($value ?? '');
     }
 
     /**
-     * Optionally, you can also normalize title before saving.
-     * For example, trimming spaces.
+     * Normalize title before saving (trim and collapse extra spaces).
      *
      * @param  string  $value
      * @return void
      */
     public function setTitleAttribute(string $value): void
     {
-        $this->attributes['title'] = trim($value);
+        $this->attributes['title'] = preg_replace('/\s+/', ' ', trim($value));
     }
 
     /**
@@ -53,9 +66,7 @@ class Menu extends Model
      */
 
     /**
-     * Get the parent of this menu item (if any).
-     *
-     * @return BelongsTo
+     * Parent menu item (if any).
      */
     public function parent(): BelongsTo
     {
@@ -63,44 +74,39 @@ class Menu extends Model
     }
 
     /**
-     * Get the direct children (only active ones).
-     *
-     * @return HasMany
+     * Direct child menu items (active only).
      */
     public function children(): HasMany
     {
         return $this->hasMany(Menu::class, 'parent_id')
-            ->where('status', 1)
+            ->where('status', true)
             ->orderBy('order');
-    }
-    /*
-    * Get the page
-    *
-    */
-    public function page()
-    {
-        return $this->hasOne(Page::class, 'slug', 'url');
-    }
-    /**
-     * Recursive children loader (Main → Child → Subchild → Sub-subchild).
-     * Use in controller: with('childrenRecursive')
-     *
-     * @return HasMany
-     */
-    public function childrenRecursive(): HasMany
-    {
-        return $this->children()->with([
-            'childrenRecursive' => function ($query) {
-                $query->orderBy('order');
-            },
-        ]);
     }
 
     /**
-     * Scope to get only top-level (main) menu items.
-     *
-     * @param Builder $query
-     * @return Builder
+     * Recursive child loader (for nested menus).
+     */
+    public function childrenRecursive(): HasMany
+    {
+        return $this->children()->with('childrenRecursive');
+    }
+
+    /**
+     * Linked page (one-to-one).
+     */
+    public function page(): HasOne
+    {
+        return $this->hasOne(Page::class, 'menu_id', 'id');
+    }
+
+    /**
+     * ============================
+     *  SCOPES
+     * ============================
+     */
+
+    /**
+     * Scope: get only top-level (main) menus.
      */
     public function scopeTopLevel(Builder $query): Builder
     {
@@ -108,15 +114,21 @@ class Menu extends Model
     }
 
     /**
+     * Scope: only active menus.
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', true);
+    }
+
+    /**
      * ============================
-     *  HELPER METHODS
+     *  HELPERS
      * ============================
      */
 
     /**
      * Check if this menu item has any active children.
-     *
-     * @return bool
      */
     public function hasChildren(): bool
     {
@@ -124,12 +136,25 @@ class Menu extends Model
     }
 
     /**
-     * Generate a properly formatted URL.
+     * Generate a proper front-end link.
      *
-     * @return string
+     * If a page is linked, use its route.
+     * Otherwise, use URL or "#".
      */
     public function getLinkAttribute(): string
     {
+        if ($this->page) {
+            return route('page.view', $this->page->slug);
+        }
+
         return $this->url ? url($this->url) : '#';
+    }
+
+    /**
+     * Get a human-readable status name.
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return $this->status ? 'Active' : 'Inactive';
     }
 }
