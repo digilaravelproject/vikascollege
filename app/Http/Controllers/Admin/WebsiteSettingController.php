@@ -119,42 +119,65 @@ class WebsiteSettingController extends Controller
      */
     private function compressVideo($file, $index)
     {
-        // Save temp original
-        $tempPath = $file->store('temp', 'public');
+        // Generate unique filename
+        $filename = 'video_' . uniqid() . '.mp4';
+
+        // Save uploaded file temporarily in storage/app/public/temp
+        $tempPath = $file->storeAs('public/temp', uniqid() . '.' . $file->getClientOriginalExtension());
         $fullTempPath = Storage::path($tempPath);
 
-        $compressedPath = 'banners/video_' . uniqid() . '.mp4';
-        $fullCompressedPath = Storage::path('public/' . $compressedPath);
+        // Final compressed path: storage/app/public/banners/video_xxx.mp4
+        $compressedPath = 'public/banners/' . $filename;
+        $fullCompressedPath = Storage::path($compressedPath);
 
-        // Initialize FFMpeg
+        // Detect OS for FFMpeg binaries
+        $ffmpegPath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
+            ? 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+            : '/usr/bin/ffmpeg';
+
+        $ffprobePath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
+            ? 'C:\\ffmpeg\\bin\\ffprobe.exe'
+            : '/usr/bin/ffprobe';
+
+        // Create FFMpeg instance
         $ffmpeg = FFMpeg::create([
-            'ffmpeg.binaries'  => '/usr/bin/ffmpeg',
-            'ffprobe.binaries' => '/usr/bin/ffprobe',
-            'timeout' => 3600,
-            'ffmpeg.threads' => 4,
+            'ffmpeg.binaries'  => $ffmpegPath,
+            'ffprobe.binaries' => $ffprobePath,
+            'timeout'          => 3600,
+            'ffmpeg.threads'   => 4,
         ]);
+
         /** @var \FFMpeg\Media\Video $video */
         $video = $ffmpeg->open($fullTempPath);
 
-        // Resize to 720p if needed
+        // Resize to 720p (compress resolution)
         $video->filters()->resize(
             new Dimension(1280, 720),
             ResizeFilter::RESIZEMODE_FIT,
             true
-        )->synchronize();
+        );
 
-        $video->save(new X264(), $fullCompressedPath);
+        // Use H.264 codec (MP4 format) and reduce bitrate
+        $format = new X264('aac', 'libx264');
+        $format->setKiloBitrate(1500); // target bitrate ~1.5Mbps (compressed)
 
-        // Remove temp original
+        // Save compressed video
+        $video->save($format, $fullCompressedPath);
+
+        // Delete temporary file
         Storage::delete($tempPath);
 
+        // Store final setting (public path)
         Setting::set("banner_media_{$index}", json_encode([
             'type' => 'video',
-            'path' => $compressedPath,
+            'path' => str_replace('public/', '', $compressedPath), // remove 'public/' for URL
+            'original_name' => $file->getClientOriginalName(),
+            'compressed_name' => $filename,
         ]));
 
-        Log::info("Video banner saved: {$compressedPath}");
+        Log::info("✅ Video compressed and saved: {$compressedPath}");
     }
+
 
     /**
      * Get all banner media from database

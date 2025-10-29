@@ -14,8 +14,8 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <!-- Toolbox -->
-            <div class="p-4 bg-white rounded-lg shadow lg:col-span-3">
+            <!-- Toolbox (sticky) -->
+            <div class="sticky self-start p-4 bg-white rounded-lg shadow lg:col-span-3 h-fit top-4">
                 <h2 class="mb-3 text-lg font-semibold text-gray-700">Available Blocks</h2>
                 <template x-for="tpl in availableBlocks" :key="tpl.type">
                     <div draggable="true" @dragstart="dragBlock($event, tpl)"
@@ -37,13 +37,124 @@
                         <button @click="confirmRemove(block.id, index)"
                             class="absolute text-xs text-red-600 opacity-0 top-2 right-2 group-hover:opacity-100">✖</button>
 
-                        <!-- Text / Heading block: Quill editor -->
+                        <!-- Section -->
+                        <template x-if="block.type === 'section'">
+                            <div class="overflow-hidden bg-white border rounded-lg shadow">
+                                <button @click="block.expanded = !block.expanded"
+                                    class="flex items-center justify-between w-full px-4 py-2 transition bg-blue-100 hover:bg-blue-200">
+                                    <input type="text" x-model="block.title"
+                                        class="flex-1 font-semibold text-gray-700 bg-transparent border-none outline-none" />
+                                    <span x-text="block.expanded ? '▾' : '▸'"></span>
+                                </button>
+
+                                <div x-show="block.expanded" x-collapse class="p-4 bg-gray-50">
+                                    <div class="border-2 border-dashed border-gray-300 rounded p-4 min-h-[100px]"
+                                        @dragover.prevent @drop="dropBlockToSection($event, block)">
+                                        <template x-if="!block.blocks || block.blocks.length === 0">
+                                            <p class="text-sm text-center text-gray-400">Drag content blocks here...</p>
+                                        </template>
+
+                                        <template x-for="(sub, sIndex) in block.blocks" :key="sub.id">
+                                            <div class="relative p-3 mb-3 bg-white border rounded shadow-sm group">
+                                                <button @click="confirmRemoveSub(block, sIndex)"
+                                                    class="absolute text-xs text-red-600 opacity-0 top-2 right-2 group-hover:opacity-100">✖</button>
+
+                                                <!-- Text / Heading (nested) -->
+                                                <template x-if="sub.type === 'text' || sub.type === 'heading'">
+                                                    <div>
+                                                        <div :id="'toolbar-' + sub.id"
+                                                            class="flex flex-wrap gap-2 p-2 mb-2 bg-white rounded shadow-sm">
+                                                            <select class="ql-size"></select>
+                                                            <button class="ql-bold"></button>
+                                                            <button class="ql-italic"></button>
+                                                            <button class="ql-underline"></button>
+                                                            <select class="ql-color"></select>
+                                                            <select class="ql-align"></select>
+                                                            <button class="ql-clean"></button>
+                                                        </div>
+                                                        <div :id="'editor-' + sub.id"
+                                                            class="bg-white border rounded quill-editor"
+                                                            style="min-height:100px;"></div>
+                                                    </div>
+                                                </template>
+
+                                                <!-- Image (nested) -->
+                                                <template x-if="sub.type === 'image'">
+                                                    <div class="text-center">
+                                                        <template x-if="sub.src">
+                                                            <img :src="sub.src"
+                                                                class="max-w-full mx-auto rounded-lg shadow-md" />
+                                                        </template>
+                                                        <template x-if="!sub.src">
+                                                            <label class="block mt-2 cursor-pointer">
+                                                                <input type="file" accept="image/*"
+                                                                    @change="handleFileUpload($event, sub.id, 'image', block)"
+                                                                    class="hidden" />
+                                                                <div
+                                                                    class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-50">
+                                                                    <p class="text-sm text-gray-500">📁 Click to upload
+                                                                        image</p>
+                                                                </div>
+                                                            </label>
+                                                        </template>
+                                                    </div>
+                                                </template>
+
+                                                <!-- Video (nested) -->
+                                                <template x-if="sub.type === 'video'">
+                                                    <div class="text-center">
+                                                        <template x-if="sub.src">
+                                                            <video :src="sub.src" controls
+                                                                class="max-w-full mx-auto rounded-lg shadow-md"></video>
+                                                        </template>
+                                                        <template x-if="!sub.src">
+                                                            <label class="block mt-2 cursor-pointer">
+                                                                <input type="file" accept="video/*"
+                                                                    @change="handleFileUpload($event, sub.id, 'video', block)"
+                                                                    class="hidden" />
+                                                                <div
+                                                                    class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-50">
+                                                                    <p class="text-sm text-gray-500">🎬 Click to upload
+                                                                        video</p>
+                                                                </div>
+                                                            </label>
+                                                        </template>
+                                                    </div>
+                                                </template>
+
+                                                <!-- PDF (nested) -->
+                                                <template x-if="sub.type === 'pdf'">
+                                                    <div class="text-center">
+                                                        <template x-if="sub.src">
+                                                            <iframe :src="sub.src"
+                                                                class="w-full h-[400px] rounded-lg shadow-md"></iframe>
+                                                        </template>
+                                                        <template x-if="!sub.src">
+                                                            <label class="block mt-2 cursor-pointer">
+                                                                <input type="file" accept="application/pdf"
+                                                                    @change="handleFileUpload($event, sub.id, 'pdf', block)"
+                                                                    class="hidden" />
+                                                                <div
+                                                                    class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-50">
+                                                                    <p class="text-sm text-gray-500">📄 Click to upload PDF
+                                                                    </p>
+                                                                </div>
+                                                            </label>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Text / Heading (root) -->
                         <template x-if="block.type === 'text' || block.type === 'heading'">
                             <div class="space-y-2">
-                                <!-- Toolbar specific to this block -->
                                 <div :id="'toolbar-' + block.id"
                                     class="flex flex-wrap items-center gap-2 p-2 bg-white rounded shadow-sm">
-                                    <!-- You can add more toolbar items; Quill toolbar below matches these selectors -->
                                     <select class="ql-size"></select>
                                     <button class="ql-bold"></button>
                                     <button class="ql-italic"></button>
@@ -53,17 +164,12 @@
                                     <button class="ql-clean"></button>
                                 </div>
 
-                                <!-- Editor container -->
                                 <div :id="'editor-' + block.id" class="bg-white border rounded quill-editor"
-                                    style="min-height:120px;">
-                                    {{-- Quill will populate this --}}
-                                </div>
-
-                                <!-- Small helper controls for block-level width/height if you want -->
+                                    style="min-height:100px;"></div>
                             </div>
                         </template>
 
-                        <!-- Image -->
+                        <!-- Image (root) -->
                         <template x-if="block.type === 'image'">
                             <div class="text-center">
                                 <template x-if="block.src">
@@ -71,17 +177,18 @@
                                         class="mx-auto rounded-lg shadow-md" />
                                 </template>
                                 <template x-if="!block.src">
-                                    <div class="mt-2">
+                                    <label class="block mt-2 cursor-pointer">
                                         <input type="file" accept="image/*"
-                                            @change="handleFileUpload($event, block.id, 'image')"
-                                            class="w-full p-2 border rounded" />
-                                        <p class="mt-1 text-sm text-gray-400">Upload an image</p>
-                                    </div>
+                                            @change="handleFileUpload($event, block.id, 'image')" class="hidden" />
+                                        <div class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-50">
+                                            <p class="text-sm text-gray-500">📁 Click to upload image</p>
+                                        </div>
+                                    </label>
                                 </template>
                             </div>
                         </template>
 
-                        <!-- Video -->
+                        <!-- Video (root) -->
                         <template x-if="block.type === 'video'">
                             <div class="text-center">
                                 <template x-if="block.src">
@@ -89,33 +196,35 @@
                                         class="mx-auto rounded-lg shadow-md"></video>
                                 </template>
                                 <template x-if="!block.src">
-                                    <div class="mt-2">
+                                    <label class="block mt-2 cursor-pointer">
                                         <input type="file" accept="video/*"
-                                            @change="handleFileUpload($event, block.id, 'video')"
-                                            class="w-full p-2 border rounded" />
-                                        <p class="mt-1 text-sm text-gray-400">Upload a video file</p>
-                                    </div>
+                                            @change="handleFileUpload($event, block.id, 'video')" class="hidden" />
+                                        <div class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-50">
+                                            <p class="text-sm text-gray-500">🎬 Click to upload video</p>
+                                        </div>
+                                    </label>
                                 </template>
                             </div>
                         </template>
 
-                        <!-- PDF -->
+                        <!-- PDF (root) -->
                         <template x-if="block.type === 'pdf'">
                             <div class="text-center">
                                 <template x-if="block.src">
-                                    <iframe :src="block.src" :style="getMediaStyle(block)"
-                                        class="w-full rounded-lg shadow-md"></iframe>
+                                    <iframe :src="block.src" class="w-full rounded-lg shadow-md h-[500px]"></iframe>
                                 </template>
                                 <template x-if="!block.src">
-                                    <div class="mt-2">
+                                    <label class="block mt-2 cursor-pointer">
                                         <input type="file" accept="application/pdf"
-                                            @change="handleFileUpload($event, block.id, 'pdf')"
-                                            class="w-full p-2 border rounded" />
-                                        <p class="mt-1 text-sm text-gray-400">Upload a PDF file</p>
-                                    </div>
+                                            @change="handleFileUpload($event, block.id, 'pdf')" class="hidden" />
+                                        <div class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-50">
+                                            <p class="text-sm text-gray-500">📄 Click to upload PDF</p>
+                                        </div>
+                                    </label>
                                 </template>
                             </div>
                         </template>
+
                     </div>
                 </template>
             </div>
@@ -132,6 +241,7 @@
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
@@ -139,24 +249,21 @@
         function pageBuilder(savedContent = null) {
             return {
                 availableBlocks: [
+                    { type: 'section', label: '📁 Section', title: 'New Section', blocks: [], expanded: true },
                     { type: 'heading', label: '🧱 Heading', defaultContent: '<p><strong>Heading</strong></p>' },
                     { type: 'text', label: '📝 Text', defaultContent: '<p>Type something...</p>' },
-                    { type: 'image', label: '🖼️ Image', src: '', width: 400, height: 300 },
-                    { type: 'video', label: '🎥 Video', src: '', width: 560, height: 315 },
-                    { type: 'pdf', label: '📄 PDF', src: '', width: 600, height: 800 },
+                    { type: 'image', label: '🖼️ Image', src: '' },
+                    { type: 'video', label: '🎥 Video', src: '' },
+                    { type: 'pdf', label: '📄 PDF', src: '' },
                 ],
-
-                // blocks array (each block must have unique id)
                 blocks: [],
-                quills: {}, // store quill instances keyed by block.id
+                quills: {},
 
-                // initialize saved content or start with empty
                 initAll() {
-                    // restore saved content
                     if (savedContent) {
                         try {
                             const parsed = JSON.parse(savedContent);
-                            // ensure each block has id (in case older data didn't)
+                            // ensure ids exist
                             this.blocks = parsed.map(b => ({ ...b, id: b.id || this._genId() }));
                         } catch (e) {
                             console.error('Saved content parse error', e);
@@ -166,17 +273,26 @@
                         this.blocks = [];
                     }
 
-                    // init Quill editors for text blocks after DOM ready
+                    // init quills
                     this.$nextTick(() => {
-                        this.blocks.forEach((b, idx) => {
-                            if (b.type === 'text' || b.type === 'heading') {
-                                this.initQuill(b.id, b.content || b.defaultContent || '');
-                            }
-                        });
+                        this.blocks.forEach(b => this.initBlockQuills(b));
                     });
                 },
 
-                // helpers
+                initBlockQuills(block) {
+                    if (!block) return;
+                    if (block.type === 'text' || block.type === 'heading') {
+                        this.initQuill(block.id, block.content || block.defaultContent || '');
+                    }
+                    if (block.type === 'section' && Array.isArray(block.blocks)) {
+                        block.blocks.forEach(sub => {
+                            if (sub.type === 'text' || sub.type === 'heading') {
+                                this.initQuill(sub.id, sub.content || sub.defaultContent || '');
+                            }
+                        });
+                    }
+                },
+
                 _genId() {
                     return 'b_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
                 },
@@ -186,48 +302,66 @@
                 },
 
                 dropBlock(e) {
+                    // drop on root canvas only
                     const data = e.dataTransfer.getData('blockTpl');
                     if (!data) return;
                     const tpl = JSON.parse(data);
                     const newBlock = JSON.parse(JSON.stringify(tpl));
                     newBlock.id = this._genId();
-                    // if text/heading, initialize content property
                     if (newBlock.type === 'text' || newBlock.type === 'heading') {
                         newBlock.content = newBlock.defaultContent || '<p></p>';
                     }
+                    // if the tpl is a 'section' it may have blocks property; ensure it's new array
+                    if (newBlock.type === 'section' && !Array.isArray(newBlock.blocks)) {
+                        newBlock.blocks = [];
+                        newBlock.expanded = true;
+                        newBlock.title = newBlock.title || 'New Section';
+                    }
                     this.blocks.push(newBlock);
+                    this.$nextTick(() => this.initBlockQuills(newBlock));
+                },
 
-                    // initialize Quill for new text blocks
+                dropBlockToSection(e, section) {
+                    // stop propagation so the root drop doesn't also add the block
+                    e.stopPropagation();
+                    const data = e.dataTransfer.getData('blockTpl');
+                    if (!data) return;
+                    const tpl = JSON.parse(data);
+                    const newBlock = JSON.parse(JSON.stringify(tpl));
+                    newBlock.id = this._genId();
+                    if (newBlock.type === 'text' || newBlock.type === 'heading') {
+                        newBlock.content = newBlock.defaultContent || '<p></p>';
+                    }
+                    if (newBlock.type === 'section') {
+                        // don't allow nested sections for now — convert to simple section or ignore
+                        newBlock.blocks = newBlock.blocks || [];
+                        newBlock.expanded = true;
+                        newBlock.title = newBlock.title || 'New Section';
+                    }
+                    // ensure section.blocks exists
+                    if (!Array.isArray(section.blocks)) section.blocks = [];
+                    section.blocks.push(newBlock);
+                    // force reactivity and init quill for nested text blocks
                     this.$nextTick(() => {
-                        const idx = this.blocks.findIndex(b => b.id === newBlock.id);
-                        if (newBlock.type === 'text' || newBlock.type === 'heading') {
-                            this.initQuill(newBlock.id, newBlock.content);
-                        }
+                        this.blocks = [...this.blocks];
+                        this.initBlockQuills(newBlock);
                     });
                 },
 
                 initQuill(blockId, initialHtml = '') {
-                    // avoid re-init
                     if (this.quills[blockId]) return;
-
                     const toolbarSelector = '#toolbar-' + blockId;
                     const editorSelector = '#editor-' + blockId;
 
-                    // If elements not yet in DOM wait a bit
                     const attemptInit = () => {
-                        const tb = document.querySelector(toolbarSelector);
                         const ed = document.querySelector(editorSelector);
-                        if (!ed) {
-                            // try again shortly
-                            setTimeout(attemptInit, 50);
-                            return;
-                        }
+                        if (!ed) return setTimeout(attemptInit, 50);
 
-                        // create quill instance
+                        const tbEl = document.querySelector(toolbarSelector);
                         const quill = new Quill(editorSelector, {
                             theme: 'snow',
                             modules: {
-                                toolbar: tb ? tb : [
+                                toolbar: tbEl ? tbEl : [
                                     [{ 'size': [] }],
                                     ['bold', 'italic', 'underline'],
                                     [{ 'color': [] }],
@@ -238,98 +372,170 @@
                             placeholder: 'Type here...'
                         });
 
-                        // set initial html (if any)
-                        if (initialHtml) {
-                            quill.root.innerHTML = initialHtml;
-                        }
-
-                        // store quill instance by id
+                        if (initialHtml) quill.root.innerHTML = initialHtml;
                         this.quills[blockId] = quill;
-
-                        // when content changes, update blocks array
                         quill.on('text-change', () => {
-                            const idx = this.blocks.findIndex(b => b.id === blockId);
-                            if (idx !== -1) {
-                                // store HTML so formatting and selection-level styling persist
-                                this.blocks[idx].content = quill.root.innerHTML;
-                            }
+                            this.updateQuillContent(blockId, quill.root.innerHTML);
                         });
                     };
 
                     attemptInit();
                 },
 
-                // when removing block, confirm and cleanup quill
-                confirmRemove(blockId, index) {
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "This block will be removed.",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, remove it',
-                    }).then((res) => {
-                        if (res.isConfirmed) {
-                            // destroy quill instance if exists
-                            if (this.quills[blockId]) {
-                                try {
-                                    // Quill has no explicit destroy; remove listeners and DOM reference
-                                    this.quills[blockId] = null;
-                                    delete this.quills[blockId];
-                                } catch (e) { /* ignore */ }
+                updateQuillContent(blockId, html) {
+                    const findAndUpdate = (arr) => {
+                        for (let b of arr) {
+                            if (b.id === blockId) {
+                                b.content = html;
+                                return true;
                             }
-                            this.blocks.splice(index, 1);
-                            Swal.fire('Removed', 'Block deleted.', 'success');
+                            if (b.type === 'section' && Array.isArray(b.blocks)) {
+                                if (findAndUpdate(b.blocks)) return true;
+                            }
                         }
-                    });
+                        return false;
+                    };
+                    findAndUpdate(this.blocks);
+                    // force Alpine to re-render
+                    this.blocks = [...this.blocks];
                 },
 
-                // File upload for media (image/video/pdf)
-                handleFileUpload(e, blockId, type) {
+                confirmRemove(blockId, index) {
+                    Swal.fire({ title: 'Delete?', text: 'Remove this block?', icon: 'warning', showCancelButton: true })
+                        .then(res => { if (res.isConfirmed) this.blocks.splice(index, 1); });
+                },
+
+                confirmRemoveSub(section, index) {
+                    Swal.fire({ title: 'Delete?', text: 'Remove sub-block?', icon: 'warning', showCancelButton: true })
+                        .then(res => { if (res.isConfirmed) section.blocks.splice(index, 1); });
+                },
+                async handleFileUpload(e, blockId, type, section = null) {
                     const file = e.target.files[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const idx = this.blocks.findIndex(b => b.id === blockId);
-                        if (idx === -1) return;
-                        this.blocks[idx].src = reader.result;
-                        Swal.fire({
-                            icon: 'success',
-                            title: `${type.toUpperCase()} Uploaded`,
-                            text: 'Upload successful!',
-                            timer: 1500,
-                            showConfirmButton: false
+
+                    // 🧾 Ask user for filename + base path
+                    const { value: formValues } = await Swal.fire({
+                        title: "Upload Options",
+                        html: `
+                <input id="custom_name" class="swal2-input" placeholder="File name (optional)" />
+                <select id="base_path" class="swal2-select">
+                    <option value="wp-content" selected>wp-content (recommended)</option>
+                    <option value="storage">storage</option>
+                </select>
+            `,
+                        focusConfirm: false,
+                        preConfirm: () => ({
+                            custom_name: document.getElementById("custom_name").value,
+                            base_path: document.getElementById("base_path").value,
+                        }),
+                        confirmButtonText: "Upload",
+                        showCancelButton: true,
+                    });
+
+                    if (!formValues) return; // cancelled
+
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("base_path", formValues.base_path || "wp-content");
+                    formData.append("custom_name", formValues.custom_name || "");
+
+                    try {
+                        const res = await fetch('{{ route('admin.pagebuilder.builder.upload', $page) }}', {
+                            method: "POST",
+                            headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                            body: formData,
                         });
 
-                    };
-                    reader.readAsDataURL(file);
+                        const data = await res.json();
+
+                        if (data.success) {
+                            const url = data.url;
+
+                            const update = (arr) => {
+                                for (let b of arr) {
+                                    if (b.id === blockId) {
+                                        b.src = url;
+                                        return true;
+                                    }
+                                    if (b.type === "section" && Array.isArray(b.blocks)) {
+                                        if (update(b.blocks)) return true;
+                                    }
+                                }
+                                return false;
+                            };
+
+                            update(this.blocks);
+                            this.blocks = [...this.blocks];
+
+                            Swal.fire({
+                                icon: "success",
+                                title: "✅ File Uploaded",
+                                text: `${data.filename}`,
+                                timer: 1400,
+                                showConfirmButton: false,
+                            });
+                        } else {
+                            Swal.fire("Error", data.message || "Upload failed.", "error");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire("Error", "Upload failed.", "error");
+                    }
                 },
 
-                // Save page: before submit, ensure all quills are read into blocks
-                savePage() {
-                    // push quill content explicitly (in case some quill didn't fire)
-                    Object.keys(this.quills).forEach(id => {
-                        const q = this.quills[id];
-                        const idx = this.blocks.findIndex(b => b.id === id);
-                        if (q && idx !== -1) {
-                            this.blocks[idx].content = q.root.innerHTML;
+                async handleFileUpload_old(e, blockId, type, section = null) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    try {
+                        // use your actual named route for upload
+                        const res = await fetch('{{ route('admin.pagebuilder.builder.upload', $page) }}', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: formData
+                        });
+
+                        const data = await res.json();
+
+                        if (data.success) {
+                            const url = data.url;
+
+                            // recursive update (works for root and nested)
+                            const update = (arr) => {
+                                for (let b of arr) {
+                                    if (b.id === blockId) {
+                                        b.src = url;
+                                        return true;
+                                    }
+                                    if (b.type === 'section' && Array.isArray(b.blocks)) {
+                                        if (update(b.blocks)) return true;
+                                    }
+                                }
+                                return false;
+                            };
+
+                            update(this.blocks);
+
+                            // force Alpine reactivity refresh
+                            this.blocks = [...this.blocks];
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: `${type.toUpperCase()} Uploaded`,
+                                text: 'Upload successful!',
+                                timer: 1200,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire('Error', data.message || 'Upload failed.', 'error');
                         }
-                    });
-
-                    const payload = JSON.stringify(this.blocks);
-                    document.getElementById('pageContent').value = payload;
-
-                    Swal.fire({
-                        title: 'Saving...',
-                        text: 'Please wait',
-                        icon: 'info',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                    });
-
-                    // Submit form
-                    this.$nextTick(() => {
-                        document.getElementById('saveForm').submit();
-                    });
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire('Error', 'Upload failed.', 'error');
+                    }
                 },
 
                 getMediaStyle(block) {
@@ -338,15 +544,23 @@
                     return `width:${w}px; height:${h}px; object-fit:contain;`;
                 },
 
+                savePage() {
+                    // push quill content explicitly
+                    Object.keys(this.quills).forEach(id => {
+                        const q = this.quills[id];
+                        if (q) this.updateQuillContent(id, q.root.innerHTML);
+                    });
+                    document.getElementById('pageContent').value = JSON.stringify(this.blocks);
+                    Swal.fire({ title: 'Saving...', text: 'Please wait', icon: 'info', showConfirmButton: false });
+                    this.$nextTick(() => document.getElementById('saveForm').submit());
+                },
             };
         }
     </script>
 
     <style>
-        /* light styling to make quill editors fit nicely */
         .ql-editor {
             min-height: 120px;
-            outline: none;
         }
 
         .quill-editor {

@@ -132,7 +132,65 @@ class PageBuilderController extends Controller
     }
 
     /** ✅ Media upload via AJAX */
+
     public function uploadMedia(Request $request, Page $page): JsonResponse
+    {
+        $validated = $request->validate([
+            'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:51200',
+            'base_path' => 'nullable|string|in:storage,wp-content',
+            'custom_name' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $mime = $file->getMimeType();
+
+            // ✅ Decide subfolder based on file type
+            $subFolder = match (true) {
+                str_starts_with($mime, 'image/') => 'uploads/images',
+                str_starts_with($mime, 'video/') => 'uploads/videos',
+                $mime === 'application/pdf' => 'uploads/pdfs',
+                default => null,
+            };
+
+            if (!$subFolder) {
+                return response()->json(['success' => false, 'message' => 'Unsupported file type.'], 422);
+            }
+
+            // ✅ Use base path or default
+            $basePath = $validated['base_path'] ?? 'wp-content';
+            $directory = "{$basePath}/{$subFolder}";
+
+            // ✅ Use manual name if given
+            $ext = $file->getClientOriginalExtension();
+            $rawName = trim($validated['custom_name'] ?? '');
+            $finalName = $rawName
+                ? Str::slug(pathinfo($rawName, PATHINFO_FILENAME)) . '.' . $ext
+                : $file->getClientOriginalName();
+
+            // ✅ Move file according to base path
+            if ($basePath === 'wp-content') {
+                $targetPath = public_path($directory);
+                if (!is_dir($targetPath)) mkdir($targetPath, 0775, true);
+                $file->move($targetPath, $finalName);
+                $url = asset("{$directory}/{$finalName}");
+            } else {
+                $path = $file->storeAs($subFolder, $finalName, 'public');
+                $url = Storage::url($path);
+            }
+
+            return response()->json([
+                'success' => true,
+                'url' => $url,
+                'path' => "{$directory}/{$finalName}",
+                'filename' => $finalName,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Upload Media Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Upload failed.'], 500);
+        }
+    }
+    public function uploadMedia_old(Request $request, Page $page): JsonResponse
     {
         $validated = $request->validate([
             'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:51200',

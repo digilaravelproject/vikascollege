@@ -29,6 +29,8 @@
     <footer class="bg-[#013954] text-white text-center py-6 mt-10">
         <p class="mb-0 text-sm">&copy; {{ date('Y') }} {{ setting('college_name') }}. All rights reserved.</p>
     </footer>
+    <script src="//unpkg.com/alpinejs" defer></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
 
 </body>
