@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Menu;
+use App\Models\Page;  // Add this for Page model
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Route;
@@ -19,7 +20,7 @@ class MenuController extends Controller
     {
         try {
             // Load all menus with parent-child relationship (recursive)
-            $menus = Menu::with('parent')
+            $menus = Menu::with('parent', 'page') // Eager load page relation
                 ->orderBy('parent_id')
                 ->orderBy('order')
                 ->get();
@@ -67,8 +68,21 @@ class MenuController extends Controller
         ]);
 
         try {
+            // Handle the status checkbox
             $validated['status'] = $request->has('status') ? 1 : 0;
-            Menu::create($validated);
+
+            // Create the menu
+            $menu = Menu::create($validated);
+
+            // Check if this menu needs a page created
+            if ($validated['url']) {
+                // Create the page with the same URL/slug
+                Page::create([
+                    'slug' => $validated['url'],
+                    'title' => $validated['title'],  // You can set other fields here as needed
+                    'content' => '', // Empty content to start with
+                ]);
+            }
 
             return redirect()
                 ->route('admin.menus.index')
@@ -85,12 +99,14 @@ class MenuController extends Controller
     public function edit(Menu $menu)
     {
         try {
+            // Fetch all menus for parent selection (nested)
             $menus = Menu::with('childrenRecursive')
                 ->whereNull('parent_id')
                 ->where('id', '!=', $menu->id)
                 ->orderBy('order')
                 ->get();
 
+            // Fetch all named routes for linking
             $routes = $this->getValidRoutes();
 
             return view('admin.menus.edit', compact('menu', 'menus', 'routes'));
@@ -118,8 +134,19 @@ class MenuController extends Controller
         ]);
 
         try {
+            // Handle the status checkbox
             $validated['status'] = $request->has('status') ? 1 : 0;
+
+            // Update the menu
             $menu->update($validated);
+
+            // Check if the page linked to the menu needs updating
+            if ($menu->page) {
+                $menu->page->update([
+                    'slug' => $validated['url'],
+                    'title' => $validated['title'], // Update the page title
+                ]);
+            }
 
             return redirect()
                 ->route('admin.menus.index')
@@ -138,6 +165,13 @@ class MenuController extends Controller
         try {
             // Also delete child menus if they exist
             $menu->children()->delete();
+
+            // Delete the associated page if it exists
+            if ($menu->page) {
+                $menu->page->delete();
+            }
+
+            // Delete the menu itself
             $menu->delete();
 
             return redirect()
@@ -173,11 +207,10 @@ class MenuController extends Controller
                 return [
                     'name' => $route->getName(),
                     'uri'  => $route->uri(),
-                    'parameters' => $route->parameterNames(), // <-- Add this
+                    'parameters' => $route->parameterNames(),
                 ];
             })
             ->filter(function ($r) {
-                // Sirf named routes rakho (parameters allowed)
                 return !empty($r['name']);
             })
             ->values();

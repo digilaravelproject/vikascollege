@@ -73,7 +73,14 @@ class Menu extends Model
             ->where('status', 1)
             ->orderBy('order');
     }
-
+    /*
+    * Get the page
+    *
+    */
+    public function page()
+    {
+        return $this->hasOne(Page::class, 'slug', 'url');
+    }
     /**
      * Recursive children loader (Main → Child → Subchild → Sub-subchild).
      * Use in controller: with('childrenRecursive')

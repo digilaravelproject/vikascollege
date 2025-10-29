@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\PageBuilderController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\TrustSectionController;
 use App\Http\Controllers\Admin\WebsiteSettingController;
@@ -34,4 +35,17 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
 
     Route::delete('trust/pdf/{trustSection}', [TrustSectionController::class, 'removePdf'])
         ->name('trust.pdf.remove');
+
+
+
+    Route::prefix('pagebuilder')->name('pagebuilder.')->group(function () {
+        Route::get('/', [PageBuilderController::class, 'index'])->name('index');
+        Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
+        Route::post('/store', [PageBuilderController::class, 'store'])->name('store');
+        Route::get('/edit/{page}', [PageBuilderController::class, 'edit'])->name('edit');
+        Route::post('/update/{page}', [PageBuilderController::class, 'update'])->name('update');
+        Route::delete('/delete/{page}', [PageBuilderController::class, 'destroy'])->name('delete');
+        Route::get('/builder/{page}', [PageBuilderController::class, 'builder'])->name('builder');
+        Route::post('/builder/save/{page}', [PageBuilderController::class, 'saveBuilder'])->name('builder.save');
+    });
 });

@@ -24,6 +24,11 @@
             Dashboard
         </a>
 
+        <a href="{{ route('admin.pagebuilder.index') }}"
+            class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 {{ request()->routeIs('admin.pagebuilder*') ? 'bg-gray-100' : '' }}">
+            <i class="w-4 fas fa-handshake"></i>
+            PAGES
+        </a>
         <a href="{{ route('admin.trust.index') }}"
             class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 {{ request()->routeIs('admin.trust*') ? 'bg-gray-100' : '' }}">
             <i class="w-4 fas fa-handshake"></i>

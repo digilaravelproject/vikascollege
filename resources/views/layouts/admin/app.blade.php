@@ -43,27 +43,27 @@
     @stack('styles')
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-800" x-data="{ sidebarOpen: false }">
+<body class="min-h-screen text-gray-800 bg-gray-50" x-data="{ sidebarOpen: false }">
 
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         @include('layouts.admin.partials.sidebar')
 
         <!-- Content area -->
-        <div class="flex-1 flex flex-col overflow-hidden lg:pl-0">
+        <div class="flex flex-col flex-1 overflow-hidden lg:pl-0">
 
             <!-- Topbar -->
             @include('layouts.admin.partials.topbar')
 
             <!-- Main -->
-            <main class="flex-1 overflow-auto p-6">
-                <div class="max-w-7xl mx-auto">
+            <main class="flex-1 p-6 overflow-auto">
+                <div class="mx-auto max-w-7xl">
                     @yield('content')
                 </div>
             </main>
 
-            <footer class="border-t bg-white p-4 text-sm text-gray-500">
-                <div class="max-w-7xl mx-auto text-center">© {{ date('Y') }} {{ config('app.name') }}. All rights
+            <footer class="p-4 text-sm text-gray-500 bg-white border-t">
+                <div class="mx-auto text-center max-w-7xl">© {{ date('Y') }} {{ config('app.name') }}. All rights
                     reserved.</div>
             </footer>
 

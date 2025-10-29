@@ -36,8 +36,7 @@
                     <button type="button" @click="open = !open"
                             class="w-full flex justify-between items-center border border-gray-300 rounded-lg p-2.5 text-sm
                                    bg-gray-50 hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <span x-text="selectedRoute ? selectedRoute : '— Select from App Routes —'"
-                              :class="selectedRoute ? 'text-gray-800' : 'text-gray-400'"></span>
+                        <span x-text="selectedRoute ? selectedRoute : '— Select from App Routes —'"></span>
                         <svg class="w-4 h-4 ml-2 text-gray-500 transition-transform duration-200 transform"
                              :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
