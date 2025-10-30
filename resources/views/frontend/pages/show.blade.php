@@ -26,35 +26,48 @@
                         $url = $menu->link;
 
                         // Track level (1 = main, 2 = child, 3+ = deeper)
-                        $html .= '<li ' . ($level >= 2 && $hasChildren ? 'x-data="{ open: false }"' : '') . '>';
+                        $html .= '<li ' . ($level >= 2 && $hasChildren ? ' x-data="{ open: false }"' : '') . '>';
 
                         // Determine item rendering logic
                         if ($hasChildren && $level >= 2) {
                             // Only level 2+ menus are expandable
-                            $html .= '<div class="flex items-center justify-between w-full">
-                                        <a href="' . e($url) . '"
-                                           class="flex-1 block px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg '
-                                . ($isActive ? 'bg-[#013954] text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-[#013954]')
-                                . '">'
-                                . e($menu->title) . '
-                                        </a>
-                                        <button @click="open = !open"
-                                            class="px-2 text-gray-600 transition hover:text-[#013954] focus:outline-none"
-                                            title="Toggle submenu">
-                                            <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6" />
-                                            </svg>
-                                            <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
-                                            </svg>
-                                        </button>
-                                    </div>';
+                            $html .=
+                                '<div class="flex items-center justify-between w-full">
+                                    <a href="' .
+                                e($url) .
+                                '" class="flex-1 block px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ' .
+                                ($isActive
+                                    ? 'bg-[#013954] text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-[#013954]') .
+                                '">' .
+                                e($menu->title) .
+                                '
+                                    </a>
+                                    <button @click="open = !open"
+                                        class="px-2 text-gray-600 transition hover:text-[#013954] focus:outline-none"
+                                        title="Toggle submenu">
+                                        <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6" />
+                                        </svg>
+                                        <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
+                                        </svg>
+                                    </button>
+                                </div>';
                         } else {
                             // Normal link for all other levels
-                            $html .= '<a href="' . e($url) . '"
-                                                                                                                class="block px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg '
-                                . ($isActive ? 'bg-[#013954] text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-[#013954]')
-                                . '">' . e($menu->title) . '</a>';
+                            $html .=
+                                '<a href="' .
+                                e($url) .
+                                '" class="block px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ' .
+                                ($isActive
+                                    ? 'bg-[#013954] text-white shadow-md'
+                                    : 'bg-gray-100 text-gray-800 hover:bg-blue-50 hover:text-[#013954]') .
+                                '">' .
+                                e($menu->title) .
+                                '</a>';
                         }
 
                         // Render children recursively
@@ -99,13 +112,13 @@
                     $blocks = json_decode($activeSection->content, true);
                 @endphp
 
-                @if(is_array($blocks))
-                    @foreach($blocks as $block)
+                @if (is_array($blocks))
+                    @foreach ($blocks as $block)
                         <x-page-block :block="$block" />
                     @endforeach
                 @endif
 
-                @if($activeSection->pdf_path)
+                @if ($activeSection->pdf_path)
                     <div class="mt-8">
                         <x-pdf-viewer :src="asset('storage/' . $activeSection->pdf_path)" />
                     </div>

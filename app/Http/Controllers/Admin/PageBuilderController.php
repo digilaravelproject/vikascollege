@@ -39,10 +39,10 @@ class PageBuilderController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'title'   => 'required|string|max:255',
-            'slug'    => 'nullable|string|max:255|unique:pages,slug',
+            'title' => 'required|string|max:255',
+            'slug' => 'nullable|string|max:255|unique:pages,slug',
             'content' => 'nullable',
-            'image'   => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:2048',
         ]);
 
         try {
@@ -75,10 +75,10 @@ class PageBuilderController extends Controller
     public function update(Request $request, Page $page): RedirectResponse
     {
         $validated = $request->validate([
-            'title'   => 'required|string|max:255',
-            'slug'    => 'required|string|max:255|unique:pages,slug,' . $page->id,
+            'title' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:pages,slug,' . $page->id,
             'content' => 'nullable',
-            'image'   => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:2048',
         ]);
 
         try {
@@ -171,7 +171,8 @@ class PageBuilderController extends Controller
             // ✅ Move file according to base path
             if ($basePath === 'wp-content') {
                 $targetPath = public_path($directory);
-                if (!is_dir($targetPath)) mkdir($targetPath, 0775, true);
+                if (!is_dir($targetPath))
+                    mkdir($targetPath, 0775, true);
                 $file->move($targetPath, $finalName);
                 $url = asset("{$directory}/{$finalName}");
             } else {
@@ -200,10 +201,14 @@ class PageBuilderController extends Controller
             $file = $request->file('file');
             $mime = $file->getMimeType();
 
-            if (str_starts_with($mime, 'image/')) $dir = 'uploads/pages';
-            elseif (str_starts_with($mime, 'video/')) $dir = 'uploads/videos';
-            elseif ($mime === 'application/pdf') $dir = 'uploads/pdfs';
-            else return response()->json(['success' => false, 'message' => 'Unsupported file type.'], 422);
+            if (str_starts_with($mime, 'image/'))
+                $dir = 'uploads/pages';
+            elseif (str_starts_with($mime, 'video/'))
+                $dir = 'uploads/videos';
+            elseif ($mime === 'application/pdf')
+                $dir = 'uploads/pdfs';
+            else
+                return response()->json(['success' => false, 'message' => 'Unsupported file type.'], 422);
 
             $path = $file->store($dir, 'public');
             $url = Storage::url($path);
