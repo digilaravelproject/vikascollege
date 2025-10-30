@@ -38,7 +38,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
 
 
 
-    Route::prefix('pagebuilder')->name('pagebuilder.')->group(function () {
+    Route::prefix('pagebuilder_old')->name('pagebuilder.')->group(function () {
         Route::get('/', [PageBuilderController::class, 'index'])->name('index');
         Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
         Route::post('/store', [PageBuilderController::class, 'store'])->name('store');
@@ -51,6 +51,26 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
         Route::post('/builder/save/{page}', [PageBuilderController::class, 'saveBuilder'])->name('builder.save');
 
         // AJAX upload/delete
+        Route::post('/builder/upload/{page}', [PageBuilderController::class, 'uploadMedia'])->name('builder.upload');
+        Route::post('/builder/upload-delete', [PageBuilderController::class, 'deleteUploadedMedia'])->name('builder.upload.delete');
+    });
+    Route::prefix('pagebuilder')->name('pagebuilder.')->group(function () {
+
+        // CRUD pages (index, create, edit, delete)
+        Route::get('/', [PageBuilderController::class, 'index'])->name('index');
+        Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
+        Route::post('/store', [PageBuilderController::class, 'store'])->name('store');
+        Route::get('/edit/{page}', [PageBuilderController::class, 'edit'])->name('edit');
+        Route::post('/update/{page}', [PageBuilderController::class, 'update'])->name('update');
+        Route::delete('/delete/{page}', [PageBuilderController::class, 'destroy'])->name('delete');
+
+        // 🧱 Page Builder (Elementor-style)
+        Route::get('/builder/{page}', [PageBuilderController::class, 'builder'])->name('builder');
+
+        // Save builder data (HTML, CSS, JSON, etc.)
+        Route::post('/builder/save/{page}', [PageBuilderController::class, 'saveBuilder'])->name('builder.save');
+
+        // AJAX media uploads (for images, videos, etc.)
         Route::post('/builder/upload/{page}', [PageBuilderController::class, 'uploadMedia'])->name('builder.upload');
         Route::post('/builder/upload-delete', [PageBuilderController::class, 'deleteUploadedMedia'])->name('builder.upload.delete');
     });

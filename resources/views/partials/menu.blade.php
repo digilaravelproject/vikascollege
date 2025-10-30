@@ -94,7 +94,7 @@
                                                                                 <ul
                                                                                     class="mt-2 space-y-1 text-sm text-gray-600">
                                                                                     @foreach ($sub->children as $subsub)
-                                                                                        <li><a h ref="{{ $subsub->url }}"
+                                                                                        <li><a href="{{ $subsub->url }}"
                                                                                                 class="block uppercase hover:text-[#35abe7]">{{ $subsub->title }}</a>
                                                                                         </li>
                                                                                     @endforeach
@@ -122,7 +122,7 @@
                                                         @mouseleave="openChild = false" class="relative">
 
                                                         <!-- child link -->
-                                                        <a h ref="{{ $child->url }}"
+                                                        <a href="{{ $child->url }}"
                                                             class="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-[#013954] hover:text-white transition duration-150">
                                                             <span>{{ $child->title }}</span>
 
@@ -161,7 +161,7 @@
                                         </div>
                                 @endif
                             @else
-                                <a h ref="{{ $menu->url }}"
+                                <a href="{{ $menu->url }}"
                                     class="relative text-xs font-medium text-gray-100 transition
                                                 hover:text-[#35abe7]
                                                 after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[2px]

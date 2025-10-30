@@ -11,7 +11,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-gray-50">
+<body class="flex flex-col min-h-screen bg-gray-50">
 
     {{-- Top Banner --}}
     @include('partials.top-banner')
@@ -19,18 +19,16 @@
     {{-- Menu --}}
     @include('partials.menu')
 
-
-
     {{-- Main Content --}}
-    <main class="">
+    <main class="flex-grow">
         @yield('content')
     </main>
 
     <footer class="bg-[#013954] text-white text-center py-6 mt-10">
         <p class="mb-0 text-sm">&copy; {{ date('Y') }} {{ setting('college_name') }}. All rights reserved.</p>
     </footer>
-    <script src="//unpkg.com/alpinejs" defer></script>
 
+    <script src="//unpkg.com/alpinejs" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
 
 </body>

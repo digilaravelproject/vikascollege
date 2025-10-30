@@ -11,33 +11,38 @@ class PageController extends Controller
     public function show($slug)
     {
         try {
-            // 1. Fetch the page
+            // 1️⃣ Fetch page by slug
             $activeSection = Page::where('slug', $slug)->firstOrFail();
 
-            // 2. Find menu linked to this page
+            // 2️⃣ Find related menu (if any)
             $activeMenu = Menu::whereHas('page', function ($q) use ($activeSection) {
                 $q->where('id', $activeSection->id);
             })->first();
 
-            // 3. If no menu found, try direct URL match
             if (!$activeMenu) {
                 $activeMenu = Menu::where('url', $slug)->first();
             }
 
+            // 3️⃣ Prepare sidebar menus
             $menus = collect();
+            $topParent = null;
 
             if ($activeMenu) {
                 $topParent = $this->getTopParent($activeMenu);
-
-                // Load top parent with all children + their pages recursively
                 $menus = Menu::with(['childrenRecursive.page'])
                     ->where('id', $topParent->id)
                     ->get();
-            } else {
-                $topParent = null;
             }
 
-            return view('frontend.pages.show', compact('activeSection', 'menus', 'activeMenu', 'topParent'));
+            // 4️⃣ Decode JSON content safely
+            $blocks = [];
+            if (!empty($activeSection->content)) {
+                $decoded = json_decode($activeSection->content, true);
+                $blocks = $decoded['blocks'] ?? $decoded ?? [];
+            }
+
+            // 5️⃣ Render view
+            return view('frontend.pages.show', compact('activeSection', 'menus', 'activeMenu', 'topParent', 'blocks'));
         } catch (\Throwable $e) {
             Log::error("PageController@show: " . $e->getMessage());
             abort(404, 'Page not found.');

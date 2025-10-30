@@ -33,7 +33,7 @@
                             // Only level 2+ menus are expandable
                             $html .=
                                 '<div class="flex items-center justify-between w-full">
-                                    <a href="' .
+                                                                                    <a href="' .
                                 e($url) .
                                 '" class="flex-1 block px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ' .
                                 ($isActive
@@ -42,20 +42,20 @@
                                 '">' .
                                 e($menu->title) .
                                 '
-                                    </a>
-                                    <button @click="open = !open"
-                                        class="px-2 text-gray-600 transition hover:text-[#013954] focus:outline-none"
-                                        title="Toggle submenu">
-                                        <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6" />
-                                        </svg>
-                                        <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
-                                        </svg>
-                                    </button>
-                                </div>';
+                                                                                    </a>
+                                                                                    <button @click="open = !open"
+                                                                                        class="px-2 text-gray-600 transition hover:text-[#013954] focus:outline-none"
+                                                                                        title="Toggle submenu">
+                                                                                        <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6" />
+                                                                                        </svg>
+                                                                                        <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
+                                                                                        </svg>
+                                                                                    </button>
+                                                                                </div>';
                         } else {
                             // Normal link for all other levels
                             $html .=
@@ -106,24 +106,28 @@
 
 
 
-            {{-- Main Content --}}
+            {{-- ==================== MAIN CONTENT ==================== --}}
             <main class="p-4 space-y-6 bg-white shadow-md rounded-2xl md:col-span-3">
                 @php
-                    $blocks = json_decode($activeSection->content, true);
+                    $content = json_decode($activeSection->content, true);
+                    $blocks = $content['blocks'] ?? $content ?? [];
                 @endphp
 
-                @if (is_array($blocks))
+                @if (!empty($blocks) && is_array($blocks))
                     @foreach ($blocks as $block)
                         <x-page-block :block="$block" />
                     @endforeach
+                @else
+                    <p class="italic text-gray-400">No content found for this page.</p>
                 @endif
 
-                @if ($activeSection->pdf_path)
+                @if (!empty($activeSection->pdf_path))
                     <div class="mt-8">
                         <x-pdf-viewer :src="asset('storage/' . $activeSection->pdf_path)" />
                     </div>
                 @endif
             </main>
+
         </div>
     </section>
 @endsection
