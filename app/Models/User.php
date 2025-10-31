@@ -46,4 +46,24 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    /**
+     * User ke naam se initials (e.g., "Super Admin" -> "SA") banata hai.
+     */
+    public function getInitialsAttribute()
+    {
+        $name = $this->name; // User ka poora naam
+
+        // Naam ko 2 hisson mein todo (max 2 words)
+        $words = explode(' ', $name, 2);
+
+        // Pehle shabd ka pehla letter
+        $initials = mb_substr($words[0], 0, 1);
+
+        // Agar doosra shabd hai, toh uska pehla letter
+        if (isset($words[1])) {
+            $initials .= mb_substr($words[1], 0, 1);
+        }
+
+        return strtoupper($initials);
+    }
 }

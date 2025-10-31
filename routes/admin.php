@@ -23,6 +23,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::post('/menus/{menu}/toggle-status', [MenuController::class, 'toggleStatus'])->name('menus.toggle-status');
     Route::get('/website-settings', [WebsiteSettingController::class, 'index'])->name('website-settings.index');
     Route::post('/website-settings', [WebsiteSettingController::class, 'update'])->name('website-settings.update');
+    Route::post('website-settings/delete-media', [WebsiteSettingController::class, 'deleteBannerMedia'])->name('website-settings.delete-media');
     Route::resource('trust', TrustSectionController::class)
         ->except(['show', 'destroy']) // keep index, create, store, edit, update
         ->parameters([
@@ -35,25 +36,6 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
 
     Route::delete('trust/pdf/{trustSection}', [TrustSectionController::class, 'removePdf'])
         ->name('trust.pdf.remove');
-
-
-
-    Route::prefix('pagebuilder_old')->name('pagebuilder_old.')->group(function () {
-        Route::get('/', [PageBuilderController::class, 'index'])->name('index');
-        Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
-        Route::post('/store', [PageBuilderController::class, 'store'])->name('store');
-        Route::get('/edit/{page}', [PageBuilderController::class, 'edit'])->name('edit');
-        Route::post('/update/{page}', [PageBuilderController::class, 'update'])->name('update');
-        Route::delete('/delete/{page}', [PageBuilderController::class, 'destroy'])->name('delete');
-
-        // Builder routes
-        Route::get('/builder/{page}', [PageBuilderController::class, 'builder'])->name('builder');
-        Route::post('/builder/save/{page}', [PageBuilderController::class, 'saveBuilder'])->name('builder.save');
-
-        // AJAX upload/delete
-        Route::post('/builder/upload/{page}', [PageBuilderController::class, 'uploadMedia'])->name('builder.upload');
-        Route::post('/builder/upload-delete', [PageBuilderController::class, 'deleteUploadedMedia'])->name('builder.upload.delete');
-    });
     Route::prefix('pagebuilder')->name('pagebuilder.')->group(function () {
 
         // CRUD pages (index, create, edit, delete)
@@ -63,6 +45,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
         Route::get('/edit/{page}', [PageBuilderController::class, 'edit'])->name('edit');
         Route::post('/update/{page}', [PageBuilderController::class, 'update'])->name('update');
         Route::delete('/delete/{page}', [PageBuilderController::class, 'destroy'])->name('delete');
+        Route::post('{page}/toggle-status', [PageBuilderController::class, 'toggleStatus'])
+            ->name('toggleStatus');
 
         // 🧱 Page Builder (Elementor-style)
         Route::get('/builder/{page}', [PageBuilderController::class, 'builder'])->name('builder');

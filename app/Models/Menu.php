@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property bool $status
  * @property \App\Models\Page|null $page
  * @property \Illuminate\Database\Eloquent\Collection|\App\Models\Menu[] $children
+ * @property-read string $link
+ * @property-read string $statusLabel
  */
 class Menu extends Model
 {
@@ -33,27 +35,15 @@ class Menu extends Model
 
     /**
      * ============================
-     *  ACCESSORS & MUTATORS
+     * ACCESSORS & MUTATORS
      * ============================
      */
 
-    /**
-     * Always return title in Title Case (more readable than uppercase).
-     *
-     * @param  string|null  $value
-     * @return string
-     */
     public function getTitleAttribute(?string $value): string
     {
         return ucwords($value ?? '');
     }
 
-    /**
-     * Normalize title before saving (trim and collapse extra spaces).
-     *
-     * @param  string  $value
-     * @return void
-     */
     public function setTitleAttribute(string $value): void
     {
         $this->attributes['title'] = preg_replace('/\s+/', ' ', trim($value));
@@ -61,21 +51,15 @@ class Menu extends Model
 
     /**
      * ============================
-     *  RELATIONSHIPS
+     * RELATIONSHIPS
      * ============================
      */
 
-    /**
-     * Parent menu item (if any).
-     */
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Menu::class, 'parent_id');
     }
 
-    /**
-     * Direct child menu items (active only).
-     */
     public function children(): HasMany
     {
         return $this->hasMany(Menu::class, 'parent_id')
@@ -83,17 +67,11 @@ class Menu extends Model
             ->orderBy('order');
     }
 
-    /**
-     * Recursive child loader (for nested menus).
-     */
     public function childrenRecursive(): HasMany
     {
         return $this->children()->with('childrenRecursive');
     }
 
-    /**
-     * Linked page (one-to-one).
-     */
     public function page(): HasOne
     {
         return $this->hasOne(Page::class, 'menu_id', 'id');
@@ -101,21 +79,15 @@ class Menu extends Model
 
     /**
      * ============================
-     *  SCOPES
+     * SCOPES
      * ============================
      */
 
-    /**
-     * Scope: get only top-level (main) menus.
-     */
     public function scopeTopLevel(Builder $query): Builder
     {
         return $query->whereNull('parent_id');
     }
 
-    /**
-     * Scope: only active menus.
-     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', true);
@@ -123,31 +95,54 @@ class Menu extends Model
 
     /**
      * ============================
-     *  HELPERS
+     * HELPERS
      * ============================
      */
 
-    /**
-     * Check if this menu item has any active children.
-     */
     public function hasChildren(): bool
     {
         return $this->children()->exists();
     }
 
     /**
-     * Generate a proper front-end link.
+     * ===============================================
+     * UPDATED/MERGED LINK FUNCTION
+     * ===============================================
      *
-     * If a page is linked, use its route.
-     * Otherwise, use URL or "#".
+     * Generate a proper front-end link.
+     * Yeh function ab har condition ko handle karta hai.
      */
     public function getLinkAttribute(): string
     {
+        // === Priority 1: Agar Page se link hai (Best Case) ===
+        // Agar admin ne menu ko Page Builder ke 'Page' se joda hai,
+        // toh hamesha ussi ka route istemal karo. Yeh sabse safe hai.
         if ($this->page) {
             return route('page.view', $this->page->slug);
         }
 
-        return $this->url ? url($this->url) : '#';
+        // === Priority 2: Agar Page se link nahi hai, toh 'url' field check karo ===
+        $url = $this->url;
+
+        // Agar URL field khaali hai, toh '#' return karo
+        if (empty($url) || $url === '#') {
+            return '#';
+        }
+
+        // 1. Agar poora URL hai (http/https), toh waisa hi return karo
+        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+            return $url;
+        }
+
+        // 2. Agar manual absolute path hai (jaise /contact), toh use absolute banao
+        if (str_starts_with($url, '/')) {
+            return url($url); // url('/contact') -> http://.../contact
+        }
+
+        // 3. (Aapka Fix) Agar kuch aur hai (jaise 'abc'),
+        // toh maano ki yeh ek page slug hai aur use 'page.view' route se banao.
+        // Yeh aapki relative path wali problem ko 100% fix kar dega.
+        return route('page.view', ['slug' => $url]);
     }
 
     /**

@@ -29,7 +29,7 @@ class MenuController extends Controller
 
             return view('admin.menus.index', compact('menus'));
         } catch (Exception $e) {
-            Log::error('Menu Index Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Error loading menus in index', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->with('error', 'Unable to load menus. Please try again later.');
         }
     }
@@ -46,11 +46,11 @@ class MenuController extends Controller
                 ->get();
 
             $routes = $this->getValidRoutes();
-            $pages = Page::orderBy('title')->get();
+            $pages = Page::where('status', true)->orderBy('title')->get();
 
             return view('admin.menus.create', compact('menus', 'routes', 'pages'));
         } catch (Exception $e) {
-            Log::error('Menu Create View Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Error loading create menu view', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->with('error', 'Failed to load create menu form.');
         }
     }
@@ -65,16 +65,20 @@ class MenuController extends Controller
 
             $menu = Menu::create($validated);
 
-            $this->ensurePageOrRouteExists($menu);
+            if ($validated['create_page'] ?? false) {
+                $this->ensurePageOrRouteExists($menu);
+            }
+
             Cache::forget('menu_tree');
 
             return redirect()
                 ->route('admin.menus.index')
                 ->with('success', 'Menu created successfully!');
         } catch (ValidationException $e) {
+            Log::error('Validation error in store menu', ['errors' => $e->errors()]);
             return back()->withErrors($e->errors())->withInput();
         } catch (Exception $e) {
-            Log::error('Menu Store Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Error storing new menu', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->withInput()->with('error', 'Failed to create menu.');
         }
     }
@@ -92,11 +96,11 @@ class MenuController extends Controller
                 ->get();
 
             $routes = $this->getValidRoutes();
-            $pages = Page::orderBy('title')->get();
+            $pages = Page::where('status', true)->orderBy('title')->get();
 
             return view('admin.menus.edit', compact('menu', 'menus', 'routes', 'pages'));
         } catch (Exception $e) {
-            Log::error('Menu Edit Error: ' . $e->getMessage(), ['menu_id' => $menu->id]);
+            Log::error('Error loading edit menu view', ['menu_id' => $menu->id, 'exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->with('error', 'Unable to load edit form.');
         }
     }
@@ -111,16 +115,20 @@ class MenuController extends Controller
 
             $menu->update($validated);
 
-            $this->ensurePageOrRouteExists($menu);
+            if ($validated['create_page'] ?? false) {
+                $this->ensurePageOrRouteExists($menu);
+            }
+
             Cache::forget('menu_tree');
 
             return redirect()
                 ->route('admin.menus.index')
                 ->with('success', 'Menu updated successfully!');
         } catch (ValidationException $e) {
+            Log::error('Validation error in update menu', ['menu_id' => $menu->id, 'errors' => $e->errors()]);
             return back()->withErrors($e->errors())->withInput();
         } catch (Exception $e) {
-            Log::error("Menu Update Error: {$e->getMessage()}", ['menu_id' => $menu->id]);
+            Log::error('Error updating menu', ['menu_id' => $menu->id, 'exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->withInput()->with('error', 'Failed to update menu.');
         }
     }
@@ -138,7 +146,7 @@ class MenuController extends Controller
                 ->route('admin.menus.index')
                 ->with('success', 'Menu deleted successfully!');
         } catch (Exception $e) {
-            Log::error("Menu Delete Error: {$e->getMessage()}", ['menu_id' => $menu->id]);
+            Log::error('Error deleting menu', ['menu_id' => $menu->id, 'exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return back()->with('error', 'Failed to delete menu.');
         }
     }
@@ -146,20 +154,26 @@ class MenuController extends Controller
     /**
      * Toggle menu active status (AJAX).
      */
+    /**
+     * Toggle menu active status (AJAX).
+     */
     public function toggleStatus(Request $request, Menu $menu)
     {
         try {
             $menu->update(['status' => $request->boolean('status')]);
+
+            Cache::forget('menu_tree'); // <-- YEH LINE ADD KAREIN
+
             return response()->json(['success' => true, 'status' => $menu->status]);
         } catch (Exception $e) {
-            Log::error('Menu Toggle Error: ' . $e->getMessage(), ['menu_id' => $menu->id]);
+            Log::error('Error toggling menu status', ['menu_id' => $menu->id, 'exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json(['success' => false, 'message' => 'Failed to update status.']);
         }
     }
 
     /**
      * ======================================
-     *           HELPER METHODS
+     * HELPER METHODS
      * ======================================
      */
 
@@ -168,13 +182,24 @@ class MenuController extends Controller
      */
     private function validateMenu(Request $request, $menuId = null): array
     {
-        return $request->validate([
-            'title'     => 'required|string|max:255',
-            'url'       => 'nullable|string|max:255',
-            'parent_id' => 'nullable|exists:menus,id|not_in:' . $menuId,
-            'order'     => 'nullable|integer|min:0',
-            'status'    => 'nullable|boolean',
-        ]);
+        try {
+            $request->merge([
+                'status' => $request->boolean('status'),
+                'create_page' => $request->boolean('create_page'),
+            ]);
+
+            return $request->validate([
+                'title'     => 'required|string|max:255',
+                'url'       => 'nullable|string|max:255',
+                'parent_id' => 'nullable|exists:menus,id|not_in:' . $menuId,
+                'order'     => 'nullable|integer|min:0',
+                'status'    => 'nullable|boolean',
+                'create_page' => 'nullable|boolean',
+            ]);
+        } catch (Exception $e) {
+            Log::error('Validation error in validateMenu', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            throw $e; // Re-throw exception for the caller to handle
+        }
     }
 
     /**
@@ -182,14 +207,19 @@ class MenuController extends Controller
      */
     private function getValidRoutes()
     {
-        return collect(Route::getRoutes())
-            ->map(fn($route) => [
-                'name'       => $route->getName(),
-                'uri'        => $route->uri(),
-                'parameters' => $route->parameterNames(),
-            ])
-            ->filter(fn($r) => !empty($r['name']) && empty($r['parameters']))
-            ->values();
+        try {
+            return collect(Route::getRoutes())
+                ->map(fn($route) => [
+                    'name'       => $route->getName(),
+                    'uri'        => $route->uri(),
+                    'parameters' => $route->parameterNames(),
+                ])
+                ->filter(fn($r) => !empty($r['name']) && empty($r['parameters']))
+                ->values();
+        } catch (Exception $e) {
+            Log::error('Error retrieving valid routes', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return []; // Return empty array if routes cannot be fetched
+        }
     }
 
     /**
@@ -198,35 +228,39 @@ class MenuController extends Controller
      */
     private function ensurePageOrRouteExists(Menu $menu): void
     {
-        if (empty($menu->url)) {
-            return;
-        }
-
-        $slug = trim($menu->url, '/');
-        $routeExists = collect(Route::getRoutes())
-            ->contains(fn($route) => $route->uri() === $slug);
-
-        $page = Page::withTrashed()->where('slug', $slug)->first();
-
-        if (!$routeExists) {
-            if ($page) {
-                $page->update(['title' => $menu->title]);
-
-                if ($page->trashed()) {
-                    $page->restore();
-                }
-
-                if (!$page->menu_id) {
-                    $page->update(['menu_id' => $menu->id]);
-                }
-            } else {
-                Page::create([
-                    'slug'     => $slug,
-                    'title'    => $menu->title,
-                    'content'  => '',
-                    'menu_id'  => $menu->id,
-                ]);
+        try {
+            if (empty($menu->url)) {
+                return;
             }
+
+            $slug = trim($menu->url, '/');
+            $routeExists = collect(Route::getRoutes())
+                ->contains(fn($route) => $route->uri() === $slug);
+
+            $page = Page::withTrashed()->where('slug', $slug)->first();
+
+            if (!$routeExists) {
+                if ($page) {
+                    $page->update(['title' => $menu->title]);
+
+                    if ($page->trashed()) {
+                        $page->restore();
+                    }
+
+                    if (!$page->menu_id) {
+                        $page->update(['menu_id' => $menu->id]);
+                    }
+                } else {
+                    Page::create([
+                        'slug'    => $slug,
+                        'title'   => $menu->title,
+                        'content' => '',
+                        'menu_id' => $menu->id,
+                    ]);
+                }
+            }
+        } catch (Exception $e) {
+            Log::error('Error ensuring page or route exists', ['menu_id' => $menu->id, 'exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
         }
     }
 
@@ -236,15 +270,19 @@ class MenuController extends Controller
      */
     private function recursiveDelete(Menu $menu): void
     {
-        foreach ($menu->children as $child) {
-            $this->recursiveDelete($child);
-        }
+        try {
+            foreach ($menu->children as $child) {
+                $this->recursiveDelete($child);
+            }
 
-        if ($menu->page) {
-            $menu->page->update(['menu_id' => null]);
-            $menu->page->delete(); // soft delete
-        }
+            if ($menu->page) {
+                $menu->page->update(['menu_id' => null]);
+                $menu->page->delete(); // soft delete
+            }
 
-        $menu->delete();
+            $menu->delete();
+        } catch (Exception $e) {
+            Log::error('Error during recursive delete', ['menu_id' => $menu->id, 'exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+        }
     }
 }

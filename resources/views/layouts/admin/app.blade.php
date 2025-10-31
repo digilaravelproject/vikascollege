@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin Panel') - {{ setting('college_name') }}</title>
     <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
     {{-- Tailwind CDN for rapid prototyping. Replace with Vite-built assets in production. --}}
     <script src="https://cdn.tailwindcss.com"></script>

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB; // Import DB facade
 use FFMpeg\FFMpeg;
 use FFMpeg\Coordinate\Dimension;
 use FFMpeg\Format\Video\X264;
@@ -41,52 +42,86 @@ class WebsiteSettingController extends Controller
             'banner_button_link' => 'nullable|url',
             'college_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
             'favicon' => 'nullable|image|mimes:jpg,jpeg,png,ico,webp|max:1024',
+            'banner_media' => 'nullable|array', // Validate as array
             'banner_media.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200', // 50MB
         ]);
 
-        // Save general settings
-        foreach ($validated as $key => $value) {
-            if (!in_array($key, ['college_logo', 'favicon', 'banner_media'])) {
-                Setting::set($key, $value);
+        DB::beginTransaction();
+        try {
+            // Save general settings
+            foreach ($validated as $key => $value) {
+                if (!in_array($key, ['college_logo', 'favicon', 'banner_media'])) {
+                    Setting::set($key, $value);
+                }
             }
-        }
 
-        // Upload logo
-        if ($request->hasFile('college_logo')) {
-            $path = $request->file('college_logo')->store('logos', 'public');
-            Setting::set('college_logo', $path);
-        }
+            // Upload logo
+            if ($request->hasFile('college_logo')) {
+                // Delete old logo if it exists
+                if ($oldLogo = Setting::get('college_logo')) {
+                    Storage::disk('public')->delete($oldLogo);
+                }
+                $path = $request->file('college_logo')->store('logos', 'public');
+                Setting::set('college_logo', $path);
+            }
 
-        // Upload favicon
-        if ($request->hasFile('favicon')) {
-            $path = $request->file('favicon')->store('favicons', 'public');
-            Setting::set('favicon', $path);
-        }
+            // Upload favicon
+            if ($request->hasFile('favicon')) {
+                // Delete old favicon if it exists
+                if ($oldFavicon = Setting::get('favicon')) {
+                    Storage::disk('public')->delete($oldFavicon);
+                }
+                $path = $request->file('favicon')->store('favicons', 'public');
+                Setting::set('favicon', $path);
+            }
 
-        // Upload banner media
-        if ($request->hasFile('banner_media')) {
-            $this->handleBannerMedia($request->file('banner_media'));
-        }
+            // Upload banner media
+            if ($request->hasFile('banner_media')) {
+                $this->handleBannerMedia($request->file('banner_media'));
+            }
 
-        return back()->with('success', 'Website settings updated successfully!');
+            DB::commit();
+            return back()->with('success', 'Website settings updated successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Failed to update settings: " . $e->getMessage());
+            return back()->with('error', 'Failed to update settings. Please check logs. ' . $e->getMessage());
+        }
     }
 
     /**
      * Handle multiple banner files (images/videos)
+     * This will DELETE all old media first.
      */
     private function handleBannerMedia(array $files)
     {
+        // 1. Delete all old banner media
+        $oldMedia = Setting::where('key', 'like', 'banner_media_%')->get();
+        foreach ($oldMedia as $item) {
+            try {
+                $media = json_decode($item->value, true);
+                if (isset($media['path'])) {
+                    Storage::disk('public')->delete($media['path']);
+                }
+                $item->delete();
+            } catch (\Exception $e) {
+                Log::error("Failed to delete old banner media: " . $item->key . " - " . $e->getMessage());
+            }
+        }
+
+        // 2. Upload new media
         foreach ($files as $index => $file) {
             try {
                 $mime = $file->getMimeType();
+                $key = "banner_media_{$index}";
 
                 if (str_starts_with($mime, 'image/')) {
-                    $this->compressImage($file, $index);
+                    $this->compressImage($file, $key);
                 } elseif (str_starts_with($mime, 'video/')) {
-                    $this->compressVideo($file, $index);
+                    $this->compressVideo($file, $key);
                 }
             } catch (\Exception $e) {
-                Log::error("Banner media #{$index} failed: " . $e->getMessage());
+                Log::error("Banner media #{$index} failed to process: " . $e->getMessage());
             }
         }
     }
@@ -94,21 +129,30 @@ class WebsiteSettingController extends Controller
     /**
      * Compress and save image
      */
-    private function compressImage($file, $index)
+    private function compressImage($file, $key)
     {
-        $path = 'banners/img_' . uniqid() . '.webp';
-        $fullPath = Storage::path('public/' . $path);
+        $path = 'banners/' . uniqid('img_') . '.webp';
+
+        // Use Storage::disk('public') to get the full path for optimization
+        $fullPath = Storage::disk('public')->path($path);
+
+        // Ensure directory exists
+        Storage::disk('public')->makeDirectory(dirname($path));
 
         // Save original as WebP
         file_put_contents($fullPath, file_get_contents($file->getRealPath()));
 
         // Optimize
-        $optimizerChain = OptimizerChainFactory::create();
-        $optimizerChain->optimize($fullPath);
+        try {
+            $optimizerChain = OptimizerChainFactory::create();
+            $optimizerChain->optimize($fullPath);
+        } catch (\Exception $e) {
+            Log::warning("Could not optimize image {$path}. Using unoptimized version. Error: " . $e->getMessage());
+        }
 
-        Setting::set("banner_media_{$index}", json_encode([
+        Setting::set($key, json_encode([
             'type' => 'image',
-            'path' => $path,
+            'path' => $path, // Save the relative public path
         ]));
 
         Log::info("Image banner saved: {$path}");
@@ -117,80 +161,134 @@ class WebsiteSettingController extends Controller
     /**
      * Compress and save video
      */
-    private function compressVideo($file, $index)
+    private function compressVideo($file, $key)
     {
-        // Generate unique filename
-        $filename = 'video_' . uniqid() . '.mp4';
-
-        // Save uploaded file temporarily in storage/app/public/temp
-        $tempPath = $file->storeAs('public/temp', uniqid() . '.' . $file->getClientOriginalExtension());
+        // Store temp file in private 'storage/app/temp'
+        $tempPath = $file->store('temp');
         $fullTempPath = Storage::path($tempPath);
 
-        // Final compressed path: storage/app/public/banners/video_xxx.mp4
-        $compressedPath = 'public/banners/' . $filename;
-        $fullCompressedPath = Storage::path($compressedPath);
+        $filename = 'video_' . uniqid() . '.mp4';
+        // Final relative path in 'storage/app/public/banners'
+        $finalRelativePath = 'banners/' . $filename;
+        // Final absolute path for FFMpeg to write to
+        $fullCompressedPath = Storage::disk('public')->path($finalRelativePath);
 
-        // Detect OS for FFMpeg binaries
-        $ffmpegPath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
-            ? 'C:\\ffmpeg\\bin\\ffmpeg.exe'
-            : '/usr/bin/ffmpeg';
+        // Ensure directory exists
+        Storage::disk('public')->makeDirectory(dirname($finalRelativePath));
 
-        $ffprobePath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
-            ? 'C:\\ffmpeg\\bin\\ffprobe.exe'
-            : '/usr/bin/ffprobe';
+        try {
+            // Detect OS for FFMpeg binaries (Update these paths if necessary)
+            $ffmpegPath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
+                ? 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+                : '/usr/bin/ffmpeg'; // Common Linux path
 
-        // Create FFMpeg instance
-        $ffmpeg = FFMpeg::create([
-            'ffmpeg.binaries'  => $ffmpegPath,
-            'ffprobe.binaries' => $ffprobePath,
-            'timeout'          => 3600,
-            'ffmpeg.threads'   => 4,
-        ]);
+            $ffprobePath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
+                ? 'C:\\ffmpeg\\bin\\ffprobe.exe'
+                : '/usr/bin/ffprobe'; // Common Linux path
 
-        /** @var \FFMpeg\Media\Video $video */
-        $video = $ffmpeg->open($fullTempPath);
+            // Check if binaries exist
+            if (!file_exists($ffmpegPath) || !file_exists($ffprobePath)) {
+                throw new \Exception("FFMpeg binaries not found at: $ffmpegPath, $ffprobePath");
+            }
 
-        // Resize to 720p (compress resolution)
-        $video->filters()->resize(
-            new Dimension(1280, 720),
-            ResizeFilter::RESIZEMODE_FIT,
-            true
-        );
+            // Create FFMpeg instance
+            $ffmpeg = FFMpeg::create([
+                'ffmpeg.binaries'  => $ffmpegPath,
+                'ffprobe.binaries' => $ffprobePath,
+                'timeout'          => 3600,
+                'ffmpeg.threads'   => 4,
+            ]);
 
-        // Use H.264 codec (MP4 format) and reduce bitrate
-        $format = new X264('aac', 'libx264');
-        $format->setKiloBitrate(1500); // target bitrate ~1.5Mbps (compressed)
+            /** @var \FFMpeg\Media\Video $video */
+            $video = $ffmpeg->open($fullTempPath);
 
-        // Save compressed video
-        $video->save($format, $fullCompressedPath);
+            // Resize to 720p (compress resolution)
+            $video->filters()->resize(
+                new Dimension(1280, 720),
+                ResizeFilter::RESIZEMODE_FIT,
+                true
+            );
 
-        // Delete temporary file
-        Storage::delete($tempPath);
+            $format = new X264('aac', 'libx264');
+            $format->setKiloBitrate(1500);
 
-        // Store final setting (public path)
-        Setting::set("banner_media_{$index}", json_encode([
-            'type' => 'video',
-            'path' => str_replace('public/', '', $compressedPath), // remove 'public/' for URL
-            'original_name' => $file->getClientOriginalName(),
-            'compressed_name' => $filename,
-        ]));
+            // Save compressed video to public disk
+            $video->save($format, $fullCompressedPath);
 
-        Log::info("✅ Video compressed and saved: {$compressedPath}");
+            // Store final setting (public relative path)
+            Setting::set($key, json_encode([
+                'type' => 'video',
+                'path' => $finalRelativePath, // Save 'banners/video_xxx.mp4'
+                'original_name' => $file->getClientOriginalName(),
+            ]));
+
+            Log::info("✅ Video compressed and saved: {$finalRelativePath}");
+        } catch (\Exception $e) {
+            Log::error("❌ FFMpeg compression failed: " . $e->getMessage());
+            // Re-throw exception to be caught by handleBannerMedia
+            throw $e;
+        } finally {
+            // ALWAYS delete temporary file
+            if (Storage::exists($tempPath)) {
+                Storage::delete($tempPath);
+            }
+        }
     }
-
 
     /**
      * Get all banner media from database
      */
     private function getBannerMedia()
     {
+        // MODIFIED: Return both key and value
         $media = [];
-        for ($i = 0; $i < 10; $i++) { // Adjust max media count if needed
-            $item = Setting::get("banner_media_{$i}");
-            if ($item) {
-                $media[] = (object)['value' => $item];
-            }
+        // This query is more efficient
+        $settings = Setting::where('key', 'like', 'banner_media_%')->orderBy('key')->get();
+
+        foreach ($settings as $item) {
+            $media[] = (object)[
+                'key' => $item->key,
+                'value' => $item->value
+            ];
         }
         return $media;
+    }
+
+    /**
+     * ADDED: Delete a specific banner media item
+     */
+    public function deleteBannerMedia(Request $request)
+    {
+        $validated = $request->validate([
+            'key' => 'required|string|starts_with:banner_media_'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $key = $validated['key'];
+            $setting = Setting::where('key', $key)->first();
+
+            if ($setting) {
+                $media = json_decode($setting->value, true);
+
+                // Delete file from public storage
+                if (isset($media['path'])) {
+                    Storage::disk('public')->delete($media['path']);
+                }
+
+                // Delete setting from database
+                $setting->delete();
+
+                DB::commit();
+                return response()->json(['success' => true, 'message' => 'Media deleted successfully.']);
+            }
+
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Media not found.'], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Failed to delete media {$request->key}: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server error, could not delete media.'], 500);
+        }
     }
 }

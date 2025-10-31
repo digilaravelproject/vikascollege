@@ -31,6 +31,7 @@ class Page extends Model
         'image',
         'pdf',
         'menu_id',
+        'status',
     ];
 
     protected $casts = [

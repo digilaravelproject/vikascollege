@@ -143,6 +143,57 @@ class PageBuilderController extends Controller
         }
     }
 
+
+    /**
+     * ADDED: Toggle the status of the specified page.
+     *
+     * @param \App\Models\Page $page
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function toggleStatus(Page $page): RedirectResponse
+    {
+        try {
+            // Step 1: Toggle the page status (true to false, false to true)
+            $page->update(['status' => !$page->status]);
+
+            // Step 2: Check if the page has a related menu
+            if ($page->menu) {
+                // If the page has a related menu, also toggle the status of the menu
+                $page->menu->update(['status' => !$page->menu->status]);
+            }
+
+            // Step 3: Determine success message based on the page status
+            $message = $page->status ? 'Page enabled successfully!' : 'Page disabled successfully!';
+
+            // If the menu was also updated, add a note about that
+            if ($page->menu && $page->menu->status === false) {
+                $message .= ' Menu item also disabled.';
+            }
+
+            return back()->with('success', $message);
+        } catch (Exception $e) {
+            // Log any errors that occur during the status toggle
+            Log::error('PageBuilder Toggle Status Error: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update page status.');
+        }
+    }
+
+    public function toggleStatus_old(Page $page): RedirectResponse
+    {
+        try {
+            // Page ki current status ko ulta kar dein (true to false, false to true)
+            $page->update(['status' => !$page->status]);
+
+            // Status ke hisaab se message set karein
+            $message = $page->status ? 'Page enabled successfully!' : 'Page disabled successfully!';
+
+            return back()->with('success', $message);
+        } catch (Exception $e) {
+            Log::error('PageBuilder Toggle Status Error: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update page status.');
+        }
+    }
+
     /**
      * Show the page builder interface for the specified page.
      *
@@ -317,6 +368,4 @@ class PageBuilderController extends Controller
             // Warning instead of error, as deletion failure shouldn't stop CRUD operations
         }
     }
-
-    // NOTE: Unused/Duplicate methods (uploadMedia_old, uploadMedia_old_2) have been removed for cleanliness.
 }
