@@ -38,7 +38,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
 
 
 
-    Route::prefix('pagebuilder_old')->name('pagebuilder.')->group(function () {
+    Route::prefix('pagebuilder_old')->name('pagebuilder_old.')->group(function () {
         Route::get('/', [PageBuilderController::class, 'index'])->name('index');
         Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
         Route::post('/store', [PageBuilderController::class, 'store'])->name('store');

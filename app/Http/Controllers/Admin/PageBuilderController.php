@@ -15,6 +15,11 @@ use Illuminate\Support\Str;
 
 class PageBuilderController extends Controller
 {
+    /**
+     * Display a listing of the pages.
+     *
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function index(): ViewView|RedirectResponse
     {
         try {
@@ -26,6 +31,11 @@ class PageBuilderController extends Controller
         }
     }
 
+    /**
+     * Show the form for creating a new page.
+     *
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function create(): ViewView|RedirectResponse
     {
         try {
@@ -36,6 +46,12 @@ class PageBuilderController extends Controller
         }
     }
 
+    /**
+     * Store a newly created page in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -47,7 +63,12 @@ class PageBuilderController extends Controller
 
         try {
             $validated['slug'] = $validated['slug'] ?: Str::slug($validated['title']);
-            $validated['image'] = $this->handleFileUpload($request, 'image', 'uploads/pages');
+
+            if ($request->hasFile('image')) {
+                // Re-using the private helper for simplicity and cleaner store logic
+                $validated['image'] = $this->storeRegularFile($request->file('image'), 'uploads/pages');
+            }
+
             Page::create($validated);
             return redirect()->route('admin.pagebuilder.index')->with('success', 'Page created successfully!');
         } catch (Exception $e) {
@@ -56,6 +77,12 @@ class PageBuilderController extends Controller
         }
     }
 
+    /**
+     * Show the form for editing the specified page.
+     *
+     * @param \App\Models\Page $page
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function edit(Page $page): ViewView|RedirectResponse
     {
         try {
@@ -65,11 +92,12 @@ class PageBuilderController extends Controller
             return back()->with('error', 'Failed to load edit form.');
         }
     }
+
     /**
      * Update a specific page in storage.
      *
      * @param \Illuminate\Http\Request $request
-     * @param Page $page
+     * @param \App\Models\Page $page
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Page $page): RedirectResponse
@@ -84,7 +112,8 @@ class PageBuilderController extends Controller
         try {
             if ($request->hasFile('image')) {
                 $this->deleteOldFile($page->image);
-                $validated['image'] = $this->handleFileUpload($request, 'image', 'uploads/pages');
+                // Re-using the private helper for file storage
+                $validated['image'] = $this->storeRegularFile($request->file('image'), 'uploads/pages');
             }
 
             $page->update($validated);
@@ -95,9 +124,17 @@ class PageBuilderController extends Controller
         }
     }
 
+    /**
+     * Remove the specified page from storage.
+     *
+     * @param \App\Models\Page $page
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroy(Page $page): RedirectResponse
     {
         try {
+            // Delete associated image before deleting the page record
+            $this->deleteOldFile($page->image);
             $page->delete();
             return back()->with('success', 'Page deleted successfully!');
         } catch (Exception $e) {
@@ -106,6 +143,12 @@ class PageBuilderController extends Controller
         }
     }
 
+    /**
+     * Show the page builder interface for the specified page.
+     *
+     * @param \App\Models\Page $page
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function builder(Page $page): ViewView|RedirectResponse
     {
         try {
@@ -116,6 +159,13 @@ class PageBuilderController extends Controller
         }
     }
 
+    /**
+     * Save the page builder content (JSON) to the specified page.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Page $page
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     */
     public function saveBuilder(Request $request, Page $page): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
@@ -131,10 +181,18 @@ class PageBuilderController extends Controller
         }
     }
 
-    /** ✅ Media upload via AJAX */
 
+    /**
+     * Handle AJAX media upload for the page builder.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Page $page
+     * @return \Illuminate\Http\JsonResponse
+     */
+    /** ✅ Media upload via AJAX */
     public function uploadMedia(Request $request, Page $page): JsonResponse
     {
+        // 1. Validation (Same as before)
         $validated = $request->validate([
             'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:51200',
             'base_path' => 'nullable|string|in:storage,wp-content',
@@ -145,7 +203,7 @@ class PageBuilderController extends Controller
             $file = $request->file('file');
             $mime = $file->getMimeType();
 
-            // ✅ Decide subfolder based on file type
+            // 2. Determine Subfolder (Unchanged)
             $subFolder = match (true) {
                 str_starts_with($mime, 'image/') => 'uploads/images',
                 str_starts_with($mime, 'video/') => 'uploads/videos',
@@ -157,33 +215,60 @@ class PageBuilderController extends Controller
                 return response()->json(['success' => false, 'message' => 'Unsupported file type.'], 422);
             }
 
-            // ✅ Use base path or default
+            // ------------------ FILENAME LOGIC FIX START (Raw Custom Name Priority) ------------------
+            $ext = $file->getClientOriginalExtension();
+            $rawPathAndName = trim($validated['custom_name'] ?? '');
+            $finalName = '';
+
+            // CRITICAL FIX: Custom name ko pura filename manenge, lekin extension add karenge.
+            if ($rawPathAndName) {
+                // Filename part nikalna
+                $filenamePart = pathinfo($rawPathAndName, PATHINFO_FILENAME);
+
+                // Filename ke path component ko directory adjustment ke liye nikalna
+                $customPath = trim(pathinfo($rawPathAndName, PATHINFO_DIRNAME), './');
+
+                // Filename ko ussi roop mein rakhenge, lekin extension confirm karenge
+                $finalName = $filenamePart . '.' . $ext;
+
+                // IMPORTANT: Agar custom path diya gaya hai, to use $subFolder mein merge karna
+                if ($customPath && $customPath !== '/') {
+                    $subFolder = trim($subFolder . '/' . $customPath, '/');
+                }
+            } else {
+                // Agar custom_name nahi diya, to original name use karo
+                $finalName = $file->getClientOriginalName();
+            }
+            // ------------------ FILENAME LOGIC FIX END ------------------
+
             $basePath = $validated['base_path'] ?? 'wp-content';
             $directory = "{$basePath}/{$subFolder}";
 
-            // ✅ Use manual name if given
-            $ext = $file->getClientOriginalExtension();
-            $rawName = trim($validated['custom_name'] ?? '');
-            $finalName = $rawName
-                ? Str::slug(pathinfo($rawName, PATHINFO_FILENAME)) . '.' . $ext
-                : $file->getClientOriginalName();
-
-            // ✅ Move file according to base path
+            // 4. Store File
             if ($basePath === 'wp-content') {
                 $targetPath = public_path($directory);
-                if (!is_dir($targetPath))
-                    mkdir($targetPath, 0775, true);
+
+                if (!is_dir($targetPath)) {
+                    if (!mkdir($targetPath, 0775, true)) {
+                        throw new Exception("Failed to create directory: {$targetPath}");
+                    }
+                }
+
                 $file->move($targetPath, $finalName);
                 $url = asset("{$directory}/{$finalName}");
+                $finalDirectory = $directory;
             } else {
+                // Laravel Storage method (storage/app/public)
                 $path = $file->storeAs($subFolder, $finalName, 'public');
                 $url = Storage::url($path);
+                $finalDirectory = "storage/{$subFolder}";
             }
 
+            // 5. Return Success Response
             return response()->json([
                 'success' => true,
                 'url' => $url,
-                'path' => "{$directory}/{$finalName}",
+                'path' => "{$finalDirectory}/{$finalName}",
                 'filename' => $finalName,
             ]);
         } catch (Exception $e) {
@@ -191,63 +276,47 @@ class PageBuilderController extends Controller
             return response()->json(['success' => false, 'message' => 'Upload failed.'], 500);
         }
     }
-    public function uploadMedia_old(Request $request, Page $page): JsonResponse
+
+
+    /**
+     * Stores a regular file (e.g., image upload from CRUD forms) using Laravel Storage.
+     * Replaces the redundant handleFileUpload logic in store/update.
+     *
+     * @param \Illuminate\Http\UploadedFile $file
+     * @param string $path
+     * @return string|null The stored file path relative to the 'public' disk.
+     */
+    private function storeRegularFile($file, string $path): ?string
     {
-        $validated = $request->validate([
-            'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:51200',
-        ]);
-
         try {
-            $file = $request->file('file');
-            $mime = $file->getMimeType();
-
-            if (str_starts_with($mime, 'image/'))
-                $dir = 'uploads/pages';
-            elseif (str_starts_with($mime, 'video/'))
-                $dir = 'uploads/videos';
-            elseif ($mime === 'application/pdf')
-                $dir = 'uploads/pdfs';
-            else
-                return response()->json(['success' => false, 'message' => 'Unsupported file type.'], 422);
-
-            $path = $file->store($dir, 'public');
-            $url = Storage::url($path);
-
-            return response()->json(['success' => true, 'url' => $url, 'path' => $path]);
-        } catch (Exception $e) {
-            Log::error('Upload Media Error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Upload failed.'], 500);
-        }
-    }
-
-    /** ✅ Optional: delete old upload (AJAX) */
-    public function deleteUploadedMedia(Request $request): JsonResponse
-    {
-        $request->validate(['path' => 'required|string']);
-        try {
-            if (Storage::disk('public')->exists($request->path)) {
-                Storage::disk('public')->delete($request->path);
-                return response()->json(['success' => true]);
+            if ($file) {
+                // Generates a unique filename and stores it.
+                return $file->store($path, 'public');
             }
-            return response()->json(['success' => false, 'message' => 'File not found.'], 404);
+            return null;
         } catch (Exception $e) {
-            Log::error('Delete Uploaded Media Error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Delete failed.'], 500);
+            Log::error('Store Regular File Error: ' . $e->getMessage());
+            return null;
         }
     }
 
-    private function handleFileUpload(Request $request, string $field, string $path): ?string
-    {
-        if ($request->hasFile($field)) {
-            return $request->file($field)->store($path, 'public');
-        }
-        return null;
-    }
-
+    /**
+     * Deletes an old file from the storage/app/public disk.
+     *
+     * @param string|null $filePath
+     * @return void
+     */
     private function deleteOldFile(?string $filePath): void
     {
-        if ($filePath && Storage::disk('public')->exists($filePath)) {
-            Storage::disk('public')->delete($filePath);
+        try {
+            if ($filePath && Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
+            }
+        } catch (Exception $e) {
+            Log::warning('Delete Old File Warning: ' . $e->getMessage());
+            // Warning instead of error, as deletion failure shouldn't stop CRUD operations
         }
     }
+
+    // NOTE: Unused/Duplicate methods (uploadMedia_old, uploadMedia_old_2) have been removed for cleanliness.
 }
