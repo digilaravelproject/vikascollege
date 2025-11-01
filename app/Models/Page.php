@@ -35,7 +35,7 @@ class Page extends Model
     ];
 
     protected $casts = [
-        'content' => 'json',
+        // 'content' => 'json',
         'status' => 'boolean',
     ];
 

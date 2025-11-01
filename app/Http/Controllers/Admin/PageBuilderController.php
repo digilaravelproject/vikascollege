@@ -253,12 +253,13 @@ class PageBuilderController extends Controller
         try {
             $file = $request->file('file');
             $mime = $file->getMimeType();
-
+            $customName = $validated['custom_name'] ?? null;
             // 2. Determine Subfolder (Unchanged)
             $subFolder = match (true) {
                 str_starts_with($mime, 'image/') => 'uploads/images',
                 str_starts_with($mime, 'video/') => 'uploads/videos',
-                $mime === 'application/pdf' => 'uploads/pdfs',
+                $mime === 'application/pdf' && $customName => 'uploads', // if custom_name present
+                $mime === 'application/pdf' => 'uploads/pdfs',           // otherwise default
                 default => null,
             };
 
