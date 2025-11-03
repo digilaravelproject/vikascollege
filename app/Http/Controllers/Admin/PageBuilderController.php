@@ -222,7 +222,7 @@ class PageBuilderController extends Controller
         $validated = $request->validate([
             'content' => 'required|json',
         ]);
-
+        // \Log::info('content is ' . $request->content);
         try {
             $page->update(['content' => $validated['content']]);
             return back()->with('success', 'Page saved successfully!');

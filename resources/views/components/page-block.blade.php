@@ -59,10 +59,9 @@
         </section>
         @break
 
-    {{-- ==================== HEADING, TEXT, and TABLE (Original) ==================== --}}
+    {{-- ==================== HEADING, TEXT (Original) ==================== --}}
     @case('heading')
     @case('text')
-    @case('table')
         <div
             class="mb-4 prose-sm prose prose-gray max-w-none"
             style="{{ $style }}"
@@ -78,7 +77,7 @@
                 <img
                     src="{{ $block['src'] }}"
                     alt="{{ $block['alt'] ?? 'Image' }}"
-                    style="max-width: 100%; height: auto;"
+                    style="max-width: 100%; height: auto; {{ $style }}"
                     class="object-contain mx-auto rounded-lg shadow-md"
                     loading="lazy"
                 />
@@ -112,10 +111,12 @@
                     class="w-full h-[700px] border rounded-lg shadow-inner"
                     frameborder="0"
                     loading="lazy"
+                    no-referrer="true" download="false"
                 ></iframe>
             </div>
         @endif
         @break
+
 
     {{-- ==================== NEW: EMBED (YouTube, Vimeo, etc.) ==================== --}}
     @case('embed')
@@ -130,7 +131,8 @@
             <div class="my-6 aspect-w-16 aspect-h-9">
                 <iframe
                     src="{{ $embedUrl }}"
-                    class="w-full h-full rounded-lg shadow-md"
+                    class="w-full h-[500px] rounded-lg shadow-md"
+                    style="height: {{ $block['height'] ?? '315px' }}; max-width: 100%;"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen
