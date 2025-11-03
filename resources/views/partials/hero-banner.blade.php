@@ -9,16 +9,44 @@
     <div class="relative flex-1 py-2 overflow-hidden text-xs sm:text-sm md:text-[15px] font-medium tracking-wide">
         <div class="marquee">
             <div class="track">
-                <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
-                <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
-                <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
-                <span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>
+                @php
+                    $notifService = app(\App\Services\NotificationService::class);
+                    $marqueeNotifications = $notifService->getActiveForMarquee();
+                @endphp
 
-                <!-- Duplicate for smooth infinite scroll -->
-                <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
-                <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
-                <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
-                <span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>
+                @if (count($marqueeNotifications))
+                    @foreach ($marqueeNotifications as $n)
+                        @php
+                            $icon = $n->icon ?: '🔔';
+                            $title = $n->title;
+                            $href = $n->href;
+                            $btn = $n->button_name ?: 'Click Here';
+                        @endphp
+                        <span>{{ $icon }} {{ $title }} — @if($href)<a href="{{ $href }}" class="marquee-link">{{ $btn }}</a>@endif</span>
+                    @endforeach
+
+                    <!-- Duplicate for smooth infinite scroll -->
+                    @foreach ($marqueeNotifications as $n)
+                        @php
+                            $icon = $n->icon ?: '🔔';
+                            $title = $n->title;
+                            $href = $n->href;
+                            $btn = $n->button_name ?: 'Click Here';
+                        @endphp
+                        <span>{{ $icon }} {{ $title }} — @if($href)<a href="{{ $href }}" class="marquee-link">{{ $btn }}</a>@endif</span>
+                    @endforeach
+                @else
+                    <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
+                    <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
+                    <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
+                    <span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>
+
+                    <!-- Duplicate for smooth infinite scroll -->
+                    <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
+                    <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
+                    <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
+                    <span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>
+                @endif
             </div>
         </div>
     </div>

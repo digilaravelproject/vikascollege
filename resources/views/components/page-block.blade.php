@@ -102,6 +102,80 @@
         @endif
         @break
 
+    {{-- ==================== INTRO (Homepage) ==================== --}}
+    @case('intro')
+        @php
+            $layout = $block['layout'] ?? 'left';
+            $img = $block['image'] ?? '';
+            $heading = $block['heading'] ?? '';
+            $text = $block['text'] ?? '';
+            $btnText = $block['buttonText'] ?? '';
+            $btnHref = $block['buttonHref'] ?? '';
+        @endphp
+        <section class="py-10">
+            <div class="container grid items-center grid-cols-1 gap-8 px-4 mx-auto md:grid-cols-2">
+                @if ($layout === 'right' || $layout === 'top')
+                    <div class="{{ $layout === 'top' ? 'order-1 md:col-span-2' : 'order-2' }}">
+                        @if ($img)
+                            <img src="{{ $img }}" class="w-full rounded-xl shadow-md" alt="">
+                        @endif
+                    </div>
+                @endif
+
+                <div class="order-1">
+                    @if ($heading)
+                        <h2 class="text-2xl font-bold text-gray-900 md:text-3xl">{{ $heading }}</h2>
+                    @endif
+                    @if ($text)
+                        <p class="mt-3 text-gray-600">{{ $text }}</p>
+                    @endif
+                    @if ($btnText && $btnHref)
+                        <a href="{{ $btnHref }}" class="inline-block px-5 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700">{{ $btnText }}</a>
+                    @endif
+                </div>
+
+                @if ($layout === 'left')
+                    <div class="order-2">
+                        @if ($img)
+                            <img src="{{ $img }}" class="w-full rounded-xl shadow-md" alt="">
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </section>
+        @break
+
+    {{-- ==================== LINKS GRID (Homepage) ==================== --}}
+    @case('linkGrid')
+        @php
+            $title = $block['title'] ?? '';
+            $columns = max(2, min(4, (int)($block['columns'] ?? 3)));
+            $items = $block['items'] ?? [];
+            $gridClass = match($columns) { 2 => 'sm:grid-cols-2', 4 => 'sm:grid-cols-2 lg:grid-cols-4', default => 'sm:grid-cols-2 lg:grid-cols-3' };
+        @endphp
+        <section class="py-8">
+            <div class="container px-4 mx-auto">
+                @if ($title)
+                    <h3 class="mb-4 text-xl font-semibold text-gray-900">{{ $title }}</h3>
+                @endif
+                <div class="grid grid-cols-1 gap-4 {{ $gridClass }}">
+                    @foreach ($items as $it)
+                        @php $t = $it['title'] ?? ''; $href = $it['href'] ?? '#'; $isNew = !empty($it['isNew']); @endphp
+                        <a href="{{ $href }}" class="flex items-center justify-between p-4 transition bg-white border rounded-lg shadow-sm hover:shadow">
+                            <span class="text-sm font-medium text-gray-800">{{ $t }}</span>
+                            <span class="flex items-center gap-2">
+                                @if ($isNew)
+                                    <span class="px-2 py-0.5 text-xs font-semibold text-white bg-green-600 rounded-full">NEW</span>
+                                @endif
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+        @break
+
     {{-- ==================== PDF (Original & Working) ==================== --}}
     @case('pdf')
         @if (!empty($block['src']))

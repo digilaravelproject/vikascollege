@@ -117,6 +117,106 @@
                 </div>
             </div>
 
+            {{-- CARD 2.5: CONTACT INFORMATION --}}
+            <div class="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Contact Information</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div class="md:col-span-3">
+                            <label for="address" class="block mb-1.5 text-sm font-medium text-gray-700">Address</label>
+                            <textarea id="address" name="address" rows="2" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('address', $data['address']) }}</textarea>
+                        </div>
+                        <div>
+                            <label for="email" class="block mb-1.5 text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="email" name="email" value="{{ old('email', $data['email']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="phone" class="block mb-1.5 text-sm font-medium text-gray-700">Phone</label>
+                            <input type="text" id="phone" name="phone" value="{{ old('phone', $data['phone']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="map_embed_url" class="block mb-1.5 text-sm font-medium text-gray-700">Google Maps Embed URL</label>
+                            <input type="url" id="map_embed_url" name="map_embed_url" placeholder="https://www.google.com/maps/embed?pb=..." value="{{ old('map_embed_url', $data['map_embed_url']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <p class="mt-1.5 text-xs text-gray-500">Paste the full iframe src URL from Google Maps Embed.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- CARD 2.6: SOCIAL LINKS --}}
+            <div class="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Social Links</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                        <div>
+                            <label for="facebook_url" class="block mb-1.5 text-sm font-medium text-gray-700">Facebook URL</label>
+                            <input type="url" id="facebook_url" name="facebook_url" value="{{ old('facebook_url', $data['facebook_url']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="twitter_url" class="block mb-1.5 text-sm font-medium text-gray-700">Twitter/X URL</label>
+                            <input type="url" id="twitter_url" name="twitter_url" value="{{ old('twitter_url', $data['twitter_url']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="instagram_url" class="block mb-1.5 text-sm font-medium text-gray-700">Instagram URL</label>
+                            <input type="url" id="instagram_url" name="instagram_url" value="{{ old('instagram_url', $data['instagram_url']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="youtube_url" class="block mb-1.5 text-sm font-medium text-gray-700">YouTube URL</label>
+                            <input type="url" id="youtube_url" name="youtube_url" value="{{ old('youtube_url', $data['youtube_url']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="linkedin_url" class="block mb-1.5 text-sm font-medium text-gray-700">LinkedIn URL</label>
+                            <input type="url" id="linkedin_url" name="linkedin_url" value="{{ old('linkedin_url', $data['linkedin_url']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- CARD 2.7: FOOTER CONTENT --}}
+            <div class="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Footer Content</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label for="footer_about" class="block mb-1.5 text-sm font-medium text-gray-700">About Text</label>
+                            <textarea id="footer_about" name="footer_about" rows="3" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Short description shown in the footer">{{ old('footer_about', $data['footer_about']) }}</textarea>
+                        </div>
+                        <div x-data="{ links: {{ Js::from($data['footer_links'] ?? []) }}, add(){ this.links.push({title:'', url:''}) }, remove(i){ this.links.splice(i,1) } }">
+                            <div class="flex items-center justify-between">
+                                <label class="block mb-1.5 text-sm font-medium text-gray-700">Useful Links</label>
+                                <button type="button" @click="add()" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700">Add Link</button>
+                            </div>
+                            <template x-if="links.length === 0">
+                                <div class="p-3 mt-2 text-sm text-gray-500 bg-gray-50 border border-dashed border-gray-200 rounded">No links added yet.</div>
+                            </template>
+                            <div class="mt-3 space-y-3">
+                                <template x-for="(link, index) in links" :key="index">
+                                    <div class="grid items-end grid-cols-1 gap-3 p-3 border border-gray-200 rounded-lg md:grid-cols-12 bg-white">
+                                        <div class="md:col-span-5">
+                                            <label :for="'footer_links_'+index+'_title'" class="block mb-1 text-xs font-medium text-gray-600">Title</label>
+                                            <input type="text" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" :id="'footer_links_'+index+'_title'" :name="`footer_links[${index}][title]`" x-model="link.title">
+                                        </div>
+                                        <div class="md:col-span-6">
+                                            <label :for="'footer_links_'+index+'_url'" class="block mb-1 text-xs font-medium text-gray-600">URL</label>
+                                            <input type="url" class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" :id="'footer_links_'+index+'_url'" :name="`footer_links[${index}][url]`" x-model="link.url" placeholder="https://...">
+                                        </div>
+                                        <div class="flex md:col-span-1 md:justify-end">
+                                            <button type="button" @click="remove(index)" class="px-3 py-2 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded hover:bg-red-100">Remove</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- CARD 3: BANNER MEDIA --}}
             <div class="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
                 <div class="px-6 py-4 border-b border-gray-200">

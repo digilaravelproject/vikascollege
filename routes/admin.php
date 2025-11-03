@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\PageBuilderController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\TrustSectionController;
 use App\Http\Controllers\Admin\WebsiteSettingController;
+use App\Http\Controllers\Admin\HomepageSetupController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +26,10 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::get('/website-settings', [WebsiteSettingController::class, 'index'])->name('website-settings.index');
     Route::post('/website-settings', [WebsiteSettingController::class, 'update'])->name('website-settings.update');
     Route::post('website-settings/delete-media', [WebsiteSettingController::class, 'deleteBannerMedia'])->name('website-settings.delete-media');
+
+    // Homepage Setup
+    Route::get('/homepage-setup', [HomepageSetupController::class, 'index'])->name('homepage.index');
+    Route::post('/homepage-setup/save', [HomepageSetupController::class, 'save'])->name('homepage.save');
     Route::resource('trust', TrustSectionController::class)
         ->except(['show', 'destroy']) // keep index, create, store, edit, update
         ->parameters([
@@ -58,4 +64,10 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
         Route::post('/builder/upload/{page}', [PageBuilderController::class, 'uploadMedia'])->name('builder.upload');
         Route::post('/builder/upload-delete', [PageBuilderController::class, 'deleteUploadedMedia'])->name('builder.upload.delete');
     });
+
+    // Notifications
+    Route::resource('notifications', NotificationController::class)->except(['show'])->names('notifications');
+    Route::post('notifications/{notification}/toggle-status', [NotificationController::class, 'toggleStatus'])->name('notifications.toggle-status');
+    Route::post('notifications/{notification}/toggle-featured', [NotificationController::class, 'toggleFeatured'])->name('notifications.toggle-featured');
+    Route::post('notifications/{notification}/toggle-feature-on-top', [NotificationController::class, 'toggleFeatureOnTop'])->name('notifications.toggle-feature-on-top');
 });

@@ -27,6 +27,18 @@ class WebsiteSettingController extends Controller
             'college_logo' => Setting::get('college_logo'),
             'favicon' => Setting::get('favicon'),
             'banner_media' => $this->getBannerMedia(),
+            // Contact & Social & Footer
+            'address' => Setting::get('address'),
+            'email' => Setting::get('email'),
+            'phone' => Setting::get('phone'),
+            'facebook_url' => Setting::get('facebook_url'),
+            'twitter_url' => Setting::get('twitter_url'),
+            'instagram_url' => Setting::get('instagram_url'),
+            'youtube_url' => Setting::get('youtube_url'),
+            'linkedin_url' => Setting::get('linkedin_url'),
+            'footer_about' => Setting::get('footer_about'),
+            'map_embed_url' => Setting::get('map_embed_url'),
+            'footer_links' => ($tmp = Setting::get('footer_links')) ? json_decode($tmp, true) : [],
         ];
 
         return view('admin.settings.website', compact('data'));
@@ -44,15 +56,34 @@ class WebsiteSettingController extends Controller
             'favicon' => 'nullable|image|mimes:jpg,jpeg,png,ico,webp|max:1024',
             'banner_media' => 'nullable|array', // Validate as array
             'banner_media.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200', // 50MB
+            // Contact & Social & Footer
+            'address' => 'nullable|string|max:500',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'facebook_url' => 'nullable|url|max:255',
+            'twitter_url' => 'nullable|url|max:255',
+            'instagram_url' => 'nullable|url|max:255',
+            'youtube_url' => 'nullable|url|max:255',
+            'linkedin_url' => 'nullable|url|max:255',
+            'footer_about' => 'nullable|string|max:500',
+            'map_embed_url' => 'nullable|string|max:2000',
+            'footer_links' => 'nullable|array',
+            'footer_links.*.title' => 'required_with:footer_links|string|max:80',
+            'footer_links.*.url' => 'required_with:footer_links|url|max:255',
         ]);
 
         DB::beginTransaction();
         try {
             // Save general settings
             foreach ($validated as $key => $value) {
-                if (!in_array($key, ['college_logo', 'favicon', 'banner_media'])) {
-                    Setting::set($key, $value);
+                if (in_array($key, ['college_logo', 'favicon', 'banner_media'])) {
+                    continue;
                 }
+                if ($key === 'footer_links' && is_array($value)) {
+                    Setting::set('footer_links', json_encode(array_values($value))); // reindex
+                    continue;
+                }
+                Setting::set($key, $value);
             }
 
             // Upload logo

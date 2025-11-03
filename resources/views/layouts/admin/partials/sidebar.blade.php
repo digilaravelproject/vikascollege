@@ -35,6 +35,13 @@
                 <i class="w-5 fas fa-fw fa-file-alt"></i>
                 Pages
             </a>
+            <a href="{{ route('admin.homepage.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.homepage*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-home"></i>
+                Homepage Setup
+            </a>
             <a href="{{ route('admin.trust.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                        {{ request()->routeIs('admin.trust*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
@@ -48,6 +55,13 @@
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
                 <i class="w-5 fas fa-fw fa-bars"></i>
                 Menus
+            </a>
+            <a href="{{ route('admin.notifications.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.notifications*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-bell"></i>
+                Notifications
             </a>
         </div>
 
