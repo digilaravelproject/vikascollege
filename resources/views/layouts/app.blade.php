@@ -4,32 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ setting('college_name', config('app.name')) }}</title>
+    <title>@yield('title', setting('college_name', config('app.name')))</title>
     <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/x-icon">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Vite assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- ✅ Styles pushed from child views (like scroll animation CSS) --}}
+    @stack('styles')
 </head>
 
 <body class="flex flex-col min-h-screen bg-gray-50">
 
-    {{-- Top Banner --}}
+    {{-- ✅ Top Banner --}}
     @include('partials.top-banner')
 
-    {{-- Menu --}}
+    {{-- ✅ Menu --}}
     @include('partials.menu')
 
-    {{-- Main Content --}}
+    {{-- ✅ Main Content --}}
     <main class="flex-grow">
         @yield('content')
     </main>
 
+    {{-- ✅ Footer --}}
     @include('partials.footer')
 
-    <script src="//unpkg.com/alpinejs" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.9/cdn.min.js" defer></script>
+    {{-- ✅ Alpine.js (only one version, latest stable) --}}
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
     <style>
-        /* 1. Images/Videos ko drag-and-drop se rokna */
+        /* Prevent dragging of media */
         img,
         video,
         embed,
@@ -42,7 +50,7 @@
             user-select: none;
         }
 
-        /* 2. (ENHANCEMENT) Print karne par page ko blank kar dena */
+        /* Hide content on print */
         @media print {
             body {
                 display: none !important;
@@ -53,61 +61,46 @@
 
     <script>
         (function () {
-            // --- 1. KEYBOARD SHORTCUTS BLOCKER (Ctrl+S, Ctrl+P) ---
-            // Yeh DOMContentLoaded ke bahar hona zaroori hai taaki turant kaam kare
+            // --- 1. Disable Ctrl+S / Ctrl+P shortcuts ---
             document.addEventListener('keydown', function (event) {
-                // 'metaKey' Mac par Command key ke liye hai
                 if (event.ctrlKey || event.metaKey) {
-                    // 's' (83) ya 'p' (80) ko check karo
                     if (event.keyCode === 83 || event.keyCode === 80) {
-                        event.preventDefault(); // Default action (Save/Print) ko roko
-                        // console.warn('Save/Print shortcut disabled.'); // Testing ke liye
+                        event.preventDefault();
                     }
                 }
             });
 
-            // --- Baaki script page load hone ke baad chalegi ---
+            // --- 2. Disable right-click ---
+            document.addEventListener('contextmenu', function (event) {
+                event.preventDefault();
+            });
+
+            // --- 3. Disable video download button ---
             document.addEventListener('DOMContentLoaded', function () {
-
-                // --- 2. PURI WEBSITE PAR RIGHT-CLICK DISABLE KAREIN ---
-                document.addEventListener('contextmenu', function (event) {
-                    event.preventDefault(); // Right-click menu ko roko
-                });
-
-                // --- 3. SABHI VIDEOS SE DOWNLOAD BUTTON HATAYEIN ---
                 const videos = document.querySelectorAll('video');
                 videos.forEach(function (video) {
                     video.setAttribute('controlslist', 'nodownload');
                 });
 
-                // --- 4. SABHI PDFs KO LOCKDOWN KAREIN (MERGED LOGIC) ---
-                // Yeh <embed> aur <iframe> dono ko dhoondhega
+                // --- 4. Lockdown PDFs ---
                 const pdfElements = document.querySelectorAll('embed[src$=".pdf"], iframe[src$=".pdf"]');
-
                 pdfElements.forEach(function (el) {
-
-                    // (A) Toolbar ko hide karne ki koshish (Chrome/Edge ke liye)
-                    // Yeh <embed> aur <iframe> dono par kaam karega
+                    // Hide toolbar (for Chrome/Edge)
                     if (!el.src.includes('#')) {
                         try {
-                            // try...catch block mein daala taaki agar cross-origin error aaye toh script crash na ho
                             el.src = el.src + '#toolbar=0&navpanes=0';
-                        } catch (e) {
-                            // console.error('Could not modify PDF src:', e);
-                        }
+                        } catch (e) { }
                     }
 
-                    // (B) IFRAME-specific lockdown (Sandbox)
-                    // Yeh check karega ki element iframe hai ya nahi
+                    // Sandbox for iframes
                     if (el.tagName.toLowerCase() === 'iframe') {
-                        // Yeh Firefox/Safari ke liye 'download' rokega
                         el.setAttribute('sandbox', 'allow-scripts allow-same-origin');
                     }
                 });
-
             });
-        })(); // Script ko turant execute karne ke liye wrapper
+        })();
     </script>
+
 </body>
 
 </html>

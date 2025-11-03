@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Admin Panel') - {{ setting('college_name') }}</title>
     <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/x-icon">
+
+    {{-- ✅ Bootstrap Icons --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-    {{-- Tailwind CDN for rapid prototyping. Replace with Vite-built assets in production. --}}
+    {{-- ✅ Tailwind CSS (use Vite in production) --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -23,14 +25,14 @@
         }
     </script>
 
-    {{-- Alpine.js for small interactions --}}
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{-- ✅ Alpine.js (lightweight interactions) --}}
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    {{-- Optional: Heroicons (SVG) CDN --}}
+    {{-- ✅ Optional: Font Awesome (icons) --}}
     <link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free/css/all.min.css">
 
     <style>
-        /* tiny tweaks to make cards look crisp */
+        /* --- Basic UI Enhancements --- */
         .card-shadow {
             box-shadow: 0 6px 18px rgba(8, 15, 52, 0.08);
         }
@@ -41,36 +43,43 @@
         }
     </style>
 
+    {{-- ✅ Custom styles from child views --}}
     @stack('styles')
 </head>
 
 <body class="min-h-screen text-gray-800 bg-gray-50" x-data="{ sidebarOpen: false }">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
+        {{-- ✅ Sidebar --}}
         @include('layouts.admin.partials.sidebar')
 
-        <!-- Content area -->
-        <div class="flex flex-col flex-1 overflow-hidden lg:pl-0">
+        {{-- ✅ Main Area --}}
+        <div class="flex flex-col flex-1 overflow-hidden">
 
-            <!-- Topbar -->
+            {{-- ✅ Topbar --}}
             @include('layouts.admin.partials.topbar')
 
-            <!-- Main -->
+            {{-- ✅ Main Content --}}
             <main class="flex-1 p-6 overflow-auto">
                 <div class="mx-auto max-w-7xl">
                     @yield('content')
                 </div>
             </main>
 
+            {{-- ✅ Footer --}}
             <footer class="p-4 text-sm text-gray-500 bg-white border-t">
-                <div class="mx-auto text-center max-w-7xl">© {{ date('Y') }} {{ config('app.name') }}. All rights
-                    reserved.</div>
+                <div class="mx-auto text-center max-w-7xl">
+                    © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                </div>
             </footer>
 
         </div>
     </div>
 
+    {{-- ✅ Extra scripts (SweetAlert, etc.) --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+
+    {{-- ✅ Scripts pushed from child views --}}
     @stack('scripts')
 </body>
 

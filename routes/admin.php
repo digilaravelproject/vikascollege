@@ -66,6 +66,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     });
 
     // Notifications
+    Route::get('notifications/list-active-featured', [NotificationController::class, 'listActiveFeatured'])
+        ->name('notifications.list-active-featured');
     Route::resource('notifications', NotificationController::class)->except(['show'])->names('notifications');
     Route::post('notifications/{notification}/toggle-status', [NotificationController::class, 'toggleStatus'])->name('notifications.toggle-status');
     Route::post('notifications/{notification}/toggle-featured', [NotificationController::class, 'toggleFeatured'])->name('notifications.toggle-featured');

@@ -1,127 +1,260 @@
 @extends('layouts.app')
+@section('title', 'Homepage')
 
 @section('content')
     @php
+        use App\Models\Notification;
+
+        // Load homepage layout from settings
         $hp = setting('homepage_layout');
         $hpBlocks = [];
         if ($hp) {
             $parsed = json_decode($hp, true);
             $hpBlocks = $parsed['blocks'] ?? [];
         }
-        $notificationsJson = setting('homepage_notifications');
-        $notifications = $notificationsJson ? json_decode($notificationsJson, true) : [];
     @endphp
 
-    @if (!empty($notifications))
-    <section class="py-2 bg-yellow-50 border-b border-yellow-200">
-        <div class="container px-4 mx-auto">
-            <div class="relative h-8 overflow-hidden" x-data="{ i: 0 }" x-init="let el=$refs.list; const items=el.children; setInterval(()=>{ i=(i+1)%items.length; el.style.transform=`translateY(-${i*2.25}rem)`; el.style.transition='transform 500ms'; }, 2500)">
-                <ul class="absolute w-full space-y-2" x-ref="list" style="will-change: transform;">
-                    @foreach ($notifications as $n)
-                        @php $t = $n['title'] ?? ''; $href = $n['href'] ?? ''; $isNew = !empty($n['isNew']); @endphp
-                        <li class="flex items-center justify-between h-9">
-                            <div class="flex items-center gap-2 text-sm">
-                                <span class="text-yellow-700">🔔</span>
-                                @if ($href)
-                                    <a href="{{ $href }}" class="font-medium text-yellow-900 hover:underline">{{ $t }}</a>
-                                @else
-                                    <span class="font-medium text-yellow-900">{{ $t }}</span>
-                                @endif
-                                @if ($isNew)
-                                    <span class="px-2 py-0.5 text-xs font-semibold text-white bg-red-600 rounded-full">NEW</span>
-                                @endif
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
-    </section>
-    @endif
-
-    {{-- Slider (from Website Settings) --}}
     @include('partials.hero-banner')
 
-    @if (!empty($hpBlocks))
-        @foreach ($hpBlocks as $block)
-            @php $type = $block['type'] ?? ''; @endphp
-            @if ($type === 'intro')
-                @php
-                    $layout = $block['layout'] ?? 'left';
-                    $img = $block['image'] ?? '';
-                    $heading = $block['heading'] ?? '';
-                    $text = $block['text'] ?? '';
-                    $btnText = $block['buttonText'] ?? '';
-                    $btnHref = $block['buttonHref'] ?? '';
-                @endphp
-                <section class="py-10">
-                    <div class="container grid items-center grid-cols-1 gap-8 px-4 mx-auto md:grid-cols-2">
-                        @if ($layout === 'right' || $layout === 'top')
-                            <div class="{{ $layout === 'top' ? 'order-1 md:col-span-2' : 'order-2' }}">
-                                @if ($img)
-                                    <img src="{{ $img }}" class="w-full rounded-xl shadow-md" alt="">
+    <div class="bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-12">
+
+            @if (!empty($hpBlocks))
+                @foreach ($hpBlocks as $block)
+                    @php $type = $block['type'] ?? ''; @endphp
+
+                    {{-- ========== INTRO BLOCK ========== --}}
+                    @if ($type === 'intro')
+                        @php
+                            $layout = $block['layout'] ?? 'left';
+                            $img = $block['image'] ?? '';
+                            $heading = $block['heading'] ?? '';
+                            $text = $block['text'] ?? '';
+                            $btnText = $block['buttonText'] ?? '';
+                            $btnHref = $block['buttonHref'] ?? '';
+                            $hasImage = !empty($img);
+                        @endphp
+
+                        <section>
+                            <div
+                                class="container mx-auto grid grid-cols-1 {{ $hasImage && $layout !== 'top' ? 'lg:grid-cols-2' : '' }} items-center gap-8 md:gap-12">
+                                @if ($hasImage && ($layout === 'right' || $layout === 'top'))
+                                    <div class="{{ $layout === 'top' ? 'order-1' : 'order-1 lg:order-2' }}">
+                                        <img src="{{ $img }}" class="w-full h-auto rounded-lg shadow-lg object-cover"
+                                            alt="">
+                                    </div>
+                                @endif
+
+                                <div class="order-2 {{ $hasImage && $layout === 'right' ? 'lg:order-1' : '' }}">
+                                    @if ($heading)
+                                        <h2 class="text-3xl font-bold text-gray-900 md:text-4xl">{{ $heading }}</h2>
+                                    @endif
+                                    @if ($text)
+                                        <p class="mt-4 text-gray-600 text-base md:text-lg leading-relaxed">
+                                            {!! nl2br(e($text)) !!}</p>
+                                    @endif
+                                    @if ($btnText && $btnHref)
+                                        <a href="{{ $btnHref }}"
+                                            class="inline-block px-6 py-3 mt-6 text-base font-medium text-white bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                                            {{ $btnText }}
+                                        </a>
+                                    @endif
+                                </div>
+
+                                @if ($hasImage && $layout === 'left')
+                                    <div class="order-1">
+                                        <img src="{{ $img }}"
+                                            class="w-full h-auto rounded-lg shadow-lg object-cover" alt="">
+                                    </div>
                                 @endif
                             </div>
-                        @endif
+                        </section>
 
-                        <div class="order-1">
-                            @if ($heading)
-                                <h2 class="text-2xl font-bold text-gray-900 md:text-3xl">{{ $heading }}</h2>
-                            @endif
-                            @if ($text)
-                                <p class="mt-3 text-gray-600">{{ $text }}</p>
-                            @endif
-                            @if ($btnText && $btnHref)
-                                <a href="{{ $btnHref }}" class="inline-block px-5 py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700">{{ $btnText }}</a>
-                            @endif
-                        </div>
+                        {{-- ========== SECTION LINKS BLOCK ========== --}}
+                    @elseif ($type === 'sectionLinks')
+                        @php
+                            $title = $block['title'] ?? '';
+                            $columns = max(1, min(4, (int) ($block['columns'] ?? 3)));
+                            $items = $block['items'] ?? [];
 
-                        @if ($layout === 'left')
-                            <div class="order-2">
-                                @if ($img)
-                                    <img src="{{ $img }}" class="w-full rounded-xl shadow-md" alt="">
-                                @endif
+                            $gridClass = match ($columns) {
+                                1 => 'grid-cols-1',
+                                2 => 'grid-cols-1 sm:grid-cols-2',
+                                3 => 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
+                                4 => 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4',
+                                default => 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3',
+                            };
+                        @endphp
+
+                        <section>
+                            <div class="container mx-auto">
+                                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                                    @if ($title)
+                                        <div class="p-5 md:p-6 border-b border-gray-200 bg-gray-50">
+                                            <h3 class="text-xl md:text-2xl font-semibold text-gray-900">{{ $title }}
+                                            </h3>
+                                        </div>
+                                    @endif
+                                    @if (!empty($items))
+                                        <div class="p-5 md:p-6">
+                                            <div class="grid {{ $gridClass }} gap-4 md:gap-5">
+                                                @foreach ($items as $it)
+                                                    @php
+                                                        $t = $it['title'] ?? '';
+                                                        $href = $it['href'] ?? '#';
+                                                        $isNew = !empty($it['isNew']);
+                                                    @endphp
+                                                    <a href="{{ $href }}"
+                                                        class="flex items-center justify-between p-4 transition duration-300 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-500 hover:bg-blue-50 group">
+                                                        <span
+                                                            class="text-sm font-medium text-gray-800 group-hover:text-blue-700">{{ $t }}</span>
+                                                        <span class="flex items-center flex-shrink-0 gap-2 pl-2">
+                                                            @if ($isNew)
+                                                                <span
+                                                                    class="px-2 py-0.5 text-xs font-semibold text-white bg-green-600 rounded-full">NEW</span>
+                                                            @endif
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                class="w-4 h-4 text-gray-400 group-hover:text-blue-600"
+                                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                        </span>
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                        @endif
-                    </div>
-                </section>
-            @elseif ($type === 'sectionLinks')
-                @php
-                    $title = $block['title'] ?? '';
-                    $columns = max(2, min(4, (int)($block['columns'] ?? 3)));
-                    $items = $block['items'] ?? [];
-                    $gridClass = match($columns) { 2 => 'sm:grid-cols-2', 4 => 'sm:grid-cols-2 lg:grid-cols-4', default => 'sm:grid-cols-2 lg:grid-cols-3' };
-                @endphp
-                <section class="py-8">
-                    <div class="container px-4 mx-auto">
-                        @if ($title)
-                            <h3 class="mb-4 text-xl font-semibold text-gray-900">{{ $title }}</h3>
-                        @endif
-                        <div class="grid grid-cols-1 gap-4 {{ $gridClass }}">
-                            @foreach ($items as $it)
-                                @php $t = $it['title'] ?? ''; $href = $it['href'] ?? '#'; $isNew = !empty($it['isNew']); @endphp
-                                <a href="{{ $href }}" class="flex items-center justify-between p-4 transition bg-white border rounded-lg shadow-sm hover:shadow">
-                                    <span class="text-sm font-medium text-gray-800">{{ $t }}</span>
-                                    <span class="flex items-center gap-2">
-                                        @if ($isNew)
-                                            <span class="px-2 py-0.5 text-xs font-semibold text-white bg-green-600 rounded-full">NEW</span>
-                                        @endif
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                    </span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                </section>
-            @elseif ($type === 'divider')
-                <hr class="my-8 border-gray-200" />
+                        </section>
+
+                        {{-- ========== DIVIDER BLOCK ========== --}}
+                    @elseif ($type === 'divider')
+                        <hr class="border-gray-200" />
+
+                        {{-- ========== LATEST UPDATES BLOCK (Bottom-to-Top Infinite Scroll) ========== --}}
+                    @elseif ($type === 'latestUpdates')
+                        @php
+                            $title = $block['title'] ?? 'Latest Updates';
+                            $updates = Notification::where('status', 1)
+                                ->where('feature_on_top', 1)
+                                ->orderByDesc('display_date')
+                                ->limit(20)
+                                ->get();
+
+                            $duration = max(20, $updates->count() * 3); // control scroll speed
+                        @endphp
+
+                        @push('styles')
+                            <style>
+                                @keyframes scroll-up {
+                                    0% {
+                                        transform: translateY(0);
+                                    }
+
+                                    100% {
+                                        transform: translateY(-50%);
+                                    }
+                                }
+
+                                .scroll-wrapper {
+                                    position: absolute;
+                                    width: 100%;
+                                    top: 0;
+                                    animation: scroll-up var(--scroll-duration, 20s) linear infinite;
+                                    will-change: transform;
+                                }
+
+                                .scroller-container {
+                                    position: relative;
+                                    height: 24rem;
+                                    /* h-96 */
+                                    overflow: hidden;
+                                }
+
+                                .scroller-container:hover .scroll-wrapper {
+                                    animation-play-state: paused;
+                                }
+                            </style>
+                        @endpush
+
+                        <section>
+                            <div class="container mx-auto">
+                                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+                                    @if ($title)
+                                        <div class="p-5 md:p-6 border-b border-gray-200 bg-gray-50">
+                                            <h3 class="text-xl md:text-2xl font-semibold text-gray-900">{{ $title }}
+                                            </h3>
+                                        </div>
+                                    @endif
+
+                                    {{-- Bottom-to-Top Infinite Scroll --}}
+                                    <div class="scroller-container p-5 md:p-6 relative" x-data x-init="$nextTick(() => {
+                                        let list1 = $refs.list1;
+                                        let list2 = $refs.list2;
+                                        if (list1.children.length > 0) {
+                                            // Duplicate list for seamless looping
+                                            list2.innerHTML = list1.innerHTML;
+                                            $refs.wrapper.classList.add('scroll-wrapper');
+                                            $refs.wrapper.style.setProperty('--scroll-duration', '{{ $duration }}s');
+                                            // Start animation from bottom
+                                            $refs.wrapper.style.transform = 'translateY(0)';
+                                        }
+                                    });">
+                                        <div class="top-0 left-0 right-0" x-ref="wrapper">
+                                            {{-- Original List --}}
+                                            <ul class="space-y-3 px-1" x-ref="list1">
+                                                @forelse ($updates as $update)
+                                                    @php
+                                                        $isNew =
+                                                            $update->is_new ||
+                                                            ($update->display_date &&
+                                                                $update->display_date->gt(now()->subDays(7)));
+                                                    @endphp
+                                                    <li class="flex">
+                                                        <a href="{{ $update->href ?? '#' }}"
+                                                            {{ $update->href ? 'target="_blank" rel="noopener"' : '' }}
+                                                            class="flex items-center gap-3 p-2 rounded-md w-full transition duration-300 hover:bg-gray-100 group">
+                                                            <span
+                                                                class="text-lg flex-shrink-0">{{ $update->icon ?? '✨' }}</span>
+                                                            <div class="flex-grow min-w-0">
+                                                                <span
+                                                                    class="text-sm font-medium text-gray-800 group-hover:text-blue-700 block truncate">{{ $update->title }}</span>
+                                                                @if ($update->display_date)
+                                                                    <p class="text-xs text-gray-500">
+                                                                        {{ $update->display_date->format('F j, Y') }}</p>
+                                                                @endif
+                                                            </div>
+                                                            @if ($isNew)
+                                                                <span
+                                                                    class="flex-shrink-0 ml-auto px-2 py-0.5 text-xs font-semibold text-white bg-green-600 rounded-full">NEW</span>
+                                                            @endif
+                                                        </a>
+                                                    </li>
+                                                @empty
+                                                    <li class="h-24 flex items-center justify-center">
+                                                        <p class="text-gray-500">No updates are available at this time.</p>
+                                                    </li>
+                                                @endforelse
+                                            </ul>
+
+                                            {{-- Duplicate list for seamless loop --}}
+                                            <ul class="space-y-3 px-1" x-ref="list2" aria-hidden="true"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    @endif
+                @endforeach
+            @else
+                <div class="container mx-auto text-center">
+                    <h2 class="mb-6 text-2xl font-bold">Welcome to {{ setting('college_name') }}</h2>
+                    <p class="text-gray-600">Explore our academic programs, admissions, and campus life.</p>
+                </div>
             @endif
-        @endforeach
-    @else
-        {{-- Fallback --}}
-        <div class="container">
-            <h2 class="mb-6 text-2xl font-bold text-center">Welcome to {{ setting('college_name') }}</h2>
-            <p class="text-center text-gray-600">Explore our academic programs, admissions, and campus life.</p>
+
         </div>
-    @endif
+    </div>
 @endsection

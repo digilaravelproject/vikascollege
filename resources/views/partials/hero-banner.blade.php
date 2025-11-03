@@ -1,17 +1,20 @@
 <section class="w-full bg-[#F1F4F9] text-[#2E2E2E] overflow-hidden flex flex-wrap items-center border-[#D6DBE2]">
-    <!-- Label -->
     <div
         class="flex items-center justify-center px-2 py-2 lg:px-5 sm:py-3 text-xs sm:text-sm md:text-base font-semibold tracking-wide text-white uppercase bg-[#0A1F44] announcement-label">
         📢 Announcement
     </div>
 
-    <!-- Marquee -->
     <div class="relative flex-1 py-2 overflow-hidden text-xs sm:text-sm md:text-[15px] font-medium tracking-wide">
         <div class="marquee">
             <div class="track">
                 @php
                     $notifService = app(\App\Services\NotificationService::class);
-                    $marqueeNotifications = $notifService->getActiveForMarquee();
+
+                    // This is the update:
+                    // We directly call the new function to get ONLY the top-featured notifications.
+                    $marqueeNotifications = $notifService->getMarqueeNotifications();
+
+                    // The old .filter() block is no longer needed.
                 @endphp
 
                 @if (count($marqueeNotifications))
@@ -22,10 +25,10 @@
                             $href = $n->href;
                             $btn = $n->button_name ?: 'Click Here';
                         @endphp
-                        <span>{{ $icon }} {{ $title }} — @if($href)<a href="{{ $href }}" class="marquee-link">{{ $btn }}</a>@endif</span>
+                        <span>{{ $icon }} {{ $title }} — @if ($href)<a href="{{ $href }}"
+                        class="marquee-link">{{ $btn }}</a>@endif</span>
                     @endforeach
 
-                    <!-- Duplicate for smooth infinite scroll -->
                     @foreach ($marqueeNotifications as $n)
                         @php
                             $icon = $n->icon ?: '🔔';
@@ -33,15 +36,16 @@
                             $href = $n->href;
                             $btn = $n->button_name ?: 'Click Here';
                         @endphp
-                        <span>{{ $icon }} {{ $title }} — @if($href)<a href="{{ $href }}" class="marquee-link">{{ $btn }}</a>@endif</span>
+                        <span>{{ $icon }} {{ $title }} — @if ($href)<a href="{{ $href }}"
+                        class="marquee-link">{{ $btn }}</a>@endif</span>
                     @endforeach
                 @else
+                    {{-- This is your original fallback content --}}
                     <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
                     <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
                     <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
                     <span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>
 
-                    <!-- Duplicate for smooth infinite scroll -->
                     <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
                     <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
                     <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
@@ -51,7 +55,6 @@
         </div>
     </div>
 </section>
-
 
 
 <!-- 🔹 Dynamic Banner Section (Image/Video Slider) -->
