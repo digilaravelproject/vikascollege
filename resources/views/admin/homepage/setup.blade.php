@@ -247,6 +247,110 @@
                                 <hr class="my-4 border-gray-300 border-dashed">
                             </template>
 
+                            <!-- Announcements Block Settings -->
+                            <template x-if="block.type === 'announcements'">
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Content Type</label>
+                                        <select x-model="block.content_type" @change="pushHistoryDebounced" class="w-full p-2 bg-white border rounded">
+                                            <option value="student">Student Corner</option>
+                                            <option value="faculty">Faculty Corner</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Display Count</label>
+                                        <input type="number" min="1" x-model.number="block.display_count" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Events Block Settings -->
+                            <template x-if="block.type === 'events'">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Section Description</label>
+                                        <textarea x-model="block.section_description" @input="pushHistoryDebounced" rows="3" class="w-full p-2 border rounded"></textarea>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Academic Calendar Block Settings -->
+                            <template x-if="block.type === 'academic_calendar'">
+                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div class="sm:col-span-2">
+                                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Item Count</label>
+                                        <input type="number" min="1" x-model.number="block.item_count" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Image + Text Block Settings -->
+                            <template x-if="block.type === 'image_text'">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Layout</label>
+                                        <select x-model="block.layout" @change="pushHistoryDebounced" class="w-full p-2 bg-white border rounded">
+                                            <option value="image_left">Image Left / Content Right</option>
+                                            <option value="content_left">Content Left / Image Right</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Content</label>
+                                        <textarea x-model="block.content" @input="pushHistoryDebounced" rows="6" class="w-full p-2 border rounded"></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Image URL</label>
+                                        <input type="text" x-model="block.image" @input="pushHistoryDebounced" class="w-full p-2 border rounded" placeholder="https://...">
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Gallery Block Settings -->
+                            <template x-if="block.type === 'gallery'">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Testimonials Block Settings -->
+                            <template x-if="block.type === 'testimonials'">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Why Choose Us Block Settings -->
+                            <template x-if="block.type === 'why_choose_us'">
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced" class="w-full p-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-600">Section Description</label>
+                                        <textarea x-model="block.section_description" @input="pushHistoryDebounced" rows="3" class="w-full p-2 border rounded"></textarea>
+                                    </div>
+                                </div>
+                            </template>
+
                         </div>
                     </template>
                 </div>
@@ -447,7 +551,51 @@
                     }, {
                         type: 'divider',
                         label: '⎯⎯ Divider'
-                    },],
+                    },
+                    // New dynamic blocks for homepage
+                    {
+                        type: 'announcements',
+                        label: '📢 Announcements',
+                        section_title: 'Student Corner',
+                        content_type: 'student',
+                        display_count: 5
+                    },
+                    {
+                        type: 'events',
+                        label: "🎫 What's Happening",
+                        section_title: "What's Happening",
+                        section_description: ''
+                    },
+                    {
+                        type: 'academic_calendar',
+                        label: '📅 Academic Calendar',
+                        section_title: 'Academic Calendar',
+                        item_count: 7
+                    },
+                    {
+                        type: 'image_text',
+                        label: '🖼️ Image + Text',
+                        image: '',
+                        content: '<p>Content...</p>',
+                        layout: 'image_left'
+                    },
+                    {
+                        type: 'gallery',
+                        label: '🖼️ Gallery',
+                        section_title: 'Student Life'
+                    },
+                    {
+                        type: 'testimonials',
+                        label: '⭐ Testimonials',
+                        section_title: 'What Our Students Say'
+                    },
+                    {
+                        type: 'why_choose_us',
+                        label: '🎯 Why Choose Us',
+                        section_title: 'Why Choose Us',
+                        section_description: ''
+                    }
+                    ],
                     blocks: [],
 
                     // === NEW STATE FOR NOTIFICATIONS ===

@@ -38,9 +38,7 @@ class NotificationService
     {
         return Notification::query()
             ->where('status', true)
-            ->where(function ($q) {
-                $q->where('feature_on_top', false)->orWhereNull('feature_on_top');
-            })
+            ->where('featured', true)
             ->orderByDesc('created_at')
             ->get();
     }

@@ -7,6 +7,14 @@ use App\Http\Controllers\Admin\TrustSectionController;
 use App\Http\Controllers\Admin\WebsiteSettingController;
 use App\Http\Controllers\Admin\HomepageSetupController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\EventCategoryController;
+use App\Http\Controllers\EventItemController;
+use App\Http\Controllers\AcademicCalendarController;
+use App\Http\Controllers\GalleryCategoryController;
+use App\Http\Controllers\GalleryImageController;
+use App\Http\Controllers\TestimonialController;
+use App\Http\Controllers\WhyChooseUsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +23,10 @@ Route::get('admin', [AuthenticatedSessionController::class, 'create']);
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
 
     Route::get('/dashboard', function () {
-        return view('admin.dashboard');
+        $pendingTestimonials = \App\Models\Testimonial::where('status', false)->count();
+        $upcomingEvents = \App\Models\EventItem::where('event_date', '>=', now())->count();
+        $activeAnnouncements = \App\Models\Announcement::where('status', true)->count();
+        return view('admin.dashboard', compact('pendingTestimonials', 'upcomingEvents', 'activeAnnouncements'));
     })->name('dashboard');
     Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles-permissions.index');
     Route::post('/roles-permissions/assign', [RolePermissionController::class, 'assign'])->name('roles-permissions.assign');
@@ -64,6 +75,16 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
         Route::post('/builder/upload/{page}', [PageBuilderController::class, 'uploadMedia'])->name('builder.upload');
         Route::post('/builder/upload-delete', [PageBuilderController::class, 'deleteUploadedMedia'])->name('builder.upload.delete');
     });
+
+    // Content Modules
+    Route::resource('announcements', AnnouncementController::class)->except(['show'])->names('announcements');
+    Route::resource('event-categories', EventCategoryController::class)->except(['show'])->names('event-categories');
+    Route::resource('event-items', EventItemController::class)->except(['show'])->names('event-items');
+    Route::resource('academic-calendar', AcademicCalendarController::class)->except(['show'])->names('academic-calendar');
+    Route::resource('gallery-categories', GalleryCategoryController::class)->except(['show'])->names('gallery-categories');
+    Route::resource('gallery-images', GalleryImageController::class)->except(['show'])->names('gallery-images');
+    Route::resource('testimonials', TestimonialController::class)->except(['show'])->names('testimonials');
+    Route::resource('why-choose-us', WhyChooseUsController::class)->except(['show'])->names('why-choose-us');
 
     // Notifications
     Route::get('notifications/list-active-featured', [NotificationController::class, 'listActiveFeatured'])

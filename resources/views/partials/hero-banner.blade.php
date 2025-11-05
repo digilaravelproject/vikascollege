@@ -1,8 +1,14 @@
-<section class="w-full bg-[#F1F4F9] text-[#2E2E2E] overflow-hidden flex flex-wrap items-center border-[#D6DBE2]">
+<section class="w-full text-[#ffffff] overflow-hidden flex flex-wrap items-center border-[#D6DBE2]"
+    style="background:linear-gradient(90deg, rgba(1, 39, 112, 0.1) 0%, #013954 62.5%);">
+
     <div
+        class="flex items-center justify-center px-2 py-2 lg:px-5 sm:py-3 text-xs sm:text-sm md:text-base font-semibold tracking-wide text-white uppercase">
+        📢 Announcement</div>
+
+    {{-- <div
         class="flex items-center justify-center px-2 py-2 lg:px-5 sm:py-3 text-xs sm:text-sm md:text-base font-semibold tracking-wide text-white uppercase bg-[#0A1F44] announcement-label">
         📢 Announcement
-    </div>
+    </div> --}}
 
     <div class="relative flex-1 py-2 overflow-hidden text-xs sm:text-sm md:text-[15px] font-medium tracking-wide">
         <div class="marquee">

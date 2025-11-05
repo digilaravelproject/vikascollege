@@ -13,51 +13,40 @@
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Students -->
-            <div
-                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+            <div class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
                 <div>
-                    <p class="text-sm text-gray-500 font-medium">Total Students</p>
-                    <h2 class="text-3xl font-bold text-blue-600 mt-1">1,234</h2>
+                    <p class="text-sm text-gray-500 font-medium">Pending Testimonials</p>
+                    <h2 class="text-3xl font-bold text-blue-600 mt-1">{{ $pendingTestimonials ?? 0 }}</h2>
                 </div>
                 <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
-                    <i class="bi bi-people-fill text-2xl"></i>
+                    <i class="fas fa-comment-dots text-2xl"></i>
                 </div>
             </div>
-
-            <!-- Faculty -->
-            <div
-                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Total Faculty</p>
-                    <h2 class="text-3xl font-bold text-green-600 mt-1">56</h2>
-                </div>
-                <div class="p-3 bg-green-100 text-green-600 rounded-full">
-                    <i class="bi bi-person-badge-fill text-2xl"></i>
-                </div>
-            </div>
-
-            <!-- Courses -->
-            <div
-                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
-                <div>
-                    <p class="text-sm text-gray-500 font-medium">Total Courses</p>
-                    <h2 class="text-3xl font-bold text-yellow-600 mt-1">32</h2>
-                </div>
-                <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full">
-                    <i class="bi bi-book-fill text-2xl"></i>
-                </div>
-            </div>
-
-            <!-- Events -->
-            <div
-                class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+            <div class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
                 <div>
                     <p class="text-sm text-gray-500 font-medium">Upcoming Events</p>
-                    <h2 class="text-3xl font-bold text-purple-600 mt-1">5</h2>
+                    <h2 class="text-3xl font-bold text-green-600 mt-1">{{ $upcomingEvents ?? 0 }}</h2>
+                </div>
+                <div class="p-3 bg-green-100 text-green-600 rounded-full">
+                    <i class="fas fa-calendar-check text-2xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Active Announcements</p>
+                    <h2 class="text-3xl font-bold text-purple-600 mt-1">{{ $activeAnnouncements ?? 0 }}</h2>
                 </div>
                 <div class="p-3 bg-purple-100 text-purple-600 rounded-full">
-                    <i class="bi bi-calendar-event text-2xl"></i>
+                    <i class="fas fa-bullhorn text-2xl"></i>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow p-6 flex items-center justify-between border border-gray-100 hover:shadow-lg transition">
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Gallery Images</p>
+                    <h2 class="text-3xl font-bold text-red-600 mt-1">{{ \App\Models\GalleryImage::count() }}</h2>
+                </div>
+                <div class="p-3 bg-red-100 text-red-600 rounded-full">
+                    <i class="fas fa-images text-2xl"></i>
                 </div>
             </div>
         </div>

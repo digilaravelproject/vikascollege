@@ -63,6 +63,62 @@
                 <i class="w-5 fas fa-fw fa-bell"></i>
                 Notifications
             </a>
+            <a href="{{ route('admin.announcements.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.announcements*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-bullhorn"></i>
+                Announcements
+            </a>
+            <a href="{{ route('admin.event-categories.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.event-categories*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-tags"></i>
+                Event Categories
+            </a>
+            <a href="{{ route('admin.event-items.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.event-items*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-calendar-check"></i>
+                Events
+            </a>
+            <a href="{{ route('admin.academic-calendar.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.academic-calendar*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-calendar"></i>
+                Academic Calendar
+            </a>
+            <a href="{{ route('admin.gallery-categories.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.gallery-categories*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-folder-open"></i>
+                Gallery Categories
+            </a>
+            <a href="{{ route('admin.gallery-images.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.gallery-images*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-images"></i>
+                Gallery Images
+            </a>
+            <a href="{{ route('admin.testimonials.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.testimonials*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-comment-dots"></i>
+                Testimonials
+            </a>
+            <a href="{{ route('admin.why-choose-us.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                       {{ request()->routeIs('admin.why-choose-us*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 fas fa-fw fa-star"></i>
+                Why Choose Us
+            </a>
         </div>
 
         <h3 class="px-3 pt-6 pb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">

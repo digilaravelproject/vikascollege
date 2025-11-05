@@ -2,6 +2,32 @@
     use App\Models\Menu;
     $menus = Menu::where('status', 1)->whereNull('parent_id')->with('childrenRecursive')->orderBy('order')->get();
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+    nav {
+        font-family: 'Roboto', sans-serif !important;
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
 
 <nav x-data="{ open: false }" class="shadow-md sticky top-0 z-50 bg-[#013954] uppercase font-sans">
     <div class="container px-4 mx-auto">
@@ -13,11 +39,11 @@
                             @if ($menu->children->count())
                                 <a href="{{ $menu->link }}" @mouseenter="openSub = true" @mouseleave="openSub = false"
                                     class="relative flex items-center gap-1 text-xs font-medium text-gray-100 uppercase transition duration-200
-                                            hover:text-[#35abe7]
-                                            after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[2px] after:bg-[#35abe7]
-                                            after:transition-all after:duration-300
-                                            {{-- YEH LINE NAHI BADALNI HAI --}}
-                                            {{ Request::is(trim(parse_url($menu->url, PHP_URL_PATH), '/')) ? 'after:w-full text-[#35abe7]' : 'after:w-0 hover:after:w-full' }}">
+                                                                                            hover:text-[#35abe7]
+                                                                                            after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[2px] after:bg-[#35abe7]
+                                                                                            after:transition-all after:duration-300
+                                                                                            {{-- YEH LINE NAHI BADALNI HAI --}}
+                                                                                            {{ Request::is(trim(parse_url($menu->url, PHP_URL_PATH), '/')) ? 'after:w-full text-[#35abe7]' : 'after:w-0 hover:after:w-full' }}">
                                     {{ $menu->title }}
                                     <svg class="w-4 h-4 text-gray-100 transition group-hover:text-gray-300" fill="none"
                                         stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round"
@@ -28,8 +54,8 @@
 
 
                                 @if ($menu->children->count() >= 6)
-                                    <div x-show="openSub" @mouseenter="openSub = true" @mouseleave="openSub = false" x-transition
-                                        class="fixed left-0 z-40 w-full text-gray-800 rounded-b-xl">
+                                    <div x-show="openSub" x-cloak @mouseenter="openSub = true" @mouseleave="openSub = false"
+                                        x-transition class="fixed left-0 z-40 w-full text-gray-800 rounded-b-xl">
                                         <div
                                             class="mx-auto overflow-hidden text-gray-800 bg-white rounded-b-lg shadow-lg max-w-7xl">
 
@@ -40,8 +66,9 @@
                                                         @foreach ($menu->children as $index => $leftItem)
                                                             <li>
                                                                 <button @mouseenter="activeLeftIndex = {{ $index }}"
-                                                                    @click="activeLeftIndex = {{ $index }}" :class="activeLeftIndex === {{ $index }} ?
-                                                                                        'bg-gray-50 text-[#013954]' : 'text-gray-700'"
+                                                                    @click="activeLeftIndex = {{ $index }}"
+                                                                    :class="activeLeftIndex === {{ $index }} ?
+                                                                                                                                                                                        'bg-gray-50 text-[#013954]' : 'text-gray-700'"
                                                                     class="flex items-center justify-between w-full px-6 py-4 text-sm font-semibold text-left uppercase transition hover:bg-gray-50">
                                                                     <span>{{ $leftItem->title }}</span>
                                                                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
@@ -103,7 +130,8 @@
                                         </div>
                                     </div>
                                 @else
-                                    <div x-show="openSub" @mouseenter="openSub = true" @mouseleave="openSub = false" x-transition
+                                    <div x-show="openSub" x-cloak @mouseenter="openSub = true" @mouseleave="openSub = false"
+                                        x-transition
                                         class="absolute left-0 mt-1 text-gray-800 bg-white border border-gray-100 rounded-lg shadow-lg top-full">
 
                                         <ul class="flex flex-col py-1 min-w-[220px]">
@@ -147,11 +175,11 @@
                             @else
                                 <a href="{{ $menu->link }}"
                                     class="relative text-xs font-medium text-gray-100 transition
-                                                    hover:text-[#35abe7]
-                                                    after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[2px]
-                                                    after:bg-[#35abe7] after:transition-all after:duration-300
-                                                    {{-- YEH LINE NAHI BADALNI HAI --}}
-                                                    {{ Request::is(trim(parse_url($menu->url, PHP_URL_PATH), '/')) ? 'after:w-full text-[#35abe7]' : 'after:w-0 hover:after:w-full' }}">
+                                                                                                    hover:text-[#35abe7]
+                                                                                                    after:content-[''] after:absolute after:left-0 after:-bottom-0.5 after:h-[2px]
+                                                                                                    after:bg-[#35abe7] after:transition-all after:duration-300
+                                                                                                    {{-- YEH LINE NAHI BADALNI HAI --}}
+                                                                                                    {{ Request::is(trim(parse_url($menu->url, PHP_URL_PATH), '/')) ? 'after:w-full text-[#35abe7]' : 'after:w-0 hover:after:w-full' }}">
                                     {{ $menu->title }}
                                 </a>
                             @endif
@@ -171,7 +199,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16m-7 6h7" />
                     </svg>
-                    <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none"
+                    <svg x-show="open" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18L18 6M6 6l12 12" />
@@ -180,7 +208,7 @@
             </div>
         </div>
 
-        <div x-show="open" x-transition class="overflow-hidden text-gray-800 bg-white shadow-md lg:hidden">
+        <div x-show="open" x-cloak x-transition class="overflow-hidden text-gray-800 bg-white shadow-md lg:hidden">
             <ul class="flex flex-col py-2 space-y-1">
                 @foreach ($menus as $menu)
                     <li x-data="{ openSub: false }" class="border-b border-gray-100">
@@ -211,7 +239,7 @@
 
 
                         @if ($menu->children->count())
-                            <div x-show="openSub" x-transition class="bg-gray-50">
+                            <div x-show="openSub" x-cloak x-transition class="bg-gray-50">
                                 @foreach ($menu->children as $child)
                                     <a href="{{ $child->link }}"
                                         class="block px-8 py-2 text-sm text-gray-700 hover:bg-[#013954] hover:text-white transition">
@@ -233,26 +261,3 @@
         </div>
     </div>
 </nav>
-
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-    nav {
-        font-family: 'Roboto', sans-serif !important;
-    }
-
-    .animate-fadeIn {
-        animation: fadeIn 0.25s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(4px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>

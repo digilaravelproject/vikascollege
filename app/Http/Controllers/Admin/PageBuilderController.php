@@ -215,23 +215,32 @@ class PageBuilderController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      * @param \App\Models\Page $page
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function saveBuilder(Request $request, Page $page): RedirectResponse|JsonResponse
+    public function saveBuilder(Request $request, Page $page): JsonResponse // Note: Only returns JsonResponse now
     {
         $validated = $request->validate([
             'content' => 'required|json',
         ]);
-        // \Log::info('content is ' . $request->content);
+
         try {
             $page->update(['content' => $validated['content']]);
-            return back()->with('success', 'Page saved successfully!');
+
+            // ✅ THE FIX: Return a JSON object on success
+            return response()->json([
+                'success' => true,
+                'message' => 'Page saved successfully!'
+            ]);
         } catch (Exception $e) {
             Log::error('PageBuilder Save Error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Failed to save content.']);
+
+            // This part was already correct!
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save content.'
+            ], 500); // Also good to add a 500 status on server error
         }
     }
-
 
     /**
      * Handle AJAX media upload for the page builder.

@@ -258,6 +258,192 @@
         </div>
         @break
 
+    {{-- ==================== NEW: ANNOUNCEMENTS ==================== --}}
+    @case('announcements')
+        @php
+            $title = $block['section_title'] ?? 'Announcements';
+            $contentType = $block['content_type'] ?? 'student';
+            $limit = max(1, (int)($block['display_count'] ?? 5));
+            $items = \App\Models\Announcement::where('type', $contentType)->where('status', true)->latest()->take($limit)->get();
+        @endphp
+        <section class="py-6">
+            <h3 class="mb-3 text-xl font-semibold text-gray-900">{{ $title }}</h3>
+            <ul class="space-y-2">
+                @forelse($items as $it)
+                    <li class="p-3 bg-white border rounded shadow-sm">
+                        <h4 class="font-medium text-gray-800">{{ $it->title }}</h4>
+                        <div class="mt-1 text-sm text-gray-600">{!! \Illuminate\Support\Str::limit(strip_tags($it->content), 160) !!}</div>
+                    </li>
+                @empty
+                    <li class="text-gray-500">No announcements.</li>
+                @endforelse
+            </ul>
+        </section>
+        @break
+
+    {{-- ==================== NEW: EVENTS (basic grouped list) ==================== --}}
+    @case('events')
+        @php
+            $title = $block['section_title'] ?? "What's Happening";
+            $desc = $block['section_description'] ?? '';
+            $categories = \App\Models\EventCategory::with(['items' => function($q){ $q->orderBy('event_date', 'desc')->take(6); }])->get();
+        @endphp
+        <section class="py-6">
+            <div class="mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">{{ $title }}</h3>
+                @if($desc)
+                    <p class="mt-1 text-gray-600">{{ $desc }}</p>
+                @endif
+            </div>
+            <div class="space-y-6">
+                @forelse($categories as $cat)
+                    <div>
+                        <h4 class="mb-2 text-lg font-medium text-gray-800">{{ $cat->name }}</h4>
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            @forelse($cat->items as $ev)
+                                <div class="p-3 bg-white border rounded shadow-sm">
+                                    <div class="text-sm text-gray-500">{{ optional($ev->event_date)->format('M d, Y h:i A') }}</div>
+                                    <div class="font-medium text-gray-800">{{ $ev->title }}</div>
+                                    @if($ev->venue)
+                                        <div class="text-sm text-gray-600">Venue: {{ $ev->venue }}</div>
+                                    @endif
+                                </div>
+                            @empty
+                                <div class="text-gray-500">No events.</div>
+                            @endforelse
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-gray-500">No event categories found.</p>
+                @endforelse
+            </div>
+        </section>
+        @break
+
+    {{-- ==================== NEW: ACADEMIC CALENDAR ==================== --}}
+    @case('academic_calendar')
+        @php
+            $title = $block['section_title'] ?? 'Academic Calendar';
+            $limit = max(1, (int)($block['item_count'] ?? 7));
+            $upcoming = \App\Models\AcademicCalendar::where('status', true)->orderBy('event_datetime')->take($limit)->get();
+        @endphp
+        <section class="py-6">
+            <h3 class="mb-3 text-xl font-semibold text-gray-900">{{ $title }}</h3>
+            <ul class="space-y-2">
+                @forelse($upcoming as $ev)
+                    <li class="flex items-start gap-3 p-3 bg-white border rounded shadow-sm">
+                        <span class="px-2 py-1 text-xs text-white bg-blue-600 rounded">{{ optional($ev->event_datetime)->format('d M, Y') }}</span>
+                        <div>
+                            <div class="font-medium text-gray-800">{{ $ev->title }}</div>
+                            @if($ev->link_href)
+                                <a href="{{ $ev->link_href }}" target="_blank" rel="noopener" class="text-sm text-blue-600 underline">More</a>
+                            @endif
+                        </div>
+                    </li>
+                @empty
+                    <li class="text-gray-500">No upcoming items.</li>
+                @endforelse
+            </ul>
+        </section>
+        @break
+
+    {{-- ==================== NEW: IMAGE + TEXT ==================== --}}
+    @case('image_text')
+        @php
+            $layout = $block['layout'] ?? 'image_left';
+            $img = $block['image'] ?? '';
+            $html = $block['contentHtml'] ?? ($block['content'] ?? '');
+        @endphp
+        <section class="py-8">
+            <div class="grid items-center grid-cols-1 gap-6 md:grid-cols-2">
+                @if($layout === 'image_left')
+                    <div>@if($img)<img src="{{ $img }}" class="w-full rounded-xl shadow" alt="">@endif</div>
+                    <div class="prose max-w-none">{!! $html !!}</div>
+                @else
+                    <div class="prose max-w-none">{!! $html !!}</div>
+                    <div>@if($img)<img src="{{ $img }}" class="w-full rounded-xl shadow" alt="">@endif</div>
+                @endif
+            </div>
+        </section>
+        @break
+
+    {{-- ==================== NEW: GALLERY (simple grid of latest by category) ==================== --}}
+    @case('gallery')
+        @php
+            $title = $block['section_title'] ?? 'Gallery';
+            $cats = \App\Models\GalleryCategory::with(['images' => function($q){ $q->latest()->take(12); }])->get();
+            $images = $cats->flatMap->images->take(12);
+        @endphp
+        <section class="py-6">
+            <h3 class="mb-3 text-xl font-semibold text-gray-900">{{ $title }}</h3>
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                @forelse($images as $img)
+                    <div class="overflow-hidden bg-white border rounded shadow-sm">
+                        <img src="{{ asset('storage/'.$img->image) }}" alt="{{ $img->title }}" class="object-cover w-full h-40">
+                    </div>
+                @empty
+                    <p class="text-gray-500">No images.</p>
+                @endforelse
+            </div>
+        </section>
+        @break
+
+    {{-- ==================== NEW: TESTIMONIALS (simple list) ==================== --}}
+    @case('testimonials')
+        @php
+            $title = $block['section_title'] ?? 'Testimonials';
+            $testimonials = \App\Models\Testimonial::where('status', true)->latest()->take(8)->get();
+        @endphp
+        <section class="py-6">
+            <h3 class="mb-3 text-xl font-semibold text-gray-900">{{ $title }}</h3>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                @forelse($testimonials as $t)
+                    <div class="p-4 bg-white border rounded shadow-sm">
+                        <div class="flex items-center gap-3">
+                            @if($t->student_image)
+                                <img src="{{ asset('storage/'.$t->student_image) }}" class="object-cover w-10 h-10 rounded-full" alt="{{ $t->student_name }}">
+                            @endif
+                            <div class="font-medium text-gray-800">{{ $t->student_name }}</div>
+                        </div>
+                        <p class="mt-2 text-gray-600">{{ $t->testimonial_text }}</p>
+                    </div>
+                @empty
+                    <p class="text-gray-500">No testimonials.</p>
+                @endforelse
+            </div>
+        </section>
+        @break
+
+    {{-- ==================== NEW: WHY CHOOSE US (grid) ==================== --}}
+    @case('why_choose_us')
+        @php
+            $title = $block['section_title'] ?? 'Why Choose Us';
+            $desc = $block['section_description'] ?? '';
+            $items = \App\Models\WhyChooseUs::orderBy('sort_order')->get();
+        @endphp
+        <section class="py-6">
+            <div class="mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">{{ $title }}</h3>
+                @if($desc)
+                    <p class="mt-1 text-gray-600">{{ $desc }}</p>
+                @endif
+            </div>
+            <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                @forelse($items as $it)
+                    <div class="p-4 text-center bg-white border rounded shadow-sm">
+                        @if($it->icon_or_image)
+                            <img src="{{ asset('storage/'.$it->icon_or_image) }}" class="w-12 h-12 mx-auto mb-2" alt="{{ $it->title }}">
+                        @endif
+                        <div class="font-medium text-gray-800">{{ $it->title }}</div>
+                        <div class="mt-1 text-sm text-gray-600">{{ $it->description }}</div>
+                    </div>
+                @empty
+                    <p class="text-gray-500">No items.</p>
+                @endforelse
+            </div>
+        </section>
+        @break
+
     {{-- ==================== DEFAULT (Original) ==================== --}}
     @default
         <div class="p-4 text-sm text-gray-500 bg-gray-100 rounded-lg">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Notification; // <-- 1. IMPORT NOTIFICATION MODEL
 use App\Models\Setting;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -19,11 +20,8 @@ class HomepageSetupController extends Controller
         $layout = Setting::get('homepage_layout') ?: '{"blocks":[]}';
 
         // 2. FETCH NOTIFICATIONS FOR THE BUILDER
-        $notifications = Notification::where('status', 1)
-            ->where('featured', 1)
-            ->where('feature_on_top', 0)
-            ->orderByDesc('display_date')
-            ->get();
+        $notifications = (new NotificationService())->getRestNotifications();
+
 
         // 3. GET ICONS (same as your NotificationController)
         $icons = ['🎓', '🏆', '🎭', '📚', '🔔', '📅'];
