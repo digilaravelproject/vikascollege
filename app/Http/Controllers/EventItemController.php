@@ -41,17 +41,23 @@ class EventItemController extends Controller
             'venue' => 'nullable|string|max:255',
             'short_description' => 'nullable|string',
             'full_content' => 'nullable|string',
+            'status' => 'nullable|boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
         ]);
 
         $validated['slug'] = $validated['slug'] ?: Str::slug($validated['title']);
+        $validated['status'] = $request->has('status'); // checkbox toggle
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('uploads/events', 'public');
         }
+
         EventItem::create($validated);
+
         return redirect()->route('admin.event-items.index')->with('success', 'Event created');
     }
+
 
     /**
      * Display the specified resource.
@@ -84,15 +90,22 @@ class EventItemController extends Controller
             'venue' => 'nullable|string|max:255',
             'short_description' => 'nullable|string',
             'full_content' => 'nullable|string',
+            'status' => 'nullable|boolean',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
         ]);
+
+        $validated['status'] = $request->has('status');
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('uploads/events', 'public');
         }
+
         $eventItem->update($validated);
+
         return redirect()->route('admin.event-items.index')->with('success', 'Event updated');
     }
+
 
     /**
      * Remove the specified resource from storage.

@@ -1,75 +1,87 @@
 @extends('layouts.admin.app')
+@section('title', 'Add New Event')
 
 @section('content')
-	<div class="max-w-3xl p-4 mx-auto">
-		<h1 class="mb-4 text-xl font-semibold">Add Event</h1>
-		@if ($errors->any())
-			<div class="p-2 mb-3 text-red-800 bg-red-100 rounded">
-				<ul class="ml-5 list-disc">
-					@foreach ($errors->all() as $error)
-						<li>{{ $error }}</li>
-					@endforeach
-				</ul>
-			</div>
-		@endif
-		<form action="{{ route('admin.event-items.store') }}" method="POST" enctype="multipart/form-data">
-			@csrf
-			<div class="grid grid-cols-1 gap-4">
-				<div>
-					<label class="block mb-1 text-sm font-medium">Category</label>
-					<select name="category_id" class="w-full p-2 bg-white border rounded">
-						@foreach($categories as $id => $name)
-							<option value="{{ $id }}" {{ old('category_id')==$id?'selected':'' }}>{{ $name }}</option>
-						@endforeach
-					</select>
-				</div>
-				<div>
-					<label class="block mb-1 text-sm font-medium">Title</label>
-					<input type="text" name="title" value="{{ old('title') }}" class="w-full p-2 border rounded">
-				</div>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<label class="block mb-1 text-sm font-medium">Slug (optional)</label>
-						<input type="text" name="slug" value="{{ old('slug') }}" class="w-full p-2 border rounded">
-					</div>
-					<div>
-						<label class="block mb-1 text-sm font-medium">Event Date & Time</label>
-						<input type="datetime-local" name="event_date" value="{{ old('event_date') }}" class="w-full p-2 border rounded">
-					</div>
-				</div>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<label class="block mb-1 text-sm font-medium">Venue</label>
-						<input type="text" name="venue" value="{{ old('venue') }}" class="w-full p-2 border rounded">
-					</div>
-					<div>
-						<label class="block mb-1 text-sm font-medium">Image</label>
-						<input type="file" name="image" accept="image/*" class="w-full p-2 border rounded">
-					</div>
-				</div>
-				<div>
-					<label class="block mb-1 text-sm font-medium">Short Description</label>
-					<textarea name="short_description" rows="3" class="w-full p-2 border rounded">{{ old('short_description') }}</textarea>
-				</div>
-				<div>
-					<label class="block mb-1 text-sm font-medium">Full Content</label>
-					<textarea name="full_content" rows="6" class="w-full p-2 border rounded">{{ old('full_content') }}</textarea>
-				</div>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<label class="block mb-1 text-sm font-medium">Meta Title</label>
-						<input type="text" name="meta_title" value="{{ old('meta_title') }}" class="w-full p-2 border rounded">
-					</div>
-					<div>
-						<label class="block mb-1 text-sm font-medium">Meta Description</label>
-						<input type="text" name="meta_description" value="{{ old('meta_description') }}" class="w-full p-2 border rounded">
-					</div>
-				</div>
-			</div>
-			<div class="flex justify-end gap-2 mt-4">
-				<a href="{{ route('admin.event-items.index') }}" class="px-3 py-2 bg-gray-200 rounded">Cancel</a>
-				<button class="px-3 py-2 text-white bg-blue-600 rounded">Save</button>
-			</div>
-		</form>
-	</div>
+    <div class="p-4 sm:p-6 space-y-6">
+
+        {{-- Page Header --}}
+        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <h1 class="text-3xl font-bold text-gray-900">Add New Event</h1>
+            <a href="{{ route('admin.event-items.index') }}"
+                class="flex items-center px-4 py-2 text-sm font-medium text-gray-800 bg-gray-100 rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
+                <i class="bi bi-arrow-left me-2"></i>
+                Back to List
+            </a>
+        </div>
+
+        {{-- Validation Errors (Copied from your reference) --}}
+        @if ($errors->any())
+            <div class="flex p-4 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50" role="alert">
+                <i class="flex-shrink-0 inline w-5 h-5 mr-3 bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                <span class="sr-only">Danger</span>
+                <div>
+                    <span class="font-medium">Please fix the following errors:</span>
+                    <ul class="mt-1.5 list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
+        <form action="{{ route('admin.event-items.store') }}" method="POST" enctype="multipart/form-data" id="event-form">
+            @csrf
+
+            {{-- Include the new shared form --}}
+            {{-- Note: Controller must pass $categories --}}
+            @include('admin.events.items._form', ['item' => null, 'categories' => $categories])
+
+            {{-- Form Actions (Copied from your reference) --}}
+            <div class="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
+                <a href="{{ route('admin.event-items.index') }}"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow-sm hover:bg-gray-200">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <i class="bi bi-save me-2"></i>
+                    Save Event
+                </button>
+            </div>
+        </form>
+    </div>
 @endsection
+
+@push('styles')
+    {{-- Quill.js styles (from your reference) --}}
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+@endpush
+
+@push('scripts')
+    {{-- Quill.js script (from your reference) --}}
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var quill = new Quill('#quill-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        ['link', 'image']
+                    ]
+                }
+            });
+
+            // Sync Quill editor content to the hidden input
+            var form = document.getElementById('event-form');
+            var hiddenInput = document.getElementById('full_content_input');
+
+            form.addEventListener('submit', function () {
+                hiddenInput.value = quill.root.innerHTML;
+            });
+        });
+    </script>
+@endpush

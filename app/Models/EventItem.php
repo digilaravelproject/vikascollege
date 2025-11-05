@@ -7,8 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class EventItem extends Model
 {
     protected $fillable = [
-        'category_id', 'title', 'slug', 'image', 'event_date', 'venue',
-        'short_description', 'full_content', 'meta_title', 'meta_description'
+        'category_id',
+        'title',
+        'slug',
+        'image',
+        'event_date',
+        'venue',
+        'short_description',
+        'full_content',
+        'status',
+        'meta_title',
+        'meta_description'
     ];
 
     protected $casts = [

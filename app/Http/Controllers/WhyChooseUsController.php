@@ -54,10 +54,11 @@ class WhyChooseUsController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(WhyChooseUs $whyChooseUs)
+    public function edit(WhyChooseUs $why_choose_u)
     {
-        return view('admin.why_choose_us.edit', ['item' => $whyChooseUs]);
+        return view('admin.why_choose_us.edit', ['item' => $why_choose_u]);
     }
+
 
     /**
      * Update the specified resource in storage.

@@ -1,79 +1,100 @@
 @extends('layouts.admin.app')
+@section('title', 'Edit Event')
 
 @section('content')
-	<div class="max-w-3xl p-4 mx-auto">
-		<h1 class="mb-4 text-xl font-semibold">Edit Event</h1>
-		@if ($errors->any())
-			<div class="p-2 mb-3 text-red-800 bg-red-100 rounded">
-				<ul class="ml-5 list-disc">
-					@foreach ($errors->all() as $error)
-						<li>{{ $error }}</li>
-					@endforeach
-				</ul>
-			</div>
-		@endif
-		<form action="{{ route('admin.event-items.update', $item) }}" method="POST" enctype="multipart/form-data">
-			@csrf
-			@method('PUT')
-			<div class="grid grid-cols-1 gap-4">
-				<div>
-					<label class="block mb-1 text-sm font-medium">Category</label>
-					<select name="category_id" class="w-full p-2 bg-white border rounded">
-						@foreach($categories as $id => $name)
-							<option value="{{ $id }}" {{ old('category_id', $item->category_id)==$id?'selected':'' }}>{{ $name }}</option>
-						@endforeach
-					</select>
-				</div>
-				<div>
-					<label class="block mb-1 text-sm font-medium">Title</label>
-					<input type="text" name="title" value="{{ old('title', $item->title) }}" class="w-full p-2 border rounded">
-				</div>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<label class="block mb-1 text-sm font-medium">Slug</label>
-						<input type="text" name="slug" value="{{ old('slug', $item->slug) }}" class="w-full p-2 border rounded">
-					</div>
-					<div>
-						<label class="block mb-1 text-sm font-medium">Event Date & Time</label>
-						<input type="datetime-local" name="event_date" value="{{ old('event_date', optional($item->event_date)->format('Y-m-d\TH:i')) }}" class="w-full p-2 border rounded">
-					</div>
-				</div>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<label class="block mb-1 text-sm font-medium">Venue</label>
-						<input type="text" name="venue" value="{{ old('venue', $item->venue) }}" class="w-full p-2 border rounded">
-					</div>
-					<div>
-						<label class="block mb-1 text-sm font-medium">Image</label>
-						<input type="file" name="image" accept="image/*" class="w-full p-2 border rounded">
-						@if($item->image)
-							<p class="mt-1 text-sm text-gray-600">Current: {{ $item->image }}</p>
-						@endif
-					</div>
-				</div>
-				<div>
-					<label class="block mb-1 text-sm font-medium">Short Description</label>
-					<textarea name="short_description" rows="3" class="w-full p-2 border rounded">{{ old('short_description', $item->short_description) }}</textarea>
-				</div>
-				<div>
-					<label class="block mb-1 text-sm font-medium">Full Content</label>
-					<textarea name="full_content" rows="6" class="w-full p-2 border rounded">{{ old('full_content', $item->full_content) }}</textarea>
-				</div>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<div>
-						<label class="block mb-1 text-sm font-medium">Meta Title</label>
-						<input type="text" name="meta_title" value="{{ old('meta_title', $item->meta_title) }}" class="w-full p-2 border rounded">
-					</div>
-					<div>
-						<label class="block mb-1 text-sm font-medium">Meta Description</label>
-						<input type="text" name="meta_description" value="{{ old('meta_description', $item->meta_description) }}" class="w-full p-2 border rounded">
-					</div>
-				</div>
-			</div>
-			<div class="flex justify-end gap-2 mt-4">
-				<a href="{{ route('admin.event-items.index') }}" class="px-3 py-2 bg-gray-200 rounded">Cancel</a>
-				<button class="px-3 py-2 text-white bg-blue-600 rounded">Update</button>
-			</div>
-		</form>
-	</div>
+    <div class="p-4 sm:p-6 space-y-6">
+
+        {{-- Page Header --}}
+        <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <h1 class="text-3xl font-bold text-gray-900">Edit Event</h1>
+            <a href="{{ route('admin.event-items.index') }}"
+                class="flex items-center px-4 py-2 text-sm font-medium text-gray-800 bg-gray-100 rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
+                <i class="bi bi-arrow-left me-2"></i>
+                Back to List
+            </a>
+        </div>
+
+        {{-- Validation Errors --}}
+        @if ($errors->any())
+            <div class="flex p-4 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50" role="alert">
+                <i class="flex-shrink-0 inline w-5 h-5 mr-3 bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                <span class="sr-only">Danger</span>
+                <div>
+                    <span class="font-medium">Please fix the following errors:</span>
+                    <ul class="mt-1.5 list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
+        <form action="{{ route('admin.event-items.update', $item) }}" method="POST" enctype="multipart/form-data"
+            id="event-form">
+            @csrf
+            @method('PUT')
+
+            {{-- Include the new shared form, passing the $item --}}
+            {{-- Note: Controller must pass $categories --}}
+            @include('admin.events.items._form', ['item' => $item, 'categories' => $categories])
+
+            {{-- Form Actions --}}
+            <div class="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200">
+                <a href="{{ route('admin.event-items.index') }}"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow-sm hover:bg-gray-200">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Update Event
+                </button>
+            </div>
+        </form>
+    </div>
 @endsection
+
+@push('styles')
+    {{-- Quill.js styles --}}
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+@endpush
+
+@push('scripts')
+    {{-- Quill.js script --}}
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var quill = new Quill('#quill-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        ['link', 'image']
+                    ]
+                }
+            });
+
+            // Sync Quill editor content to the hidden input on form submit
+            var form = document.getElementById('event-form');
+            var hiddenInput = document.getElementById('full_content_input');
+
+            form.addEventListener('submit', function (e) {
+                // Get the HTML content from Quill
+                var content = quill.root.innerHTML;
+
+                // Set value, but check if editor is effectively empty
+                if (content === '<p><br></p>') {
+                    hiddenInput.value = '';
+                } else {
+                    hiddenInput.value = content;
+                }
+            });
+
+            // Set initial content for edit page
+            // (The hidden input already has the value, Quill picks it up from the div's content)
+        });
+    </script>
+@endpush

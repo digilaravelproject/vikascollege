@@ -13,8 +13,15 @@ class GalleryImageController extends Controller
      */
     public function index()
     {
-        $images = GalleryImage::with('category')->latest()->paginate(24);
-        return view('admin.gallery.images.index', compact('images'));
+        // Fetch all categories for the filter tabs
+        $categories = GalleryCategory::orderBy('name')->get(['id', 'name']);
+
+        // Fetch images with category relationship
+        $images = GalleryImage::with('category')
+            ->latest()
+            ->paginate(24);
+
+        return view('admin.gallery.images.index', compact('images', 'categories'));
     }
 
     /**
@@ -36,17 +43,14 @@ class GalleryImageController extends Controller
             'image' => 'required|image|max:8192',
             'title' => 'nullable|string|max:255',
         ]);
-        $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
-        GalleryImage::create($validated);
-        return redirect()->route('admin.gallery-images.index')->with('success', 'Image added');
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(GalleryImage $galleryImage)
-    {
-        return redirect()->route('admin.gallery-images.index');
+        $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
+
+        GalleryImage::create($validated);
+
+        return redirect()
+            ->route('admin.gallery-images.index')
+            ->with('success', 'Image added successfully.');
     }
 
     /**
@@ -55,7 +59,10 @@ class GalleryImageController extends Controller
     public function edit(GalleryImage $galleryImage)
     {
         $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
-        return view('admin.gallery.images.edit', ['image' => $galleryImage, 'categories' => $categories]);
+        return view('admin.gallery.images.edit', [
+            'image' => $galleryImage,
+            'categories' => $categories
+        ]);
     }
 
     /**
@@ -68,11 +75,16 @@ class GalleryImageController extends Controller
             'image' => 'nullable|image|max:8192',
             'title' => 'nullable|string|max:255',
         ]);
+
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
         }
+
         $galleryImage->update($validated);
-        return redirect()->route('admin.gallery-images.index')->with('success', 'Image updated');
+
+        return redirect()
+            ->route('admin.gallery-images.index')
+            ->with('success', 'Image updated successfully.');
     }
 
     /**
@@ -81,6 +93,7 @@ class GalleryImageController extends Controller
     public function destroy(GalleryImage $galleryImage)
     {
         $galleryImage->delete();
-        return back()->with('success', 'Image deleted');
+
+        return back()->with('success', 'Image deleted successfully.');
     }
 }
