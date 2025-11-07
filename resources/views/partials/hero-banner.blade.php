@@ -82,9 +82,16 @@
                             <img src="{{ asset('storage/' . $data['path']) }}"
                                 class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center transition-transform duration-700 hover:scale-105" />
                         @else
-                            <video autoplay muted loop playsinline
+                            {{-- <video autoplay muted loop playsinline
                                 class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center">
                                 <source src="{{ asset('storage/' . $data['path']) }}" type="video/mp4" />
+                            </video> --}}
+                            <video
+                                class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center your-slider-video"
+                                autoplay muted loop playsinline preload="metadata" ">
+                                                                    <source src=" {{ asset('storage/' . $data['path']) }}"
+                                type="video/mp4" />
+                            Aapka browser video tag support nahi karta.
                             </video>
                         @endif
 

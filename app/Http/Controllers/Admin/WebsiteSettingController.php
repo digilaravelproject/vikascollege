@@ -18,6 +18,7 @@ class WebsiteSettingController extends Controller
 {
     public function index()
     {
+
         $data = [
             'college_name' => Setting::get('college_name'),
             'banner_heading' => Setting::get('banner_heading'),
@@ -174,6 +175,132 @@ class WebsiteSettingController extends Controller
      */
     private function handleBannerMedia(array $files)
     {
+        Log::info("Starting banner media upload for " . count($files) . " files.");
+
+        // Delete old banner media
+        $oldMedia = Setting::where('key', 'like', 'banner_media_%')->get();
+        foreach ($oldMedia as $item) {
+            try {
+                $media = json_decode($item->value, true);
+                if (isset($media['path'])) {
+                    Storage::disk('public')->delete($media['path']);
+                    Log::info("Deleted old media: " . $media['path']);
+                }
+                $item->delete();
+            } catch (\Exception $e) {
+                Log::error("Failed to delete old banner media {$item->key}: " . $e->getMessage());
+            }
+        }
+
+        foreach ($files as $index => $file) {
+            try {
+                $mime = $file->getMimeType();
+                $key = "banner_media_{$index}";
+                Log::info("Processing file #{$index} ({$file->getClientOriginalName()}) with MIME: {$mime}");
+
+                if (str_starts_with($mime, 'image/')) {
+                    $this->compressImage($file, $key);
+                } elseif (str_starts_with($mime, 'video/')) {
+                    $this->compressVideo($file, $key);
+                } else {
+                    Log::warning("Unsupported media type for {$file->getClientOriginalName()}: {$mime}");
+                }
+            } catch (\Exception $e) {
+                Log::error("Failed to process banner media #{$index} ({$file->getClientOriginalName()}): " . $e->getMessage());
+            }
+        }
+    }
+
+    private function compressVideo($file, $key)
+    {
+        Log::info("Starting video compression: {$file->getClientOriginalName()}");
+
+        $maxBytes = 50 * 1024 * 1024;
+        $tempPath = null;
+
+        try {
+            $tempPath = $file->store('temp');
+            $fullTempPath = Storage::path($tempPath);
+            Log::info("Temporary file stored at: {$fullTempPath}");
+
+            $filename = 'video_' . uniqid() . '.mp4';
+            $finalRelativePath = 'banners/' . $filename;
+            $fullCompressedPath = Storage::disk('public')->path($finalRelativePath);
+            Storage::disk('public')->makeDirectory(dirname($finalRelativePath));
+
+            // Detect FFMpeg binaries
+            $ffmpegPath = '/home/u701168881/domains/lightgray-emu-283059.hostingersite.com/public_html/ffmpeg/ffmpeg';
+            $ffprobePath = '/home/u701168881/domains/lightgray-emu-283059.hostingersite.com/public_html/ffmpeg/ffprobe';
+
+
+            if (!file_exists($ffmpegPath) || !file_exists($ffprobePath)) {
+                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                    $ffmpegPath = 'C:\\ffmpeg\\bin\\ffmpeg.exe';
+                    $ffprobePath = 'C:\\ffmpeg\\bin\\ffprobe.exe';
+                } else {
+                    $ffmpegPath = '/usr/bin/ffmpeg';
+                    $ffprobePath = '/usr/bin/ffprobe';
+                }
+            }
+
+            if (!file_exists($ffmpegPath) || !file_exists($ffprobePath)) {
+                throw new \Exception("FFMpeg binaries not found. Checked paths: $ffmpegPath , $ffprobePath");
+            }
+
+            $ffmpeg = FFMpeg::create([
+                'ffmpeg.binaries'  => $ffmpegPath,
+                'ffprobe.binaries' => $ffprobePath,
+                'timeout'          => 3600,
+                'ffmpeg.threads'   => 4,
+            ]);
+
+            /** @var \FFMpeg\Media\Video $video */
+            $video = $ffmpeg->open($fullTempPath);
+            $video->filters()->resize(new Dimension(1280, 720), ResizeFilter::RESIZEMODE_FIT, true);
+            Log::info("Video resized to 1280x720");
+
+            $bitrate = 1500;
+            do {
+                $format = new X264('aac', 'libx264');
+                $format->setKiloBitrate($bitrate);
+                $format->setAdditionalParameters(['-movflags', '+faststart', '-crf', '24']);
+
+                $tempCompressed = str_replace('.mp4', "_{$bitrate}k.mp4", $fullCompressedPath);
+                $video->save($format, $tempCompressed);
+
+                $size = filesize($tempCompressed);
+                Log::info("Compressed video at bitrate {$bitrate} kbps size: {$size} bytes");
+
+                if ($size <= $maxBytes) {
+                    rename($tempCompressed, $fullCompressedPath);
+                    Log::info("Final video saved: {$fullCompressedPath}");
+                    break;
+                }
+
+                $bitrate = max(500, intval($bitrate * 0.8));
+                unlink($tempCompressed);
+            } while ($bitrate > 500);
+
+            Setting::set($key, json_encode([
+                'type' => 'video',
+                'path' => $finalRelativePath,
+                'original_name' => $file->getClientOriginalName(),
+            ]));
+
+            Log::info("Video banner setting saved: {$key}");
+        } catch (\Exception $e) {
+            Log::error("Video compression failed for {$file->getClientOriginalName()}: " . $e->getMessage());
+            throw $e;
+        } finally {
+            if ($tempPath && Storage::exists($tempPath)) {
+                Storage::delete($tempPath);
+                Log::info("Temporary video deleted: {$tempPath}");
+            }
+        }
+    }
+
+    private function handleBannerMedia_old(array $files)
+    {
         // 1. Delete all old banner media
         $oldMedia = Setting::where('key', 'like', 'banner_media_%')->get();
         foreach ($oldMedia as $item) {
@@ -240,7 +367,7 @@ class WebsiteSettingController extends Controller
     /**
      * Compress and save video
      */
-    private function compressVideo($file, $key)
+    private function compressVideo_old($file, $key)
     {
         // Store temp file in private 'storage/app/temp'
         $tempPath = $file->store('temp');
@@ -257,13 +384,8 @@ class WebsiteSettingController extends Controller
 
         try {
             // Detect OS for FFMpeg binaries (Update these paths if necessary)
-            $ffmpegPath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
-                ? 'C:\\ffmpeg\\bin\\ffmpeg.exe'
-                : '/usr/bin/ffmpeg'; // Common Linux path
-
-            $ffprobePath = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'
-                ? 'C:\\ffmpeg\\bin\\ffprobe.exe'
-                : '/usr/bin/ffprobe'; // Common Linux path
+            $ffmpegPath = base_path('public_html/ffmpeg/ffmpeg');
+            $ffprobePath = base_path('public_html/ffmpeg/ffprobe');
 
             // Check if binaries exist
             if (!file_exists($ffmpegPath) || !file_exists($ffprobePath)) {
