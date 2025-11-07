@@ -3,20 +3,22 @@
 @endphp
 
 @if($topBannerImage)
-    <div class="relative w-full bg-white overflow-hidden">
-        <div class="w-full py-1">
-            <img src="{{ asset('storage/' . $topBannerImage) }}" alt="Top Banner"
-                class="w-full h-20 sm:h-28 md:h-32 lg:h-36 object-contain object-center transition-all duration-500 ease-in-out">
+    <div class="w-full bg-white shadow-sm border-b border-gray-200">
+        <div class="container mx-auto flex items-center justify-between px-4 py-2">
 
-        </div>
+            {{-- Left: Banner Image --}}
+            <div class="flex-shrink-0">
+                <img src="{{ asset('storage/' . $topBannerImage) }}" alt="Top Banner"
+                    class="h-12 sm:h-16 md:h-20 lg:h-24 object-contain object-left transition-all duration-300 ease-in-out">
+            </div>
 
-        {{-- Optional overlay text (you can remove this if not needed) --}}
-        {{-- @if(setting('top_banner_text'))
-        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <h2 class="text-white text-lg sm:text-2xl md:text-3xl font-semibold drop-shadow-md text-center">
-                {{ setting('top_banner_text') }}
-            </h2>
+            {{-- Right: Menu Section --}}
+            <div class="flex items-center space-x-4 text-gray-700 font-medium text-sm sm:text-base">
+                <a href="#" class="hover:text-blue-600 transition">Home</a>
+                <a href="#" class="hover:text-blue-600 transition">About</a>
+                <a href="#" class="hover:text-blue-600 transition">Services</a>
+                <a href="#" class="hover:text-blue-600 transition">Contact</a>
+            </div>
         </div>
-        @endif --}}
     </div>
 @endif

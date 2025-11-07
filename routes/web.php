@@ -1,10 +1,8 @@
 <?php
 
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\PdfViewerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TrustController;
-use App\Http\Middleware\VerifyPdfFile;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {

@@ -11,6 +11,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventCategoryController;
 use App\Http\Controllers\EventItemController;
 use App\Http\Controllers\AcademicCalendarController;
+use App\Http\Controllers\Admin\CacheController;
 use App\Http\Controllers\GalleryCategoryController;
 use App\Http\Controllers\GalleryImageController;
 use App\Http\Controllers\TestimonialController;
@@ -93,4 +94,11 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::post('notifications/{notification}/toggle-status', [NotificationController::class, 'toggleStatus'])->name('notifications.toggle-status');
     Route::post('notifications/{notification}/toggle-featured', [NotificationController::class, 'toggleFeatured'])->name('notifications.toggle-featured');
     Route::post('notifications/{notification}/toggle-feature-on-top', [NotificationController::class, 'toggleFeatureOnTop'])->name('notifications.toggle-feature-on-top');
+
+
+
+    // Cache
+    Route::get('/cache-management', [CacheController::class, 'index'])->name('cache.index');
+    Route::get('/cache-clear-all', [CacheController::class, 'clearAllCache'])->name('cache.clear-all');
+    Route::get('/cache-re-optimize', [CacheController::class, 'reOptimizeApp'])->name('cache.re-optimize');
 });

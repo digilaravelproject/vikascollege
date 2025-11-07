@@ -4,13 +4,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Admin Panel') - {{ setting('college_name') }}</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- ✅ Admin Panel Title --}}
+    <title>@yield('title', 'Admin Panel') - {{ setting('college_name', config('app.name')) }}</title>
+
+    {{-- ✅ Favicon --}}
     <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/x-icon">
+
+    {{-- ✅ IMPORTANT: Tell Google to NOT index this admin panel --}}
+    <meta name="robots" content="noindex, nofollow">
+
+    {{-- ✅ Alpine.js --}}
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
     {{-- ✅ Bootstrap Icons --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-    {{-- ✅ Tailwind CSS (use Vite in production) --}}
+    {{-- ✅ Tailwind CSS (CDN) --}}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -25,14 +35,15 @@
         }
     </script>
 
-    {{-- ✅ Alpine.js (lightweight interactions) --}}
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
     {{-- ✅ Optional: Font Awesome (icons) --}}
     <link rel="stylesheet" href="https://unpkg.com/@fortawesome/fontawesome-free/css/all.min.css">
 
     <style>
         /* --- Basic UI Enhancements --- */
+        [x-cloak] {
+            display: none !important;
+        }
+
         .card-shadow {
             box-shadow: 0 6px 18px rgba(8, 15, 52, 0.08);
         }

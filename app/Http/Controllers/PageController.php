@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Page;
 use App\Models\Menu;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache; // 1. Cache facade import karein
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PageController extends Controller
@@ -15,46 +16,58 @@ class PageController extends Controller
     public function show($slug)
     {
         try {
-            // 1️⃣ Fetch active page by slug (status must be active)
-            $activeSection = Page::where('slug', $slug)
-                ->where('status', true) // Ensure the page is active
-                ->firstOrFail();
+            // 2. Poore data ko 'page:view:SLUG' key ke saath 24 ghante (86400 sec) ke liye cache karein
+            $viewData = Cache::remember('page:view:' . $slug, 86400, function () use ($slug) {
 
-            // 2️⃣ Find related menu (if any)
-            $activeMenu = Menu::whereHas('page', function ($q) use ($activeSection) {
-                $q->where('id', $activeSection->id);
-            })->first();
+                // 1️⃣ Fetch active page (ye pehle jaisa hi hai)
+                $activeSection = Page::where('slug', $slug)
+                    ->where('status', true)
+                    ->firstOrFail(); // Agar nahi mila toh ModelNotFoundException throw karega
 
-            if (!$activeMenu) {
-                $activeMenu = Menu::where('url', $slug)->where('status', true)->first(); // Ensure the menu is active
-            }
+                // 2️⃣ Find related menu (thoda behtar kiya gaya)
+                $activeMenu = Menu::where('status', true) // Status pehle check karein
+                    ->whereHas('page', function ($q) use ($activeSection) {
+                        $q->where('id', $activeSection->id);
+                    })
+                    ->first();
 
-            // 3️⃣ Prepare sidebar menus
-            $menus = collect();
-            $topParent = null;
+                if (!$activeMenu) {
+                    $activeMenu = Menu::where('url', $slug)->where('status', true)->first();
+                }
 
-            if ($activeMenu) {
-                $topParent = $this->getTopParent($activeMenu);
-                $menus = Menu::with(['childrenRecursive.page'])
-                    ->where('id', $topParent->id)
-                    ->get();
-            }
+                // 3️⃣ Prepare sidebar menus
+                $menus = collect();
+                $topParent = null;
 
-            // 4️⃣ Decode JSON content safely
-            $blocks = [];
-            if (!empty($activeSection->content)) {
-                $decoded = json_decode($activeSection->content, true);
-                $blocks = $decoded['blocks'] ?? $decoded ?? [];
-            }
+                if ($activeMenu) {
+                    // getTopParent() function ab internally cached hai
+                    $topParent = $this->getTopParent($activeMenu);
 
-            // 5️⃣ Render view
-            return view('frontend.pages.show', compact('activeSection', 'menus', 'activeMenu', 'topParent', 'blocks'));
+                    // Yeh heavy query ab cache ho jaayegi
+                    $menus = Menu::with(['childrenRecursive.page']) // Recursive load
+                        ->where('id', $topParent->id)
+                        ->where('status', true) // Active menus hi laayein
+                        ->get();
+                }
+
+                // 4️⃣ Decode JSON content
+                $blocks = [];
+                if (!empty($activeSection->content)) {
+                    $decoded = json_decode($activeSection->content, true);
+                    $blocks = $decoded['blocks'] ?? $decoded ?? [];
+                }
+
+                // 5️⃣ Saara data ek array mein return karein taaki cache ho sake
+                return compact('activeSection', 'menus', 'activeMenu', 'topParent', 'blocks');
+            });
+
+            // 6️⃣ Cached data se view render karein
+            return view('frontend.pages.show', $viewData);
         } catch (ModelNotFoundException $e) {
-            // If page or menu not found, log and show 404 error
+            // Cache closure ke andar se throw hua exception yahaan pakda jaayega
             Log::error("Page or Menu not found for slug: {$slug}", ['exception' => $e->getMessage()]);
             abort(404, 'Page not found.');
         } catch (\Throwable $e) {
-            // Log any other errors with more context
             Log::error("Error in PageController@show for slug: {$slug}", ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             abort(500, 'Something went wrong. Please try again later.');
         }
@@ -62,18 +75,27 @@ class PageController extends Controller
 
 
     /**
-     * Get the top-most parent menu.
+     * Get the top-most parent menu (Ab yeh cached hai).
      */
     private function getTopParent(Menu $menu)
     {
-        try {
-            if ($menu->parent_id) {
-                return $this->getTopParent(Menu::find($menu->parent_id));
+        // 3. Har menu ke top parent ko 24 ghante ke liye cache karein
+        return Cache::remember('menu:top_parent:' . $menu->id, 86400, function () use ($menu) {
+            try {
+                if ($menu->parent_id) {
+                    // find() use karein taaki agar parent delete ho gaya ho toh error na aaye
+                    $parent = Menu::find($menu->parent_id);
+                    if ($parent) {
+                        // Recursive call bhi ab cache use karegi
+                        return $this->getTopParent($parent);
+                    }
+                }
+                // Agar parent_id nahi hai, ya parent nahi mila, toh yehi top parent hai
+                return $menu;
+            } catch (\Throwable $e) {
+                Log::error("Error retrieving top parent for menu ID: {$menu->id}", ['exception' => $e->getMessage()]);
+                return $menu; // Error hone par current menu return karein
             }
-            return $menu;
-        } catch (\Throwable $e) {
-            Log::error("Error retrieving top parent for menu ID: {$menu->id}", ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return $menu; // Return the current menu if something goes wrong
-        }
+        });
     }
 }

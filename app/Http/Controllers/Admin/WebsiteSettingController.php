@@ -25,12 +25,15 @@ class WebsiteSettingController extends Controller
             'banner_button_text' => Setting::get('banner_button_text'),
             'banner_button_link' => Setting::get('banner_button_link'),
             'college_logo' => Setting::get('college_logo'),
+            'top_banner_image' => Setting::get('top_banner_image'),
             'favicon' => Setting::get('favicon'),
             'banner_media' => $this->getBannerMedia(),
+
             // Contact & Social & Footer
             'address' => Setting::get('address'),
             'email' => Setting::get('email'),
             'phone' => Setting::get('phone'),
+            'phone_alternate' => Setting::get('phone_alternate'), // ADDED
             'facebook_url' => Setting::get('facebook_url'),
             'twitter_url' => Setting::get('twitter_url'),
             'instagram_url' => Setting::get('instagram_url'),
@@ -39,6 +42,11 @@ class WebsiteSettingController extends Controller
             'footer_about' => Setting::get('footer_about'),
             'map_embed_url' => Setting::get('map_embed_url'),
             'footer_links' => ($tmp = Setting::get('footer_links')) ? json_decode($tmp, true) : [],
+
+            // SEO Settings (ADDED)
+            'meta_title' => Setting::get('meta_title'),
+            'meta_description' => Setting::get('meta_description'),
+            'meta_image' => Setting::get('meta_image'),
         ];
 
         return view('admin.settings.website', compact('data'));
@@ -53,13 +61,16 @@ class WebsiteSettingController extends Controller
             'banner_button_text' => 'nullable|string|max:100',
             'banner_button_link' => 'nullable|url',
             'college_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            'top_banner_image' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
             'favicon' => 'nullable|image|mimes:jpg,jpeg,png,ico,webp|max:1024',
             'banner_media' => 'nullable|array', // Validate as array
             'banner_media.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200', // 50MB
+
             // Contact & Social & Footer
             'address' => 'nullable|string|max:500',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
+            'phone_alternate' => 'nullable|string|max:50', // ADDED
             'facebook_url' => 'nullable|url|max:255',
             'twitter_url' => 'nullable|url|max:255',
             'instagram_url' => 'nullable|url|max:255',
@@ -70,13 +81,19 @@ class WebsiteSettingController extends Controller
             'footer_links' => 'nullable|array',
             'footer_links.*.title' => 'required_with:footer_links|string|max:80',
             'footer_links.*.url' => 'required_with:footer_links|url|max:255',
+
+            // SEO Settings (ADDED)
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'meta_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         DB::beginTransaction();
         try {
             // Save general settings
             foreach ($validated as $key => $value) {
-                if (in_array($key, ['college_logo', 'favicon', 'banner_media'])) {
+                // MODIFIED: Added 'meta_image' to skip list
+                if (in_array($key, ['college_logo', 'favicon', 'banner_media', 'meta_image'])) {
                     continue;
                 }
                 if ($key === 'footer_links' && is_array($value)) {
@@ -95,6 +112,15 @@ class WebsiteSettingController extends Controller
                 $path = $request->file('college_logo')->store('logos', 'public');
                 Setting::set('college_logo', $path);
             }
+            // Upload top image
+            if ($request->hasFile('top_banner_image')) {
+                // Delete old logo if it exists
+                if ($oldtop_banner_image = Setting::get('top_banner_image')) {
+                    Storage::disk('public')->delete($oldtop_banner_image);
+                }
+                $path = $request->file('top_banner_image')->store('banners', 'public');
+                Setting::set('top_banner_image', $path);
+            }
 
             // Upload favicon
             if ($request->hasFile('favicon')) {
@@ -105,6 +131,28 @@ class WebsiteSettingController extends Controller
                 $path = $request->file('favicon')->store('favicons', 'public');
                 Setting::set('favicon', $path);
             }
+
+            // ADDED: Upload Meta Image
+            if ($request->hasFile('meta_image')) {
+                // Delete old image if it exists
+                if ($oldImage = Setting::get('meta_image')) {
+                    Storage::disk('public')->delete($oldImage);
+                }
+                // Store in 'seo' folder
+                $path = $request->file('meta_image')->store('seo', 'public');
+
+                // Optimize it
+                try {
+                    $fullPath = Storage::disk('public')->path($path);
+                    $optimizerChain = OptimizerChainFactory::create();
+                    $optimizerChain->optimize($fullPath);
+                } catch (\Exception $e) {
+                    Log::warning("Could not optimize meta_image {$path}: " . $e->getMessage());
+                }
+
+                Setting::set('meta_image', $path);
+            }
+
 
             // Upload banner media
             if ($request->hasFile('banner_media')) {

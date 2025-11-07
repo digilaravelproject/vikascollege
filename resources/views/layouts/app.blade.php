@@ -1,16 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', setting('college_name', config('app.name')))</title>
-    <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/x-icon">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- ✅ Favicon --}}
+    <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/image">
 
-    <!-- Tailwind CSS -->
+    @php
+        // Database se settings fetch karna
+        $seoTitle = setting('meta_title');
+        $seoDescription = setting('meta_description');
+        $seoImage = setting('meta_image');
+
+        // Agar meta_title set nahi hai, toh default college_name use karna
+        // setting('college_name', config('app.name')) ensures a fallback
+        $pageTitle = $seoTitle ?: setting('college_name', config('app.name'));
+    @endphp
+
+    <title>@yield('title', $pageTitle)</title>
+    <meta name="description" content="@yield('description', $seoDescription)">
+    <meta name="author" content="{{ setting('college_name') }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="@yield('title', $pageTitle)">
+    <meta property="og:description" content="@yield('description', $seoDescription)">
+    @if ($seoImage)
+        <meta property="og:image" content="{{ asset('storage/' . $seoImage) }}">
+    @endif
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url()->current() }}">
+    <meta name="twitter:title" content="@yield('title', $pageTitle)">
+    <meta name="twitter:description" content="@yield('description', $seoDescription)">
+    @if ($seoImage)
+        <meta name="twitter:image" content="{{ asset('storage/' . $seoImage) }}">
+    @endif
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Vite assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- ✅ Styles pushed from child views (like scroll animation CSS) --}}
