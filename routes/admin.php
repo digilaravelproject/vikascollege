@@ -12,6 +12,7 @@ use App\Http\Controllers\EventCategoryController;
 use App\Http\Controllers\EventItemController;
 use App\Http\Controllers\AcademicCalendarController;
 use App\Http\Controllers\Admin\CacheController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\GalleryCategoryController;
 use App\Http\Controllers\GalleryImageController;
 use App\Http\Controllers\TestimonialController;
@@ -95,7 +96,10 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::post('notifications/{notification}/toggle-featured', [NotificationController::class, 'toggleFeatured'])->name('notifications.toggle-featured');
     Route::post('notifications/{notification}/toggle-feature-on-top', [NotificationController::class, 'toggleFeatureOnTop'])->name('notifications.toggle-feature-on-top');
 
-
+    // Media Managemnet
+    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+    Route::post('/media/upload', [MediaController::class, 'store'])->name('media.store');
+    Route::post('/media/delete', [MediaController::class, 'destroy'])->name('media.destroy');
 
     // Cache
     Route::get('/cache-management', [CacheController::class, 'index'])->name('cache.index');
