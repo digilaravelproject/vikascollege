@@ -49,7 +49,7 @@ class NotificationService
 
             return Notification::query()
                 ->where('status', true)
-                ->where('feature_on_top', '!=', true) // Yani (false OR null)
+                // ->where('feature_on_top', '!=', true) // Yani (false OR null)
                 ->orderByDesc('created_at')
                 ->get();
         });

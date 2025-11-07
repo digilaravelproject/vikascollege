@@ -12,12 +12,15 @@ use FFMpeg\FFMpeg;
 use FFMpeg\Coordinate\Dimension;
 use FFMpeg\Format\Video\X264;
 use FFMpeg\Filters\Video\ResizeFilter;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Spatie\ImageOptimizer\OptimizerChainFactory;
 
 class WebsiteSettingController extends Controller
 {
+    use AuthorizesRequests;
     public function index()
     {
+        $this->authorize('manage settings');
 
         $data = [
             'college_name' => Setting::get('college_name'),
@@ -55,6 +58,7 @@ class WebsiteSettingController extends Controller
 
     public function update(Request $request)
     {
+        $this->authorize('manage settings');
         $validated = $request->validate([
             'college_name' => 'required|string|max:255',
             'banner_heading' => 'nullable|string|max:255',

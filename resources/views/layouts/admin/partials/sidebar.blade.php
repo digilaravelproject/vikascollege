@@ -147,6 +147,13 @@
             Administration
         </h3>
         <div class="space-y-1">
+            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                {{ request()->routeIs('admin.users*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 bi bi-shield-lock"></i>
+                Users Management
+            </a>
             <a href="{{ route('admin.roles-permissions.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                 {{ request()->routeIs('admin.roles-permissions*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
@@ -161,12 +168,12 @@
                 <i class="w-5 bi bi-gear"></i>
                 Site Settings
             </a>
-            <a href="{{ route('admin.cache.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
-                {{ request()->routeIs('admin.cache*')
+            <a href="{{ route('admin.site.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                {{ request()->routeIs('admin.site*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
                 <i class="w-5 bi bi-hdd-stack"></i>
-                Cache Management
+                Developer Settings
             </a>
         </div>
     </nav>

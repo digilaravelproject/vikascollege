@@ -11,14 +11,17 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class MenuController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display all menus in hierarchical order (cached).
      */
     public function index()
     {
+        // $this->authorize('manage menus');
         try {
             $menus = Cache::remember('menu_tree', 3600, function () {
                 return Menu::with(['parent', 'childrenRecursive', 'page'])
@@ -39,6 +42,7 @@ class MenuController extends Controller
      */
     public function create()
     {
+        $this->authorize('manage menus');
         try {
             $menus = Menu::with('childrenRecursive')
                 ->whereNull('parent_id')
@@ -60,6 +64,7 @@ class MenuController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('manage menus');
         try {
             $validated = $this->validateMenu($request);
 
@@ -88,6 +93,7 @@ class MenuController extends Controller
      */
     public function edit(Menu $menu)
     {
+        $this->authorize('manage menus');
         try {
             $menus = Menu::with('childrenRecursive')
                 ->whereNull('parent_id')
@@ -110,6 +116,7 @@ class MenuController extends Controller
      */
     public function update(Request $request, Menu $menu)
     {
+        $this->authorize('manage menus');
         try {
             $validated = $this->validateMenu($request, $menu->id);
 
@@ -138,6 +145,7 @@ class MenuController extends Controller
      */
     public function destroy(Menu $menu)
     {
+        $this->authorize('manage menus');
         try {
             $this->recursiveDelete($menu);
             Cache::forget('menu_tree');
@@ -159,6 +167,7 @@ class MenuController extends Controller
      */
     public function toggleStatus(Request $request, Menu $menu)
     {
+        $this->authorize('manage menus');
         try {
             $menu->update(['status' => $request->boolean('status')]);
 

@@ -1,20 +1,27 @@
-<section class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="mb-6 text-2xl font-bold text-center text-gray-800">{{ $title }}</h2>
-    @if ($items->isEmpty())
-        <p class="text-center text-gray-500">No announcements found.</p>
-    @else
-        <ul class="space-y-3 list-disc list-inside">
+{{-- Updated typography --}}
+<h2 class="text-3xl font-extrabold text-center text-gray-900 mb-10 tracking-tight">{{ $title }}</h2>
+
+@if ($items->isEmpty())
+    <p class="text-center text-gray-500">No announcements found.</p>
+@else
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm border">
+        <ul class="space-y-4 divide-y divide-gray-100">
             @foreach ($items as $item)
-                <li class="text-gray-700">
-                    <a href="#" class="font-medium hover:underline hover:text-blue-600">
+                <li class="pt-4 first:pt-0">
+                    <a href="#" class="font-semibold text-lg text-gray-800 hover:underline hover:text-blue-600">
                         {{ $item->title }}
                     </a>
-                    <span class="text-sm text-gray-500"> - {{ $item->created_at->format('M d') }}</span>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-sm text-gray-500">{{ $item->created_at->format('M d, Y') }}</span>
+                        @if ($item->is_new) {{-- Example condition --}}
+                            <span class="px-2 py-0.5 text-xs font-medium text-white bg-red-500 rounded-full">NEW</span>
+                        @endif
+                    </div>
                 </li>
             @endforeach
         </ul>
-        <div class="mt-6 text-center">
-            <a href="#" class="text-sm font-medium text-blue-600 hover:underline">View All Announcements &rarr;</a>
+        <div class="mt-8 text-center">
+            <a href="#" class="font-medium text-blue-600 hover:underline">View All Announcements &rarr;</a>
         </div>
-    @endif
-</section>
+    </div>
+@endif

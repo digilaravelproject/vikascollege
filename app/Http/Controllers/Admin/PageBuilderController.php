@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Page;
 use Exception;
 use Illuminate\Contracts\View\View as ViewView;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ use Illuminate\Support\Str;
 
 class PageBuilderController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the pages.
      *
@@ -22,6 +24,7 @@ class PageBuilderController extends Controller
      */
     public function index(): ViewView|RedirectResponse
     {
+        $this->authorize('view pages');
         try {
             $pages = Page::latest()->get();
             return view('admin.pagebuilder.index', compact('pages'));
@@ -38,6 +41,7 @@ class PageBuilderController extends Controller
      */
     public function create(): ViewView|RedirectResponse
     {
+        $this->authorize('create pages');
         try {
             return view('admin.pagebuilder.create');
         } catch (Exception $e) {
@@ -54,6 +58,7 @@ class PageBuilderController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create pages');
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:pages,slug',
@@ -85,6 +90,7 @@ class PageBuilderController extends Controller
      */
     public function edit(Page $page): ViewView|RedirectResponse
     {
+        $this->authorize('edit pages');
         try {
             return view('admin.pagebuilder.edit', compact('page'));
         } catch (Exception $e) {
@@ -102,6 +108,8 @@ class PageBuilderController extends Controller
      */
     public function update(Request $request, Page $page): RedirectResponse
     {
+        $this->authorize('edit pages');
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:pages,slug,' . $page->id,
@@ -132,6 +140,7 @@ class PageBuilderController extends Controller
      */
     public function destroy(Page $page): RedirectResponse
     {
+        $this->authorize('delete pages');
         try {
             // Delete associated image before deleting the page record
             $this->deleteOldFile($page->image);
@@ -152,6 +161,8 @@ class PageBuilderController extends Controller
      */
     public function toggleStatus(Page $page): RedirectResponse
     {
+        $this->authorize('manage menus');
+
         try {
             // Step 1: Toggle the page status (true to false, false to true)
             $page->update(['status' => !$page->status]);
@@ -202,6 +213,8 @@ class PageBuilderController extends Controller
      */
     public function builder(Page $page): ViewView|RedirectResponse
     {
+        $this->authorize('edit pages');
+
         try {
             return view('admin.pagebuilder.builder', compact('page'));
         } catch (Exception $e) {
@@ -219,6 +232,8 @@ class PageBuilderController extends Controller
      */
     public function saveBuilder(Request $request, Page $page): JsonResponse // Note: Only returns JsonResponse now
     {
+        $this->authorize('edit pages');
+
         $validated = $request->validate([
             'content' => 'required|json',
         ]);

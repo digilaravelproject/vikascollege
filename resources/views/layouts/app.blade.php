@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {{-- ✅ Favicon --}}
     <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/image">
-
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
     @php
         // Database se settings fetch karna
         $seoTitle = setting('meta_title');
@@ -46,7 +46,7 @@
     @stack('styles')
 </head>
 
-<body class="flex flex-col min-h-screen bg-gray-50">
+<body class="flex flex-col min-h-screen bg-gray-50 font-sans antialiased">
 
     {{-- ✅ Top Banner --}}
     @include('partials.top-banner')
@@ -129,7 +129,12 @@
             });
         })();
     </script>
-
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true // Animation sirf ek baar chalega
+        });
+    </script>
 </body>
 
 </html>

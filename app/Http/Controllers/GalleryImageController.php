@@ -4,24 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\GalleryImage;
 use App\Models\GalleryCategory;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GalleryImageController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // Fetch all categories for the filter tabs
-        $categories = GalleryCategory::orderBy('name')->get(['id', 'name']);
+        try {
+            $this->authorize('view gallery images'); // Add permission check
+            // Fetch all categories for the filter tabs
+            $categories = GalleryCategory::orderBy('name')->get(['id', 'name']);
 
-        // Fetch images with category relationship
-        $images = GalleryImage::with('category')
-            ->latest()
-            ->paginate(24);
+            // Fetch images with category relationship
+            $images = GalleryImage::with('category')
+                ->latest()
+                ->paginate(24);
 
-        return view('admin.gallery.images.index', compact('images', 'categories'));
+            return view('admin.gallery.images.index', compact('images', 'categories'));
+        } catch (\Exception $e) {
+            Log::error("Error fetching gallery images: " . $e->getMessage());
+            return back()->with('error', 'Failed to load gallery images.');
+        }
     }
 
     /**
@@ -29,8 +39,14 @@ class GalleryImageController extends Controller
      */
     public function create()
     {
-        $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
-        return view('admin.gallery.images.create', compact('categories'));
+        try {
+            $this->authorize('upload gallery images'); // Add permission check
+            $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
+            return view('admin.gallery.images.create', compact('categories'));
+        } catch (\Exception $e) {
+            Log::error("Error opening create gallery image form: " . $e->getMessage());
+            return back()->with('error', 'Failed to open create gallery image form.');
+        }
     }
 
     /**
@@ -38,19 +54,26 @@ class GalleryImageController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:gallery_categories,id',
-            'image' => 'required|image|max:8192',
-            'title' => 'nullable|string|max:255',
-        ]);
+        try {
+            $this->authorize('upload gallery images'); // Add permission check
 
-        $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
+            $validated = $request->validate([
+                'category_id' => 'required|exists:gallery_categories,id',
+                'image' => 'required|image|max:8192',
+                'title' => 'nullable|string|max:255',
+            ]);
 
-        GalleryImage::create($validated);
+            $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
 
-        return redirect()
-            ->route('admin.gallery-images.index')
-            ->with('success', 'Image added successfully.');
+            GalleryImage::create($validated);
+
+            return redirect()
+                ->route('admin.gallery-images.index')
+                ->with('success', 'Image added successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error creating gallery image: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to upload image.');
+        }
     }
 
     /**
@@ -58,11 +81,17 @@ class GalleryImageController extends Controller
      */
     public function edit(GalleryImage $galleryImage)
     {
-        $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
-        return view('admin.gallery.images.edit', [
-            'image' => $galleryImage,
-            'categories' => $categories
-        ]);
+        try {
+            $this->authorize('edit gallery images'); // Add permission check
+            $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
+            return view('admin.gallery.images.edit', [
+                'image' => $galleryImage,
+                'categories' => $categories
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error opening edit gallery image form: " . $e->getMessage());
+            return back()->with('error', 'Failed to open edit image form.');
+        }
     }
 
     /**
@@ -70,21 +99,28 @@ class GalleryImageController extends Controller
      */
     public function update(Request $request, GalleryImage $galleryImage)
     {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:gallery_categories,id',
-            'image' => 'nullable|image|max:8192',
-            'title' => 'nullable|string|max:255',
-        ]);
+        try {
+            $this->authorize('edit gallery images'); // Add permission check
 
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
+            $validated = $request->validate([
+                'category_id' => 'required|exists:gallery_categories,id',
+                'image' => 'nullable|image|max:8192',
+                'title' => 'nullable|string|max:255',
+            ]);
+
+            if ($request->hasFile('image')) {
+                $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
+            }
+
+            $galleryImage->update($validated);
+
+            return redirect()
+                ->route('admin.gallery-images.index')
+                ->with('success', 'Image updated successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error updating gallery image: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update image.');
         }
-
-        $galleryImage->update($validated);
-
-        return redirect()
-            ->route('admin.gallery-images.index')
-            ->with('success', 'Image updated successfully.');
     }
 
     /**
@@ -92,8 +128,14 @@ class GalleryImageController extends Controller
      */
     public function destroy(GalleryImage $galleryImage)
     {
-        $galleryImage->delete();
+        try {
+            $this->authorize('delete gallery images'); // Add permission check
+            $galleryImage->delete();
 
-        return back()->with('success', 'Image deleted successfully.');
+            return back()->with('success', 'Image deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error deleting gallery image: " . $e->getMessage());
+            return back()->with('error', 'Failed to delete image.');
+        }
     }
 }

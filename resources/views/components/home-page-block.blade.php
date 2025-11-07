@@ -1,63 +1,54 @@
-<div class="page-block-wrapper">
+@php
+    // $loop variable ko PageBlock.php class se pass karna hoga
+    // (Aapko PageBlock.php me public $loop; add karna pad sakta hai)
+    $loop = $loop ?? null;
+
+    // Default view path
+    $includePath = null;
+
+    // Divider ko alag se handle karein, usme padding/wrapper nahi chahiye
+    if ($type === 'divider') {
+        $includePath = 'components.home-page-blocks.divider';
+    } else {
+        // Baki sab blocks ke liye unka view path set karein
+        $includePath = match ($type) {
+            'intro' => 'components.home-page-blocks.intro',
+            'sectionLinks' => 'components.home-page-blocks.section-links',
+            // 'latestUpdates' => 'components.home-page-blocks.latest-updates',
+            'announcements' => 'components.home-page-blocks.announcements',
+            'events' => 'components.home-page-blocks.events',
+            'academic_calendar' => 'components.home-page-blocks.academic-calendar',
+            'image_text' => 'components.home-page-blocks.image-text', // Yeh 'intro' jaisa lag raha hai, iska naam 'image_text' hai
+            'gallery' => 'components.home-page-blocks.gallery',
+            'testimonials' => 'components.home-page-blocks.testimonials',
+            'why_choose_us' => 'components.home-page-blocks.why-choose-us',
+            default => null
+        };
+    }
+@endphp
+
+@if ($type === 'divider')
+    {{-- Divider me koi wrapper nahi ayega --}}
+    @include($includePath)
+
+@elseif ($includePath)
     {{--
-        Yeh file ek router ki tarah kaam karti hai.
-        $block variable (static data) aur $items, $title, $description variables (dynamic data)
-        component class (PageBlock.php) se automatically pass ho rahe hain.
+    YAHAN HAI ASLI MAGIC:
+    Har block ko hum ek full-width section me wrap kar rahe hain.
+    $loop->even se background color alternate hoga (white, gray-50, white, gray-50...)
     --}}
-    @switch($type)
-        @case('intro')
-            @include('components.home-page-blocks.intro', ['block' => $block])
-            @break
+    <section class="w-full py-12 md:py-20 {{ $loop && $loop->even ? 'bg-gray-50' : 'bg-white' }}">
+        {{-- Content ko max-width container me rakhenge --}}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        @case('sectionLinks')
-            @include('components.home-page-blocks.section-links', ['block' => $block])
-            @break
-
-        @case('latestUpdates')
-            @include('components.home-page-blocks.latest-updates', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('announcements')
-            @include('components.home-page-blocks.announcements', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('events')
-            @include('components.home-page-blocks.events', [
-                'items' => $items,
-                'title' => $title,
-                'description' => $description,
+            @include($includePath, [
+                'block' => $block ?? null,
+                'items' => $items ?? null,
+                'title' => $title ?? null,
+                'description' => $description ?? null,
+                'loop' => $loop // Modal ID ke liye $loop pass kar rahe hain
             ])
-            @break
 
-        @case('academic_calendar')
-            @include('components.home-page-blocks.academic-calendar', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('image_text')
-            @include('components.home-page-blocks.image-text', ['block' => $block])
-            @break
-
-        @case('gallery')
-            @include('components.home-page-blocks.gallery', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('testimonials')
-            @include('components.home-page-blocks.testimonials', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('why_choose_us')
-            @include('components.home-page-blocks.why-choose-us', [
-                'items' => $items,
-                'title' => $title,
-                'description' => $description,
-            ])
-            @break
-
-        @case('divider')
-            @include('components.home-page-blocks.divider')
-            @break
-
-        @default
-            {{-- Aap yahan ek default view ya error dikha sakte hain --}}
-            @endswitch
-</div>
+                </div>
+            </section>
+@endif

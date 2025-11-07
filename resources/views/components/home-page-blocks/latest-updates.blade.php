@@ -1,27 +1,69 @@
-<section class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="mb-6 text-2xl font-bold text-center text-gray-800">{{ $title }}</h2>
+@php
+    // Animation ki speed ko items ke count ke hisab se set karenge
+    $itemCount = $items->count();
+    // Har item ke liye 4 seconds. Kam time = faster scroll.
+    $animationDuration = $itemCount * 4;
+@endphp
 
-    @if ($items->isEmpty())
-        <p class="text-center text-gray-500">No updates found.</p>
-    @else
-        <div class="space-y-4">
-            @foreach ($items as $notification)
-                <div
-                    class="flex items-center gap-4 p-4 transition-all bg-gray-50 border border-gray-200 rounded-lg hover:shadow-sm">
-                    <span class="text-2xl">{{ $notification->icon }}</span>
-                    <div class="flex-grow">
-                        <p class="font-semibold text-gray-800">{{ $notification->title }}</p>
-                        <span class="text-xs text-gray-500">{{ $notification->display_date->format('M d, Y') }}</span>
-                    </div>
-                    @if ($notification->href)
-                        <a href="{{ $notification->href }}"
-                            class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-700"
-                            target="_blank" rel="noopener noreferrer">
-                            {{ $notification->button_name ?: 'View' }}
-                        </a>
-                    @endif
-                </div>
-            @endforeach
+{{-- 1. CSS FOR SCROLLING --}}
+@pushOnce('styles')
+<style>
+    @keyframes scroll-up {
+        0% {
+            transform: translateY(0);
+        }
+
+        100% {
+            /* -50% isliye kyonki humne list ko duplicate kiya hai */
+            transform: translateY(-50%);
+        }
+    }
+
+    .ticker-content {
+        animation: scroll-up linear infinite;
+        animation-duration:
+            {{ $animationDuration }}
+            s;
+    }
+
+    .ticker-wrapper:hover .ticker-content {
+        /* Hover karne par animation pause ho jayega */
+        animation-play-state: paused;
+    }
+</style>
+@endpushOnce
+
+{{-- 2. HEADING --}}
+<h2 class="text-3xl font-extrabold text-center text-gray-900 mb-10 tracking-tight">{{ $title }}</h2>
+
+@if ($items->isEmpty())
+    <p class="text-center text-gray-500">No updates found.</p>
+@else
+    {{-- 3. THE SCROLLING CONTAINER --}}
+    <div class="max-w-3xl mx-auto">
+        {{--
+        Yeh wrapper hai jo scroll ko "kaat" dega (overflow: hidden)
+        - max-h-[450px] se iski height limit kar di hai.
+        - 'mask-image' se top aur bottom me fade effect diya hai (professional touch)
+        --}}
+        <div class="ticker-wrapper"
+            style="max-height: 450px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent); mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);">
+
+            {{-- Yeh content hai jo animate hoga --}}
+            <div class="ticker-content">
+
+                {{-- LIST 1 (Original) --}}
+                @foreach ($items as $notification)
+                    {{-- Yeh 'item' file ko call kar raha hai --}}
+                    @include('components.home-page-blocks.partials.latest-update-item', ['notification' => $notification])
+                @endforeach
+
+                {{-- LIST 2 (Duplicate for Seamless Loop) --}}
+                @foreach ($items as $notification)
+                    @include('components.home-page-blocks.partials.latest-update-item', ['notification' => $notification])
+                @endforeach
+
+            </div>
         </div>
-    @endif
-</section>
+    </div>
+@endif

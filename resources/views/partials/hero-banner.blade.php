@@ -62,8 +62,7 @@
     </div>
 </section>
 
-
-<!-- 🔹 Dynamic Banner Section (Image/Video Slider) -->
+{{-- 2. DYNAMIC BANNER SECTION (Slider) --}}
 @php
     $banners = \App\Models\Setting::where('key', 'like', 'banner_media_%')->get();
 @endphp
@@ -82,20 +81,15 @@
                             <img src="{{ asset('storage/' . $data['path']) }}"
                                 class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center transition-transform duration-700 hover:scale-105" />
                         @else
-                            {{-- <video autoplay muted loop playsinline
-                                class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center">
-                                <source src="{{ asset('storage/' . $data['path']) }}" type="video/mp4" />
-                            </video> --}}
                             <video
                                 class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center your-slider-video"
                                 autoplay muted loop playsinline preload="metadata" ">
-                                                                    <source src=" {{ asset('storage/' . $data['path']) }}"
+                                                                        <source src=" {{ asset('storage/' . $data['path']) }}"
                                 type="video/mp4" />
                             Aapka browser video tag support nahi karta.
                             </video>
                         @endif
 
-                        <!-- 🔸 Overlay -->
                         <div
                             class="absolute inset-0 flex flex-col items-center justify-center px-5 text-center text-white bg-gradient-to-b from-black/50 via-black/40 to-black/30 sm:px-16">
 
@@ -122,8 +116,6 @@
                     </div>
                 @endforeach
             </div>
-
-            <!-- Swiper Controls -->
             <div class="swiper-pagination"></div>
             <div class="swiper-button-next"></div>
             <div class="swiper-button-prev"></div>
@@ -133,28 +125,88 @@
     <script>
         new Swiper(".mySwiper", {
             loop: true,
-            pagination: {
-                el: ".swiper-pagination",
-                clickable: true
-            },
-            navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev"
-            },
-            autoplay: {
-                delay: 5000,
-                disableOnInteraction: false
-            },
+            pagination: { el: ".swiper-pagination", clickable: true },
+            navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+            autoplay: { delay: 5000, disableOnInteraction: false },
             effect: "fade",
-            fadeEffect: {
-                crossFade: true
-            },
+            fadeEffect: { crossFade: true },
         });
     </script>
 @endif
 
+{{-- 3. NOTICE BOARD BUTTON (Aligned to the Right, Slightly Above Center) --}}
+<button type="button" id="open-notice-modal"
+        class="animate-pulse fixed z-40 right-0 top-1/2 -translate-y-1/2
+               bg-white text-blue-800 font-semibold
+               p-4 rounded-l-xl shadow-lg   py-3 px-3
+               transition-all duration-300 ease-in-out
+                hover:bg-blue-50 hover:shadow-xl group ">
+    <span class="block text-[13px] font-medium tracking-wide" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+        Notice Board
+    </span>
+    <span
+    class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-md ring-2 ring-white">
+</span>
+</button>
+
+
+
+{{-- 4. NOTICE BOARD MODAL --}}
+<div id="notice-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/50 transition-all duration-300 ease-out hidden opacity-0">
+
+    <div id="notice-modal-content"
+        class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col transform transition-all duration-300 ease-out scale-90 opacity-0 overflow-hidden border border-gray-200">
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-5 py-4 border-b bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+            <h3 class="text-lg font-semibold flex items-center gap-2">
+                📋 <span>Notice Board</span>
+            </h3>
+            <button type="button" id="close-notice-modal"
+                class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+        </div>
+
+        {{-- Body --}}
+        <div class="p-5 space-y-3 overflow-y-auto text-[14px] scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
+            @if (count($marqueeNotifications))
+                @foreach ($marqueeNotifications as $n)
+                    @php
+                        $icon = $n->icon ?: '🔔';
+                        $title = $n->title;
+                        $href = $n->href;
+                        $btn = $n->button_name ?: 'View';
+                    @endphp
+
+                    <a href="{{ $href ?? '#' }}" target="_blank"
+                        class="group flex items-center gap-3 py-3 px-4 border border-gray-200 rounded-xl transition-all duration-200 bg-white/60 hover:bg-blue-50 hover:scale-[1.01] shadow-sm">
+                        <span class="text-lg w-9 h-9 flex items-center justify-center bg-blue-100 text-blue-700 rounded-md">
+                            {{ $icon }}
+                        </span>
+                        <div class="flex flex-col flex-grow min-w-0">
+                            <p class="font-medium text-gray-800 truncate">{{ $title }}</p>
+                        </div>
+                        @if ($href)
+                            <span
+                                class="text-blue-600 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                                {{ $btn }} →
+                            </span>
+                        @endif
+                    </a>
+                @endforeach
+            @else
+                <div class="flex flex-col items-center justify-center text-gray-500 py-8">
+                    <span class="text-4xl mb-2">📭</span>
+                    <p>No current announcements.</p>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+{{-- 5. CLEAN ANIMATION STYLE --}}
 <style>
-    .banner-image {
+     .banner-image {
         font-family: 'Montserrat', sans-serif;
     }
 
@@ -243,4 +295,96 @@
             animation-duration: 35s;
         }
     }
+    /* 🔴 Pulse Indicator + Subtle Shake Animation */
+    #open-notice-modal .animate-pulse {
+        animation: pulse-shake 2s infinite;
+    }
+
+    @keyframes pulse-shake {
+        0%, 100% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+        }
+        25% {
+            transform: translate(1px, -1px) scale(1.2);
+            opacity: 0.9;
+        }
+        50% {
+            transform: translate(-1px, 1px) scale(1);
+            opacity: 1;
+        }
+        75% {
+            transform: translate(0px, -1px) scale(1.2);
+            opacity: 0.9;
+        }
+    }
+
+    /* Modal Animation */
+    #notice-modal-content {
+        transition: all 0.3s ease;
+    }
+
+    #notice-modal:not(.hidden) {
+        animation: fadeIn 0.3s ease forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        to {
+            opacity: 1;
+            backdrop-filter: blur(3px);
+        }
+    }
+
+    /* Scrollbar Styling */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+    }
+
+    .scrollbar-thumb-blue-300::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thumb-blue-300::-webkit-scrollbar-thumb {
+        background-color: #93c5fd;
+        border-radius: 10px;
+    }
 </style>
+
+{{-- 6. SCRIPT (Removed Hover-to-Open Logic, Click Only) --}}
+<script>
+    (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            const openBtn = document.getElementById('open-notice-modal');
+            const closeBtn = document.getElementById('close-notice-modal');
+            const modal = document.getElementById('notice-modal');
+            const modalContent = document.getElementById('notice-modal-content');
+
+            const openModal = () => {
+                modal.classList.remove('hidden', 'opacity-0');
+                document.body.style.overflow = 'hidden';
+                requestAnimationFrame(() => {
+                    modalContent.classList.remove('scale-90', 'opacity-0');
+                });
+            };
+
+            const closeModal = () => {
+                modalContent.classList.add('scale-90', 'opacity-0');
+                modal.classList.add('opacity-0');
+                document.body.style.overflow = 'auto';
+                setTimeout(() => modal.classList.add('hidden'), 250);
+            };
+
+            // Only Click Open Now
+            openBtn.addEventListener('click', openModal);
+
+            // Close Events
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => e.target === modal && closeModal());
+            document.addEventListener('keydown', (e) => e.key === 'Escape' && !modal.classList.contains('hidden') && closeModal());
+        });
+    })();
+</script>
