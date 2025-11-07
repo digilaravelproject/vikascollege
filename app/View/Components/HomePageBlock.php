@@ -5,6 +5,7 @@ namespace App\View\Components;
 use App\Models\AcademicCalendar;
 use App\Models\Announcement;
 use App\Models\EventItem;
+use App\Models\GalleryCategory;
 use App\Models\GalleryImage;
 use App\Models\Notification;
 use App\Models\Testimonial;
@@ -106,8 +107,23 @@ class HomePageBlock extends Component
                 ->get();
         });
     }
-
     private function loadGallery()
+    {
+        // Cache key badal diya hai
+        $cacheKey = "gallery:homepage:categories:with_images";
+
+        // $this->items me ab Images nahi, Categories aayengi
+        $this->items = Cache::remember($cacheKey, 3600, function () {
+            // Yahan hum GalleryImage nahi, GalleryCategory fetch kar rahe hain
+            // 'galleryImages' aapke relation ka naam hona chahiye (GalleryCategory model me)
+            return GalleryCategory::with(['images' => function ($query) {
+                // Har category ki sirf 8 images load karein (limit)
+                $query->latest()->take(10);
+            }])
+                ->get();
+        });
+    }
+    private function loadGallery_old()
     {
         $cacheKey = "gallery:homepage:count:8";
 
