@@ -1,613 +1,606 @@
 @extends('layouts.admin.app')
 
 @section('content')
-    {{-- Use x-data and x-init on the main container --}}
+    {{-- 1. Main Alpine Component and Initialization --}}
     <div x-data="homepageBuilder()" x-init="initAll()" class="relative min-h-screen p-2 bg-gray-50 sm:p-4">
 
-        {{-- 1. HEADER (Unchanged) --}}
+        {{-- 1. HEADER --}}
         <div class="flex flex-col flex-wrap justify-between gap-3 mb-4 sm:flex-row sm:items-center">
             <h1 class="text-xl font-bold text-gray-800">🏠 Homepage Setup (Grid v2)</h1>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button @click="exportJSON" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300">Export JSON</button>
-                    <button @click="importJSONPrompt" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300">Import JSON</button>
-                    <button @click="undo" :disabled="historyStack.length <= 1" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Undo</button>
-                    <button @click="redo" :disabled="redoStack.length === 0" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Redo</button>
-                    <button @click="savePage" class="flex items-center justify-center px-4 py-2 space-x-2 text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700">
-                        <span>💾</span><span>Save Homepage</span>
-                    </button>
+                <button @click="importJSONPrompt" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300">Import JSON</button>
+                <button @click="undo" :disabled="historyStack.length <= 1" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Undo</button>
+                <button @click="redo" :disabled="redoStack.length === 0" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Redo</button>
+                <button @click="savePage" class="flex items-center justify-center px-4 py-2 space-x-2 text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700">
+                    <span>💾</span><span>Save Homepage</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+            {{-- 2. AVAILABLE BLOCKS (Static HTML container populated by JS) --}}
+            <div class="self-start p-4 bg-white rounded-lg shadow lg:col-span-3 h-fit lg:sticky lg:top-4">
+                <h2 class="mb-3 text-lg font-semibold text-gray-700">Available Blocks</h2>
+                <div id="available-blocks-list" class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
+                    {{-- Content will be inserted here dynamically on init --}}
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            {{-- 3. BUILDER AREA --}}
+            <div class="lg:col-span-9 bg-white p-4 sm:p-6 rounded-lg shadow min-h-[60vh]">
 
-                {{-- 2. AVAILABLE BLOCKS --}}
-                <div class="self-start p-4 bg-white rounded-lg shadow lg:col-span-3 h-fit lg:sticky lg:top-4">
-                    <h2 class="mb-3 text-lg font-semibold text-gray-700">Available Blocks</h2>
-
-                    {{-- ❗️ FIX: Yeh div ab khaali hai. Hum ise JavaScript se populate karenge --}}
-                    {{-- Isse "tpl is not defined" error solve ho jayega --}}
-                    <div id="available-blocks-list" class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
-                        {{-- Yahaan se <template x-for...> poora hata diya gaya hai --}}
+                <template x-if="blocks.length === 0">
+                    {{-- ❗️ FIX: Yahaan se @drop.prevent.stop HATA DIYA GAYA HAI. --}}
+                    {{-- 'data-sortable-container' hi 'onAdd' event ko trigger karega. --}}
+                    {{-- @dragover.prevent drop ko allow karne ke liye zaroori hai --}}
+                    <div class="flex items-center justify-center min-h-[40vh] p-10 border border-dashed rounded-lg"
+                        :data-sortable-container="'blocks'"
+                        @dragover.prevent>
+                        <p class="text-center text-gray-400">🚀 Drag blocks here to start building the homepage</p>
                     </div>
-                </div>
+                </template>
 
-                {{-- 3. BUILDER AREA (Unchanged) --}}
-                <div class="lg:col-span-9 bg-white p-4 sm:p-6 rounded-lg shadow min-h-[60vh]">
-
-                    <template x-if="blocks.length === 0">
-                        <div class="flex items-center justify-center min-h-[40vh] p-10 border border-dashed rounded-lg"
-                            @dragover.prevent @drop.prevent.stop="dropBlock($event, 'blocks')">
-                            <p class="text-center text-gray-400">🚀 Drag blocks here to start building the homepage</p>
-                        </div>
-                    </template>
-
-                    {{-- Yahan hum naya recursive partial include kar rahe hain --}}
-                    <div id="rootBlocks" class="space-y-4">
-                        @include('admin.homepage._block_renderer', [
-                            'blocks' => 'blocks',
-                            'parentPath' => "'blocks'"
-                        ])
-                    </div>
+                {{-- Root Block Renderer (Level 1) --}}
+                <div id="rootBlocks" class="space-y-4">
+                    @include('admin.homepage._block_renderer', [
+                        'blocks' => 'blocks',
+                        'parentPath' => 'blocks' // 'blocks' string hai, bilkul sahi
+                    ])
                 </div>
             </div>
+        </div>
 
-            {{-- 4. NOTIFICATION CREATE MODAL (Unchanged) --}}
-            <div x-show="showNotificationModal" @keydown.escape.window="closeNotificationModal()" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto">
-                 {{-- ... (Aapka modal content yahaan) ... --}}
+        {{-- 4. NOTIFICATION CREATE MODAL --}}
+        <div x-show="showNotificationModal" @keydown.escape.window="closeNotificationModal()" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto">
+            {{-- ... (Aapka modal content yahaan) ... --}}
+            <div class="fixed inset-0 transition-opacity" @click="closeNotificationModal()">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
+            <div class="relative w-full max-w-lg p-6 mx-auto my-8 bg-white rounded-lg shadow-xl">
+                <h3 class="text-lg font-medium">New Notification</h3>
+                <p>Modal content yahaan...</p>
+                <button @click="closeNotificationModal()" class="mt-4 px-4 py-2 bg-gray-200 rounded">Close</button>
+            </div>
+        </div>
 
-            {{-- 5. SCRIPT TAGS (Unchanged) --}}
-            <script type="application/json" id="hp-initial-content">{!! $layout !!}</script>
-            <script type="application/json" id="hp-initial-notifications">{!! json_encode($notifications) !!}</script>
-            <script type="application/json" id="hp-notification-icons">{!! json_encode($icons) !!}</script>
+        {{-- 5. SCRIPT TAGS --}}
+        <script type="application/json" id="hp-initial-content">{!! $layout !!}</script>
+        <script type="application/json" id="hp-initial-notifications">{!! json_encode($notifications) !!}</script>
+        <script type="application/json" id="hp-notification-icons">{!! json_encode($icons) !!}</script>
 
-            {{-- 6. CDN scripts (Unchanged) --}}
-            <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-            <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-            <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+        {{-- 6. CDN scripts --}}
+        <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 
-            {{-- =================================== --}}
-            {{-- 7. ALPINE JS (POORA NAYA LOGIC) --}}
-            {{-- =================================== --}}
-            <script>
-                function homepageBuilder() {
-                    return {
-                        availableBlocks: [
-                            { type: 'intro', label: '✨ Intro', layout: 'left', image: '', heading: '', buttonText: '' },
-                            { type: 'sectionLinks', label: '📚 Section (links list)', title: '', columns: 1, links: [] },
-                            { type: 'latestUpdates', label: '📣 Latest Updates', title: '', count: 5 },
-                            { type: 'divider', label: '⎯⎯ Divider' },
-                            { type: 'announcements', label: '📢 Announcements', items: [] },
-                            { type: 'events', label: "🎫 What's Happening", items: [] },
-                            { type: 'academic_calendar', label: '📅 Academic Calendar', items: [] },
-                            { type: 'image_text', label: '🖼️ Image + Text', image: '', text: '' },
-                            { type: 'gallery', label: '🖼️ Gallery', images: [] },
-                            { type: 'testimonials', label: '⭐ Testimonials', items: [] },
-                            { type: 'why_choose_us', label: '🎯 Why Choose Us', items: [] },
-                            {
-                                type: 'layout_grid',
-                                label: 'Layout (Grid)',
-                                layout: '6-6',
-                                columns: [
-                                    { span: 6, blocks: [] },
-                                    { span: 6, blocks: [] }
-                                ]
-                            }
-                        ],
-                        blocks: [],
-
-                        // Notifications
-                        allNotifications: [],
-                        notificationIcons: [],
-                        showNotificationModal: false,
-                        newNotification: null,
-
-                        // History
-                        historyStack: [],
-                        redoStack: [],
-                        _historyTimer: null,
-                        _debounceTimer: null,
-
-                        initAll() {
-                            // load initial content
-                            const scriptEl = document.getElementById('hp-initial-content');
-                            let initial = null;
-                            if (scriptEl) {
-                                try { initial = JSON.parse(scriptEl.textContent || 'null'); } catch(e){ initial = null; }
-                            }
-                            if (initial && initial.blocks && Array.isArray(initial.blocks)) {
-                                this.blocks = this._processLoadedBlocks(initial.blocks);
-                            } else {
-                                this.blocks = [];
-                            }
-
-                            // load notifications/icons
-                            const notifScriptEl = document.getElementById('hp-initial-notifications');
-                            if (notifScriptEl) {
-                                try { this.allNotifications = JSON.parse(notifScriptEl.textContent || '[]'); } catch(e){ this.allNotifications = []; }
-                            }
-                            const iconScriptEl = document.getElementById('hp-notification-icons');
-                            if (iconScriptEl) {
-                                try { this.notificationIcons = JSON.parse(iconScriptEl.textContent || '[]'); } catch(e){ this.notificationIcons = []; }
-                            }
-
-                            this.newNotification = this._getDefaultNotification();
-                            this.pushHistory(); // initial state
-
-                            // ❗️ NAYA CHANGE: Sortable init karne se PEHLE static list generate karein
-                            this.initAvailableBlocksList();
-
-                            this.$nextTick(() => this.initSortables());
+        {{-- =================================== --}}
+        {{-- ✅ 7. ALPINE JS (FULL WORKING LOGIC) --}}
+        {{-- =================================== --}}
+        <script>
+            function homepageBuilder() {
+                return {
+                    {{-- ⭐️ ENHANCED: availableBlocks array with new fields --}}
+                    availableBlocks: [
+                        {
+                            type: 'intro',
+                            label: '✨ Intro',
+                            layout: 'left',
+                            image: '',
+                            heading: 'Block Heading',
+                            subheading: 'Block subheading',
+                            buttonText: 'Learn More',
+                            buttonLink: '#'
                         },
+                        {
+                            type: 'sectionLinks',
+                            label: '📚 Section Links',
+                            title: 'Quick Links',
+                            links: [
+                                { text: 'Sample Link 1', url: '#' },
+                                { text: 'Sample Link 2', url: '#' }
+                            ]
+                        },
+                        { type: 'latestUpdates', label: '📣 Latest Updates', title: 'Latest Updates', count: 5 },
+                        { type: 'divider', label: '⎯⎯ Divider' },
+                        { type: 'announcements', label: '📢 Announcements', items: [] },
+                        { type: 'events', label: "🎫 What's Happening", items: [] },
+                        { type: 'academic_calendar', label: '📅 Academic Calendar', items: [] },
+                        { type: 'image_text', label: '🖼️ Image + Text', image: '', text: '' },
+                        { type: 'gallery', label: '🖼️ Gallery', images: [] },
+                        { type: 'testimonials', label: '⭐ Testimonials', items: [] },
+                        { type: 'why_choose_us', label: '🎯 Why Choose Us', items: [] },
+                        {
+                            type: 'layout_grid',
+                            label: 'Layout (Grid)',
+                            layout: '6-6',
+                            columns: [
+                                { span: 6, blocks: [] },
+                                { span: 6, blocks: [] }
+                            ]
+                        }
+                    ],
+                    blocks: [],
 
-                        // ❗️ YEH POORA NAYA FUNCTION HAI
-                        // Yeh function 'available-blocks-list' div ko static HTML se bharta hai
-                  // ❗️ IS POORE FUNCTION KO REPLACE KAREIN
-                  initAvailableBlocksList() {
-                        const container = document.getElementById('available-blocks-list');
-                        if (!container) {
-                            console.error('Available blocks container not found');
-                            return;
+                    // Notifications/History
+                    allNotifications: [],
+                    notificationIcons: [],
+                    showNotificationModal: false,
+                    newNotification: null,
+                    historyStack: [],
+                    redoStack: [],
+                    _historyTimer: null,
+                    _debounceTimer: null,
+
+                    initAll() {
+                        const scriptEl = document.getElementById('hp-initial-content');
+                        let initial = null;
+                        if (scriptEl) {
+                            try { initial = JSON.parse(scriptEl.textContent || 'null'); } catch(e){ initial = null; }
+                        }
+                        if (initial && initial.blocks && Array.isArray(initial.blocks)) {
+                            this.blocks = this._processLoadedBlocks(initial.blocks);
+                        } else {
+                            this.blocks = [];
                         }
 
-                        container.innerHTML = ''; // Pehle se ho toh clear karein
+                        const notifScriptEl = document.getElementById('hp-initial-notifications');
+                        if (notifScriptEl) {
+                            try { this.allNotifications = JSON.parse(notifScriptEl.textContent || '[]'); } catch(e){ this.allNotifications = []; }
+                        }
+                        const iconScriptEl = document.getElementById('hp-notification-icons');
+                        if (iconScriptEl) {
+                            try { this.notificationIcons = JSON.parse(iconScriptEl.textContent || '[]'); } catch(e){ this.notificationIcons = []; }
+                        }
 
-                        // 'this' ko reference karein taaki listener ke andar available ho
-                        const that = this;
+                        this.newNotification = this._getDefaultNotification();
+                        this.pushHistory(true); // Initial state
 
-                        // availableBlocks array se loop karke STATIC HTML banayein
+                        this.initAvailableBlocksList();
+                        this.$nextTick(() => this.initSortables());
+                    },
+
+                    _processLoadedBlocks(blocks) {
+                        if (!blocks || !Array.isArray(blocks)) return [];
+                        return blocks.map(b => {
+                            if (!b || !b.type) return null; // Invalid block
+                            const defaults = this._getBlockDefaults(b.type);
+                            if (!defaults) {
+                                console.warn('Unknown block type found during load:', b.type);
+                                return null; // Unknown block type
+                            }
+
+                            // Deep merge (Object.assign shallow merge karta hai)
+                            const merged = JSON.parse(JSON.stringify(defaults));
+                            Object.assign(merged, b); // Saved properties ko overwrite karein
+
+                            merged.id = merged.id || this._genId();
+
+                            if (merged.type === 'layout_grid' && Array.isArray(merged.columns)) {
+                                merged.columns = merged.columns.map(col => {
+                                    return {
+                                        span: col.span || 12,
+                                        blocks: this._processLoadedBlocks(col.blocks || [])
+                                    };
+                                });
+                            }
+                            // ❗️ FIX for sectionLinks: Ensure 'links' is always an array
+                            if (merged.type === 'sectionLinks' && !Array.isArray(merged.links)) {
+                                merged.links = defaults.links || [];
+                            }
+                            return merged;
+                        }).filter(Boolean); // Filter out null/invalid blocks
+                    },
+
+                    initAvailableBlocksList() {
+                        const container = document.getElementById('available-blocks-list');
+                        if (!container) return;
+                        container.innerHTML = '';
                         this.availableBlocks.forEach(tpl => {
-                            // 1. Main div banayein
                             const div = document.createElement('div');
                             div.className = "p-3 text-gray-700 transition border border-gray-200 rounded cursor-grab hover:bg-blue-50";
-
-                            // 2. Static data-block-type attribute set karein (onAdd ke liye)
                             div.setAttribute('data-block-type', tpl.type);
-
-                            // 3. ❗️ NAYA: Ise 'draggable' banayein
                             div.setAttribute('draggable', 'true');
 
-                            // 4. ❗️ NAYA: dragstart listener add karein (dropBlock fallback ke liye)
                             div.addEventListener('dragstart', (e) => {
-                                // Fallback drop handler (dropBlock) ke liye data set karein
                                 try {
                                     e.dataTransfer.setData('block-type', tpl.type);
-                                    e.dataTransfer.setData('text/plain', tpl.type);
                                     e.dataTransfer.effectAllowed = 'copy';
-                                } catch (err) {
-                                    console.error('Error setting dataTransfer', err);
-                                }
+                                } catch (err) { console.error('Error setting dataTransfer', err); }
                             });
 
-                            // 5. Static span banayein
                             const span = document.createElement('span');
-                            span.textContent = tpl.label; // textContent use karein, x-text nahi
-
-                            // 6. Jodein
+                            span.textContent = tpl.label;
                             div.appendChild(span);
                             container.appendChild(div);
                         });
+
+                        // Initialize Sortable on the sidebar (clone group)
+                        const sidebar = document.getElementById('available-blocks-list');
+                        if (sidebar && !sidebar._sortable) {
+                            sidebar._sortable = Sortable.create(sidebar, {
+                                group: { name: 'shared-blocks', pull: 'clone', put: false },
+                                sort: false,
+                                animation: 150,
+                            });
+                        }
                     },
 
-                        // ensure loaded blocks have defaults, IDs and process nested grid columns
-                        _processLoadedBlocks(blocks) {
-                            if (!blocks || !Array.isArray(blocks)) return [];
-                            return blocks.map(b => {
-                                const defaults = this._getBlockDefaults(b.type);
-                                const merged = Object.assign({}, defaults, b);
-                                merged.id = merged.id || this._genId();
+                    // ----------------- SORTABLE LOGIC -----------------
 
-                                if (merged.type === 'layout_grid' && Array.isArray(merged.columns)) {
-                                    merged.columns = merged.columns.map(col => {
-                                        return {
-                                            span: col.span || 12,
-                                            blocks: this._processLoadedBlocks(col.blocks || [])
-                                        };
-                                    });
+                    initSortables() {
+                        this.destroySortables(); // Pehle purane instances ko destroy karein
+
+                        const containers = this.$el.querySelectorAll('[data-sortable-container]');
+
+                        containers.forEach(container => {
+                            if (container._sortable) return; // Already initialized
+
+                            const sortableInstance = Sortable.create(container, {
+                                group: { name: 'shared-blocks', pull: true, put: true },
+                                handle: '.cursor-grab',
+                                draggable: '[data-id]', // Sirf data-id waale items ko drag karein
+                                animation: 150,
+
+                                onStart(evt) {
+                                    if (evt.item.dataset.id) {
+                                        evt.item.classList.add('opacity-50', 'border-blue-500');
+                                    }
+                                },
+
+                                onAdd: (evt) => {
+                                    const blockType = evt.item.dataset.blockType;
+                                    const newIndex = evt.newIndex;
+                                    const currentPath = evt.to.dataset.sortableContainer;
+
+                                    if (blockType) { // Case: Added from Sidebar (Clone)
+                                        const tpl = this.availableBlocks.find(b => b.type === blockType);
+                                        if (!tpl) { evt.item.remove(); return; }
+
+                                        const newBlock = JSON.parse(JSON.stringify(tpl));
+                                        newBlock.id = this._genId();
+
+                                        if (newBlock.type === 'layout_grid' && Array.isArray(newBlock.columns)) {
+                                            newBlock.columns = newBlock.columns.map(c => ({ span: c.span || 12, blocks: [] }));
+                                        }
+
+                                        const targetArr = this.getDeep(currentPath);
+                                        if (Array.isArray(targetArr)) {
+                                            targetArr.splice(newIndex, 0, newBlock);
+                                            this.pushHistory();
+                                        }
+
+                                        evt.item.remove(); // DOM clone ko remove karein
+                                    }
+                                },
+
+                                onEnd: (evt) => {
+                                    evt.item.classList.remove('opacity-50', 'border-blue-500');
+
+                                    const blockId = evt.item.dataset.id;
+                                    if (!blockId) return; // Sidebar clone, onAdd ne handle kiya
+
+                                    const fromPath = evt.from.dataset.sortableContainer;
+                                    const toPath = evt.to.dataset.sortableContainer;
+                                    const oldIndex = evt.oldIndex;
+                                    const newIndex = evt.newIndex;
+
+                                    if (fromPath === toPath && oldIndex === newIndex) return;
+
+                                    const [foundBlock, oldParentArray] = this._findAndRemoveBlock(blockId, this.blocks);
+                                    if (!foundBlock) {
+                                        console.error('Moved block not found in data', blockId);
+                                        return;
+                                    }
+
+                                    const newParentArray = this.getDeep(toPath);
+                                    if (Array.isArray(newParentArray)) {
+                                        newParentArray.splice(newIndex, 0, foundBlock);
+                                        this.pushHistory(); // Triggers re-render and re-initSortables
+                                    } else {
+                                        console.error('Target parent array not found during onEnd', toPath);
+                                        if (oldParentArray && Array.isArray(oldParentArray)) {
+                                            oldParentArray.splice(oldIndex, 0, foundBlock);
+                                        }
+                                    }
                                 }
-                                return merged;
                             });
-                        },
+                            container._sortable = sortableInstance;
+                        });
+                    },
 
-                        // ... (Notification functions - _getDefaultNotification, etc. - Unchanged) ...
-                        _getDefaultNotification() {
-                            return {
-                                id: null,
-                                title: '',
-                                message: '',
-                                icon: this.notificationIcons?.[0] || null,
-                                send_at: null
-                            };
-                        },
-                        openNewNotificationModal() {
-                            this.newNotification = this._getDefaultNotification();
-                            this.showNotificationModal = true;
-                        },
-                        closeNotificationModal() {
-                            this.showNotificationModal = false;
-                        },
-                        refreshNotifications() {
-                            console.log('refreshNotifications: not implemented');
-                        },
-                        saveNewNotification() {
-                            const payload = Object.assign({}, this.newNotification);
-                            payload.id = payload.id || this._genId();
-                            this.allNotifications.unshift(payload);
-                            this.closeNotificationModal();
-                        },
+                    destroySortables() {
+                        const containers = this.$el.querySelectorAll('[data-sortable-container]');
+                        containers.forEach(container => {
+                            if (container._sortable && typeof container._sortable.destroy === 'function') {
+                                container._sortable.destroy();
+                                delete container._sortable;
+                            }
+                        });
+                    },
+
+                    // ----------------- ❗️ NEW/MISSING FUNCTIONS ADDED HERE -----------------
+
+                    moveBlockUp(path, index) {
+                        const [parentArray] = this.getDeepParent(path, index);
+                        if (!parentArray || index <= 0) return;
+                        // Simple array swap
+                        [parentArray[index - 1], parentArray[index]] = [parentArray[index], parentArray[index - 1]];
+                        this.pushHistory();
+                    },
+
+                    moveBlockDown(path, index) {
+                        const [parentArray] = this.getDeepParent(path, index);
+                        if (!parentArray || index >= parentArray.length - 1) return;
+                        // Simple array swap
+                        [parentArray[index + 1], parentArray[index]] = [parentArray[index], parentArray[index + 1]];
+                        this.pushHistory();
+                    },
+
+                    duplicateBlock(path, index) {
+                        const [parentArray] = this.getDeepParent(path, index);
+                        if (!parentArray) return;
+                        const original = parentArray[index];
+                        const clone = JSON.parse(JSON.stringify(original));
+
+                        // Sabhi nested IDs ko regenerate karein
+                        const regenerateIds = (b) => {
+                            b.id = this._genId();
+                            if (b.type === 'layout_grid' && Array.isArray(b.columns)) {
+                                b.columns.forEach(col => {
+                                    col.blocks = (col.blocks || []).map(child => {
+                                        regenerateIds(child);
+                                        return child;
+                                    });
+                                });
+                            }
+                        };
+                        regenerateIds(clone);
+
+                        parentArray.splice(index + 1, 0, clone);
+                        this.pushHistory();
+                    },
+
+                    confirmRemove(path, index) {
+                        const that = this;
+                        Swal.fire({
+                            title: 'Delete Block?',
+                            text: "This will remove the block and all nested content. Are you sure?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Yes, delete it!'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const [parentArray] = that.getDeepParent(path, index);
+                                if (parentArray) {
+                                    parentArray.splice(index, 1);
+                                    that.pushHistory();
+                                }
+                            }
+                        });
+                    },
 
 
-                        // helper: get deep copy of a template from availableBlocks
-                        _getBlockDefaults(type) {
-                            const tpl = this.availableBlocks.find(b => b.type === type);
-                            return tpl ? JSON.parse(JSON.stringify(tpl)) : { type, id: this._genId() };
-                        },
+                    // ----------------- UTILITY & HISTORY -----------------
 
-                        _genId() {
-                            return 'hp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,6);
-                        },
-
-                        // ... (Path helpers - getDeep, getDeepParent - Unchanged) ...
-                        getDeep(path) {
-                            if (!path) return undefined;
+                    _getBlockDefaults(type) {
+                        const tpl = this.availableBlocks.find(b => b.type === type);
+                        return tpl ? JSON.parse(JSON.stringify(tpl)) : null; // Return null if unknown
+                    },
+                    _genId() {
+                        return 'hp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,6);
+                    },
+                    getDeep(path) {
+                        if (!path) return undefined;
+                        // 'blocks[0].columns[1].blocks' ko 'blocks.0.columns.1.blocks' mein convert karein
+                        const normalized = path.replace(/\[(\d+)\]/g, '.$1').replace(/^\.+/, '');
+                        const parts = normalized.split('.');
+                        let obj = this;
+                        for (let p of parts) {
+                            if (obj === null || typeof obj === 'undefined') return undefined;
+                            if (p === '') continue;
+                            if (/^\d+$/.test(p)) {
+                                obj = obj[Number(p)];
+                            } else {
+                                obj = obj[p];
+                            }
+                        }
+                        return obj;
+                    },
+                    getDeepParent(path, index) {
+                        try {
                             const normalized = path.replace(/\[(\d+)\]/g, '.$1').replace(/^\.+/, '');
                             const parts = normalized.split('.');
                             let obj = this;
-                            for (let p of parts) {
-                                if (obj === null || typeof obj === 'undefined') return undefined;
-                                if (p === '') continue;
-                                if (/^\d+$/.test(p)) {
-                                    obj = obj[Number(p)];
-                                } else {
-                                    obj = obj[p];
+                            for (let i = 0; i < parts.length; i++) {
+                                const key = parts[i];
+                                if (key === '') continue;
+                                if (/^\d+$/.test(key)) obj = obj[Number(key)];
+                                else obj = obj[key];
+                            }
+                            if (Array.isArray(obj) && typeof obj[index] !== 'undefined') {
+                                return [obj, index];
+                            }
+                        } catch (e) {
+                            console.error('getDeepParent error', e);
+                        }
+                        return [null, -1];
+                    },
+                    _findAndRemoveBlock(id, blocksArray) {
+                        for (let i = 0; i < blocksArray.length; i++) {
+                            const b = blocksArray[i];
+                            if (b.id === id) {
+                                blocksArray.splice(i, 1);
+                                return [b, blocksArray];
+                            }
+                            if (b.type === 'layout_grid' && Array.isArray(b.columns)) {
+                                for (let col of b.columns) {
+                                    if (!Array.isArray(col.blocks)) continue;
+                                    const found = this._findAndRemoveBlock(id, col.blocks);
+                                    if (found && found[0]) return found;
                                 }
                             }
-                            return obj;
-                        },
-                        getDeepParent(path, index) {
-                            try {
-                                const normalized = path.replace(/\[(\d+)\]/g, '.$1').replace(/^\.+/, '');
-                                const parts = normalized.split('.');
-                                let obj = this;
-                                for (let i = 0; i < parts.length; i++) {
-                                    const key = parts[i];
-                                    if (key === '') continue;
-                                    if (/^\d+$/.test(key)) obj = obj[Number(key)];
-                                    else obj = obj[key];
-                                }
-                                if (Array.isArray(obj) && typeof obj[index] !== 'undefined') {
-                                    return [obj, index];
-                                }
-                            } catch (e) {
-                                console.error('getDeepParent error', e);
+                        }
+                        return [null, null];
+                    },
+                    changeGridLayout(block) {
+                        if (!block || !block.layout) return;
+                        const spans = ('' + block.layout).split('-').map(s => parseInt(s, 10) || 12);
+                        const oldColumns = Array.isArray(block.columns) ? block.columns : [];
+                        const newColumns = [];
+
+                        for (let i = 0; i < spans.length; i++) {
+                            if (oldColumns[i]) {
+                                newColumns.push({ span: spans[i], blocks: oldColumns[i].blocks });
+                            } else {
+                                newColumns.push({ span: spans[i], blocks: [] });
                             }
-                            return [null, -1];
-                        },
-
-
-                        /**************
-                        * Sortable.js
-                        ***************/
-                        initSortables() {
-                            // 1) init sidebar (clone)
-                            const sidebar = document.getElementById('available-blocks-list');
-                            if (sidebar && !sidebar._sortable) {
-                                sidebar._sortable = Sortable.create(sidebar, {
-                                    group: {
-                                        name: 'shared-blocks',
-                                        pull: 'clone',
-                                        put: false
-                                    },
-                                    sort: false,
-                                    animation: 150,
-                                });
-                            }
-
-                            // 2) all drop targets
-                            const containers = this.$el.querySelectorAll('[data-sortable-container]');
-                            containers.forEach(container => {
-                                if (container._sortable) return; // Pehle se init hai toh chhod dein
-
-                                container._sortable = Sortable.create(container, {
-                                    group: 'shared-blocks',
-                                    handle: '.cursor-grab, .group',
-                                    draggable: '[data-id], [data-block-type]', // ❗️ Yahaan [data-block-type] important hai
-                                    animation: 150,
-                                    onAdd: (evt) => {
-                                        // Sidebar se drag hone par
-                                        const blockType = evt.item.dataset.blockType;
-                                        const newIndex = evt.newIndex;
-                                        const targetPath = evt.to.dataset.sortableContainer;
-
-                                        if (blockType) {
-                                            const tpl = this.availableBlocks.find(b => b.type === blockType);
-                                            if (!tpl) {
-                                                evt.item.remove();
-                                                return;
-                                            }
-                                            const newBlock = JSON.parse(JSON.stringify(tpl));
-                                            newBlock.id = this._genId();
-
-                                            if (newBlock.type === 'layout_grid' && Array.isArray(newBlock.columns)) {
-                                                newBlock.columns = newBlock.columns.map(c => ({ span: c.span || 12, blocks: [] }));
-                                            }
-
-                                            const targetArr = this.getDeep(targetPath);
-                                            if (Array.isArray(targetArr)) {
-                                                targetArr.splice(newIndex, 0, newBlock);
-                                                this.pushHistory();
-                                            }
-
-                                            // ❗️ DOM clone ko remove karein (kyunki Alpine render karega)
-                                            evt.item.remove();
-                                            this.$nextTick(() => this.initSortables());
-                                        }
-                                    },
-                                    onEnd: (evt) => {
-                                        // Page ke andar reorder karna
-                                        const blockId = evt.item.dataset.id;
-                                        if (!blockId) return; // Yeh sidebar clone tha, onAdd ne handle kar liya
-
-                                        const fromPath = evt.from.dataset.sortableContainer;
-                                        const toPath = evt.to.dataset.sortableContainer;
-                                        const oldIndex = evt.oldIndex;
-                                        const newIndex = evt.newIndex;
-
-                                        if (fromPath === toPath && oldIndex === newIndex) return;
-
-                                        // Block ko data model se remove karein
-                                        const [foundBlock, _oldParent] = this._findAndRemoveBlock(blockId, this.blocks);
-                                        if (!foundBlock) {
-                                            console.error('Moved block not found in data', blockId);
-                                            return;
-                                        }
-
-                                        // Nayi jagah daalein
-                                        const newParent = this.getDeep(toPath);
-                                        if (Array.isArray(newParent)) {
-                                            newParent.splice(newIndex, 0, foundBlock);
-                                            this.pushHistory();
-                                            this.$nextTick(() => this.initSortables());
-                                        } else {
-                                            console.error('Target parent array not found', toPath);
-                                            // Fallback: Wapas purani jagah daal do
-                                            if (_oldParent && Array.isArray(_oldParent)) {
-                                                _oldParent.splice(oldIndex, 0, foundBlock);
-                                            }
-                                        }
-                                    }
-                                });
-                            });
-                        },
-
-                        // ... (_findAndRemoveBlock - Unchanged) ...
-                        _findAndRemoveBlock(id, blocksArray) {
-                            for (let i = 0; i < blocksArray.length; i++) {
-                                const b = blocksArray[i];
-                                if (b.id === id) {
-                                    blocksArray.splice(i, 1);
-                                    return [b, blocksArray];
-                                }
-                                if (b.type === 'layout_grid' && Array.isArray(b.columns)) {
-                                    for (let col of b.columns) {
-                                        if (!Array.isArray(col.blocks)) continue;
-                                        const found = this._findAndRemoveBlock(id, col.blocks);
-                                        if (found && found[0]) return found;
-                                    }
+                        }
+                        if (oldColumns.length > newColumns.length) {
+                            for (let i = newColumns.length; i < oldColumns.length; i++) {
+                                if (Array.isArray(oldColumns[i].blocks) && oldColumns[i].blocks.length) {
+                                    newColumns[newColumns.length - 1].blocks.push(...oldColumns[i].blocks);
                                 }
                             }
-                            return [null, null];
-                        },
+                        }
+                        block.columns = newColumns;
+                        this.pushHistoryDebounced();
+                    },
 
-                        // ... (dropBlock, dragBlock - Unchanged) ...
-                        dropBlock(e, path) {
-                            // Yeh sirf khaali containers ke liye fallback hai
-                            const blockType = e.dataTransfer.getData('block-type');
-                            const targetArr = this.getDeep(path.replace(/^\'+|\'+$/g, ''));
-                            if (targetArr && targetArr.length === 0 && blockType) {
-                                const tpl = this.availableBlocks.find(b => b.type === blockType);
-                                if (!tpl) return;
-                                const newBlock = JSON.parse(JSON.stringify(tpl));
-                                newBlock.id = this._genId();
-                                targetArr.push(newBlock);
-                                this.pushHistory();
-                                this.$nextTick(() => this.initSortables());
-                            }
-                        },
-                        dragBlock(e, tpl) {
-                            // Fallback (ab shayad use nahi hoga)
-                            e.dataTransfer.setData('block-type', tpl.type);
-                            e.dataTransfer.setData('text/plain', tpl.type);
-                        },
-
-                        // ... (Grid logic - changeGridLayout - Unchanged) ...
-                        changeGridLayout(block) {
-                            if (!block || !block.layout) return;
-                            const spans = ('' + block.layout).split('-').map(s => parseInt(s, 10) || 12);
-                            const oldColumns = Array.isArray(block.columns) ? block.columns : [];
-                            const newColumns = [];
-
-                            for (let i = 0; i < spans.length; i++) {
-                                if (oldColumns[i]) {
-                                    newColumns.push({ span: spans[i], blocks: oldColumns[i].blocks });
-                                } else {
-                                    newColumns.push({ span: spans[i], blocks: [] });
-                                }
-                            }
-                            if (oldColumns.length > newColumns.length) {
-                                for (let i = newColumns.length; i < oldColumns.length; i++) {
-                                    if (Array.isArray(oldColumns[i].blocks) && oldColumns[i].blocks.length) {
-                                        newColumns[newColumns.length - 1].blocks.push(...oldColumns[i].blocks);
-                                    }
-                                }
-                            }
-                            block.columns = newColumns;
-                            this.pushHistoryDebounced();
-                            this.$nextTick(() => this.initSortables());
-                        },
-
-                        // ... (Block controls - moveBlockUp, moveBlockDown, duplicateBlock, confirmRemove - Unchanged) ...
-                        moveBlockUp(path, index) {
-                            const [parentArray] = this.getDeepParent(path.replace(/^\'+|\'+$/g, ''), index);
-                            if (!parentArray || index <= 0) return;
-                            [parentArray[index - 1], parentArray[index]] = [parentArray[index], parentArray[index - 1]];
-                            this.pushHistory();
-                        },
-                        moveBlockDown(path, index) {
-                            const [parentArray] = this.getDeepParent(path.replace(/^\'+|\'+$/g, ''), index);
-                            if (!parentArray || index >= parentArray.length - 1) return;
-                            [parentArray[index + 1], parentArray[index]] = [parentArray[index], parentArray[index + 1]];
-                            this.pushHistory();
-                        },
-                        duplicateBlock(path, index) {
-                            const [parentArray] = this.getDeepParent(path.replace(/^\'+|\'+$/g, ''), index);
-                            if (!parentArray) return;
-                            const original = parentArray[index];
-                            const clone = JSON.parse(JSON.stringify(original));
-                            const regenerateIds = (b) => {
-                                b.id = this._genId();
-                                if (b.type === 'layout_grid' && Array.isArray(b.columns)) {
-                                    b.columns.forEach(col => {
-                                        col.blocks = (col.blocks || []).map(child => {
-                                            regenerateIds(child);
-                                            return child;
-                                        });
-                                    });
-                                }
-                            };
-                            regenerateIds(clone);
-                            parentArray.splice(index + 1, 0, clone);
-                            this.pushHistory();
-                            this.$nextTick(() => this.initSortables());
-                        },
-                        confirmRemove(path, index) {
-                            const that = this;
-                            Swal.fire({
-                                title: 'Delete Block?',
-                                text: 'This will remove the block and all nested content.',
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#d33',
-                                confirmButtonText: 'Yes, delete'
-                            }).then(result => {
-                                if (result.isConfirmed) {
-                                    const [parentArray] = that.getDeepParent(path.replace(/^\'+|\'+$/g, ''), index);
-                                    if (parentArray) {
-                                        parentArray.splice(index, 1);
-                                        that.pushHistory();
-                                    }
-                                }
-                            });
-                        },
-
-                        // ... (History functions - _snapshot, pushHistory, etc. - Unchanged) ...
-                        _snapshot() {
-                            return JSON.parse(JSON.stringify({ blocks: this.blocks }));
-                        },
-                        pushHistory() {
-                            const snap = this._snapshot();
-                            this.historyStack.push(snap);
-                            if (this.historyStack.length > 100) this.historyStack.shift();
+                    _snapshot() {
+                        return JSON.parse(JSON.stringify({ blocks: this.blocks }));
+                    },
+                    pushHistory(isInitial = false) {
+                        const snap = this._snapshot();
+                        this.historyStack.push(snap);
+                        if (this.historyStack.length > 100) this.historyStack.shift();
+                        if (!isInitial) {
                             this.redoStack = [];
-                        },
-                        pushHistoryDebounced() {
-                            if (this._debounceTimer) clearTimeout(this._debounceTimer);
-                            this._debounceTimer = setTimeout(() => {
-                                this.pushHistory();
-                            }, 350);
-                        },
-                        undo() {
-                            if (this.historyStack.length <= 1) return;
-                            const current = this.historyStack.pop();
-                            this.redoStack.push(current);
-                            const prev = this.historyStack[this.historyStack.length - 1];
-                            if (prev) {
-                                this.blocks = this._processLoadedBlocks(prev.blocks || []);
-                                this.$nextTick(() => this.initSortables());
-                            }
-                        },
-                        redo() {
-                            if (this.redoStack.length === 0) return;
-                            const snap = this.redoStack.pop();
-                            if (snap) {
-                                this.historyStack.push(snap);
-                                this.blocks = this._processLoadedBlocks(snap.blocks || []);
-                                this.$nextTick(() => this.initSortables());
-                            }
-                        },
+                        }
+                        // Crucial: Re-init sortables after data change
+                        this.$nextTick(() => this.initSortables());
+                    },
+                    pushHistoryDebounced() {
+                        if (this._debounceTimer) clearTimeout(this._debounceTimer);
+                        this._debounceTimer = setTimeout(() => {
+                            this.pushHistory();
+                        }, 350);
+                    },
+                    undo() {
+                        if (this.historyStack.length <= 1) return;
+                        const current = this.historyStack.pop();
+                        this.redoStack.push(current);
+                        const prev = this.historyStack[this.historyStack.length - 1];
+                        if (prev) {
+                            this.blocks = this._processLoadedBlocks(prev.blocks || []);
+                            this.$nextTick(() => this.initSortables());
+                        }
+                    },
+                    redo() {
+                        if (this.redoStack.length === 0) return;
+                        const snap = this.redoStack.pop();
+                        if (snap) {
+                            this.historyStack.push(snap);
+                            this.blocks = this._processLoadedBlocks(snap.blocks || []);
+                            this.$nextTick(() => this.initSortables());
+                        }
+                    },
 
-                        // ... (Save / Export / Import - Unchanged) ...
-                        savePage() {
-                            const url = '/admin/homepage-setup/save';
-                            const payload = { blocks: this.blocks };
+                    // ❗️ NOTE: `dropBlock` function ko hata diya gaya hai.
+                    // Aapka `initSortables` mein `onAdd` event ab 100% drops ko handle karta hai.
 
-                            fetch(url, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                                },
-                                body: JSON.stringify(payload)
-                            }).then(r => {
-                                if (r.ok) {
-                                    Swal.fire({ title: 'Saved', icon: 'success', timer: 1200, showConfirmButton: false });
-                                } else {
-                                    r.text().then(t => {
-                                        Swal.fire({ title: 'Save failed', text: t || 'Server error', icon: 'error' });
-                                    });
-                                }
-                            }).catch(err => {
-                                console.error('Save error', err);
-                                Swal.fire({ title: 'Save error', text: err.message || err, icon: 'error' });
-                            });
-                        },
-                        exportJSON() {
-                            const data = JSON.stringify({ blocks: this.blocks }, null, 2);
-                            const blob = new Blob([data], { type: 'application/json' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = 'homepage-layout.json';
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                            URL.revokeObjectURL(url);
-                        },
-                        importJSONPrompt() {
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = 'application/json';
-                            input.onchange = (e) => {
-                                const file = e.target.files[0];
-                                if (!file) return;
-                                const reader = new FileReader();
-                                reader.onload = (ev) => {
-                                    try {
-                                        const json = JSON.parse(ev.target.result);
-                                        if (json && Array.isArray(json.blocks)) {
-                                            this.blocks = this._processLoadedBlocks(json.blocks);
-                                            this.pushHistory();
-                                            this.$nextTick(() => this.initSortables());
-                                            Swal.fire({ title: 'Imported', icon: 'success', timer: 1000, showConfirmButton: false });
-                                        } else {
-                                            Swal.fire({ title: 'Invalid JSON', text: 'Missing blocks array', icon: 'error' });
-                                        }
-                                    } catch (ex) {
-                                        Swal.fire({ title: 'Invalid JSON', text: ex.message, icon: 'error' });
+                    // --- Other Methods (Unchanged) ---
+                    _getDefaultNotification() { return { id: null, title: '', message: '', icon: this.notificationIcons?.[0] || null, send_at: null }; },
+                    openNewNotificationModal() { this.newNotification = this._getDefaultNotification(); this.showNotificationModal = true; },
+                    closeNotificationModal() { this.showNotificationModal = false; },
+                    refreshNotifications() { console.log('refreshNotifications: not implemented'); },
+                    saveNewNotification() { const payload = Object.assign({}, this.newNotification); payload.id = payload.id || this._genId(); this.allNotifications.unshift(payload); this.closeNotificationModal(); },
+
+                    savePage() {
+                        // Agar aap route name istemaal nahi kar rahe hain, toh URL hardcode karein
+                        const url = '/admin/homepage-setup/save';
+                        // Agar route name use kar rahe hain:
+                        // const url = '{{ route("admin.homepage.save") }}';
+
+                        const payload = { blocks: this.blocks };
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                            },
+                            body: JSON.stringify(payload)
+                        }).then(r => {
+                            if (r.ok) {
+                                Swal.fire({ title: 'Saved!', icon: 'success', timer: 1200, showConfirmButton: false });
+                                return r.json();
+                            } else {
+                                // Server se error message lene ki koshish karein
+                                return r.json().then(err => {
+                                    throw new Error(err.message || 'Server error. Status: ' + r.status);
+                                }).catch(() => {
+                                    // Agar JSON parse nahi hota hai
+                                    throw new Error('Server error. Status: ' + r.status);
+                                });
+                            }
+                        }).then(data => {
+                            console.log(data.message); // "Layout saved successfully."
+                        }).catch(err => {
+                            console.error('Save error', err);
+                            Swal.fire({ title: 'Save error', text: err.message || 'Check console for details', icon: 'error' });
+                        });
+                    },
+
+                    exportJSON() {
+                        const data = JSON.stringify({ blocks: this.blocks }, null, 2);
+                        const blob = new Blob([data], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'homepage-layout.json';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                    },
+
+                    importJSONPrompt() {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'application/json';
+                        input.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                                try {
+                                    const json = JSON.parse(ev.target.result);
+                                    if (json && Array.isArray(json.blocks)) {
+                                        this.blocks = this._processLoadedBlocks(json.blocks);
+                                        this.pushHistory();
+                                        Swal.fire({ title: 'Imported', icon: 'success', timer: 1000, showConfirmButton: false });
+                                    } else {
+                                        Swal.fire({ title: 'Invalid JSON', text: 'Missing blocks array', icon: 'error' });
                                     }
-                                };
-                                reader.readAsText(file);
+                                } catch (ex) {
+                                    Swal.fire({ title: 'Invalid JSON', text: ex.message, icon: 'error' });
+                                }
                             };
-                            input.click();
-                        },
+                            reader.readAsText(file);
+                        };
+                        input.click();
+                    },
 
-                    } // return end
-                } // function end
-            </script>
-
-        </div>
+                } // return end
+            } // function end
+        </script>
+    </div>
 @endsection

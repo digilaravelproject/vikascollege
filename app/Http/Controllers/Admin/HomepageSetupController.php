@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Notification; // <-- 1. IMPORT NOTIFICATION MODEL
+use App\Models\Notification;
 use App\Models\Setting;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -13,20 +13,13 @@ class HomepageSetupController extends Controller
 {
     /**
      * Show the homepage setup page.
-     * We load the layout and all active/featured notifications.
      */
     public function index()
     {
         $layout = Setting::get('homepage_layout') ?: '{"blocks":[]}';
-
-        // 2. FETCH NOTIFICATIONS FOR THE BUILDER
         $notifications = (new NotificationService())->getRestNotifications();
-
-
-        // 3. GET ICONS (same as your NotificationController)
         $icons = ['🎓', '🏆', '🎭', '📚', '🔔', '📅'];
 
-        // 4. PASS EVERYTHING TO THE VIEW
         return view('admin.homepage.setup', compact('layout', 'notifications', 'icons'));
     }
 
@@ -35,18 +28,33 @@ class HomepageSetupController extends Controller
      */
     public function save(Request $request)
     {
-        // This controller's save function remains unchanged
-        // as the notifications are not saved in the layout JSON.
+        // ❗️ FIX 1: 'content' ki jagah 'blocks' ko validate karein
         $validated = $request->validate([
-            'content' => 'required|json',
+            'blocks' => 'required|array', // 'blocks' ek array hona chahiye
         ]);
 
         try {
-            Setting::set('homepage_layout', $validated['content']);
-            return response()->json(['success' => true]);
+            // ❗️ FIX 2: Data ko ek object mein wrap karke JSON string mein convert karein
+            $jsonContentToSave = json_encode(['blocks' => $validated['blocks']]);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Failed to encode JSON: ' . json_last_error_msg());
+            }
+
+            // ❗️ FIX 3: JSON string ko save karein
+            Setting::set('homepage_layout', $jsonContentToSave);
+
+            // Success response dein
+            return response()->json([
+                'success' => true,
+                'message' => 'Homepage layout saved successfully.'
+            ]);
         } catch (\Throwable $e) {
             Log::error('Homepage layout save failed: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Save failed'], 500);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

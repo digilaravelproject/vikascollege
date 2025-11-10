@@ -1,9 +1,9 @@
 <aside
-    class="fixed inset-y-0 left-0 z-20 transition-transform duration-300 transform bg-white border-r border-gray-200 shadow-xl w-72 lg:static lg:inset-auto lg:translate-x-0 lg:shadow-none"
+    class="fixed inset-y-0 left-0 z-20 flex flex-col transition-transform duration-300 transform bg-white border-r border-gray-200 shadow-xl w-72 lg:static lg:inset-auto lg:translate-x-0 lg:shadow-none"
     :class="{'-translate-x-72': !sidebarOpen}">
 
     {{-- Logo/Header --}}
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+    <div class="flex items-center justify-between flex-shrink-0 px-6 py-4 border-b border-gray-200">
         <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3">
             <img src="{{ asset('storage/' . setting('college_logo')) }}" alt="logo" class="object-contain w-10 h-10">
             <div>
@@ -16,7 +16,7 @@
         </button>
     </div>
 
-    {{-- Navigation --}}
+    {{-- Navigation (Scrollable Area) --}}
     <nav class="flex-1 px-4 py-6 overflow-y-auto">
 
         {{-- Dashboard Link --}}
@@ -24,38 +24,17 @@
             {{ request()->routeIs('admin.dashboard')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-            <i class="w-5 bi bi-speedometer2"></i>
+            <i class="w-5 bi bi-grid-1x2-fill"></i>
             Dashboard
         </a>
 
-        {{-- Section: Content Management --}}
+        {{-- Section: Website Content --}}
         <h3 class="px-3 pt-6 pb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-            Content Management
+            Website Content
         </h3>
         <div class="space-y-1">
-            <a href="{{ route('admin.pagebuilder.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
-                {{ request()->routeIs('admin.pagebuilder*')
-    ? 'bg-indigo-50 text-indigo-600 font-semibold'
-    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                <i class="w-5 bi bi-file-earmark-text"></i>
-                Page Builder
-            </a>
-            <a href="{{ route('admin.menus.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
-                {{ request()->routeIs('admin.menus*')
-    ? 'bg-indigo-50 text-indigo-600 font-semibold'
-    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                <i class="w-5 bi bi-list"></i>
-                Menu Builder
-            </a>
-            <a href="{{ route('admin.trust.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
-                {{ request()->routeIs('admin.trust*')
-    ? 'bg-indigo-50 text-indigo-600 font-semibold'
-    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                <i class="w-5 bi bi-bank"></i>
-                The Trust
-            </a>
 
-            {{-- New Dropdown: Homepage --}}
+            {{-- Dropdown: Homepage --}}
             @php
                 $isHomeActive = request()->routeIs('admin.homepage*') ||
                     request()->routeIs('admin.notifications*') ||
@@ -73,7 +52,7 @@
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
                     <span class="flex items-center gap-3">
-                        <i class="w-5 bi bi-house-door"></i>
+                        <i class="w-5 bi bi-house-door-fill"></i>
                         Homepage
                     </span>
                     <i class="bi bi-chevron-down transition-transform duration-200"
@@ -93,28 +72,28 @@
                         {{ request()->routeIs('admin.notifications*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                        <i class="w-5 bi bi-bell"></i>
+                        <i class="w-5 bi bi-bell-fill"></i>
                         Notifications
                     </a>
                     <a href="{{ route('admin.announcements.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                         {{ request()->routeIs('admin.announcements*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                        <i class="w-5 bi bi-megaphone"></i>
+                        <i class="w-5 bi bi-megaphone-fill"></i>
                         Announcements
                     </a>
                     <a href="{{ route('admin.event-items.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                         {{ request()->routeIs('admin.event-items*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                        <i class="w-5 bi bi-calendar-check"></i>
+                        <i class="w-5 bi bi-calendar-check-fill"></i>
                         Events
                     </a>
                     <a href="{{ route('admin.academic-calendar.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                         {{ request()->routeIs('admin.academic-calendar*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                        <i class="w-5 bi bi-calendar-week"></i>
+                        <i class="w-5 bi bi-calendar-week-fill"></i>
                         Academic Calendar
                     </a>
                     <a href="{{ route('admin.gallery-images.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
@@ -128,58 +107,94 @@
                         {{ request()->routeIs('admin.testimonials*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                        <i class="w-5 bi bi-chat-quote"></i>
+                        <i class="w-5 bi bi-chat-quote-fill"></i>
                         Testimonials
                     </a>
                     <a href="{{ route('admin.why-choose-us.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                         {{ request()->routeIs('admin.why-choose-us*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                        <i class="w-5 bi bi-patch-check"></i>
+                        <i class="w-5 bi bi-patch-check-fill"></i>
                         Why Choose Us
                     </a>
                 </div>
             </div>
+
+            <a href="{{ route('admin.pagebuilder.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                {{ request()->routeIs('admin.pagebuilder*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 bi bi-layout-text-window"></i>
+                Page Builder
+            </a>
+            <a href="{{ route('admin.menus.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                {{ request()->routeIs('admin.menus*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 bi bi-list-task"></i>
+                Menu Builder
+            </a>
+            <a href="{{ route('admin.media.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                {{ request()->routeIs('admin.media*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 bi bi-folder2-open"></i>
+                Media Management
+            </a>
+            <a href="{{ route('admin.trust.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                {{ request()->routeIs('admin.trust*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 bi bi-bank"></i>
+                The Trust
+            </a>
         </div>
 
-        {{-- Section: Administration --}}
+        {{-- Section: Access Control --}}
         <h3 class="px-3 pt-6 pb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-            Administration
+            Access Control
         </h3>
         <div class="space-y-1">
             <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                 {{ request()->routeIs('admin.users*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                <i class="w-5 bi bi-shield-lock"></i>
+                <i class="w-5 bi bi-people-fill"></i>
                 Users Management
             </a>
             <a href="{{ route('admin.roles-permissions.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                 {{ request()->routeIs('admin.roles-permissions*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                <i class="w-5 bi bi-shield-lock"></i>
+                <i class="w-5 bi bi-shield-lock-fill"></i>
                 Roles & Permissions
             </a>
+        </div>
+
+        {{-- Section: Configuration --}}
+        <h3 class="px-3 pt-6 pb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+            Configuration
+        </h3>
+        <div class="space-y-1">
             <a href="{{ route('admin.website-settings.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                 {{ request()->routeIs('admin.website-settings*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                <i class="w-5 bi bi-gear"></i>
+                <i class="w-5 bi bi-gear-wide-connected"></i>
                 Site Settings
             </a>
-            <a href="{{ route('admin.site.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+            <a href="{{ route('admin.site.index') }}" classs="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
                 {{ request()->routeIs('admin.site*')
     ? 'bg-indigo-50 text-indigo-600 font-semibold'
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
-                <i class="w-5 bi bi-hdd-stack"></i>
+                <i class="w-5 bi bi-code-slash"></i>
                 Developer Settings
             </a>
         </div>
     </nav>
 
-    {{-- User Footer --}}
-    <div class="absolute bottom-0 w-full p-4 bg-white border-t border-gray-200">
+    {{-- User Footer (Non-Absolute) --}}
+    <div class="flex-shrink-0 p-4 bg-white border-t border-gray-200">
         <div class="flex items-center gap-3">
             @if (auth()->user()->avatar)
                 <img src="{{ auth()->user()->avatar }}" class="object-cover w-8 h-8 rounded-full">
