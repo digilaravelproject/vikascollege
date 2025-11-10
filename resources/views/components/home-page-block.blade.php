@@ -49,6 +49,6 @@
                 'loop' => $loop // Modal ID ke liye $loop pass kar rahe hain
             ])
 
-                </div>
-            </section>
+                    </div>
+                </section>
 @endif

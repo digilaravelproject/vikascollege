@@ -28,20 +28,18 @@ class HomepageSetupController extends Controller
      */
     public function save(Request $request)
     {
-        // ❗️ FIX 1: 'content' ki jagah 'blocks' ko validate karein
+
         $validated = $request->validate([
             'blocks' => 'required|array', // 'blocks' ek array hona chahiye
         ]);
 
         try {
-            // ❗️ FIX 2: Data ko ek object mein wrap karke JSON string mein convert karein
             $jsonContentToSave = json_encode(['blocks' => $validated['blocks']]);
-
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new \Exception('Failed to encode JSON: ' . json_last_error_msg());
             }
 
-            // ❗️ FIX 3: JSON string ko save karein
+
             Setting::set('homepage_layout', $jsonContentToSave);
 
             // Success response dein

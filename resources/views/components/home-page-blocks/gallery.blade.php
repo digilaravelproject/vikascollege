@@ -141,16 +141,9 @@
     <div class="student-life-section" data-aos="fade-up">
 
         {{-- Heading --}}
-        @php
-            $titleParts = Str::contains($title, '@') ? explode('@', $title, 2) : [$title, null];
-        @endphp
-
         <div class="student-life-heading" data-aos="fade-up">
             <h2>
-                {{ $titleParts[0] }}
-                @if ($titleParts[1])
-                    <span>@{{ $titleParts[1] }}</span>
-                @endif
+                {{ $title }}
             </h2>
         </div>
 

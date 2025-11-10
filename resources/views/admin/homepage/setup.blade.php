@@ -6,7 +6,7 @@
 
         {{-- 1. HEADER --}}
         <div class="flex flex-col flex-wrap justify-between gap-3 mb-4 sm:flex-row sm:items-center">
-            <h1 class="text-xl font-bold text-gray-800">🏠 Homepage Setup (Grid v2)</h1>
+            <h1 class="text-xl font-bold text-gray-800">🏠 Homepage Setup</h1>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button @click="exportJSON" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300">Export JSON</button>
                 <button @click="importJSONPrompt" class="px-3 py-2 text-sm bg-gray-200 rounded hover:bg-gray-300">Import JSON</button>
@@ -32,9 +32,6 @@
             <div class="lg:col-span-9 bg-white p-4 sm:p-6 rounded-lg shadow min-h-[60vh]">
 
                 <template x-if="blocks.length === 0">
-                    {{-- ❗️ FIX: Yahaan se @drop.prevent.stop HATA DIYA GAYA HAI. --}}
-                    {{-- 'data-sortable-container' hi 'onAdd' event ko trigger karega. --}}
-                    {{-- @dragover.prevent drop ko allow karne ke liye zaroori hai --}}
                     <div class="flex items-center justify-center min-h-[40vh] p-10 border border-dashed rounded-lg"
                         :data-sortable-container="'blocks'"
                         @dragover.prevent>
@@ -93,7 +90,8 @@
                             layout: 'left',
                             image: '',
                             heading: 'Block Heading',
-                            subheading: 'Block subheading',
+                            content: 'Block content',
+                            text: 'Block Text',
                             buttonText: 'Learn More',
                             buttonLink: '#'
                         },
@@ -106,12 +104,12 @@
                                 { text: 'Sample Link 2', url: '#' }
                             ]
                         },
-                        { type: 'latestUpdates', label: '📣 Latest Updates', title: 'Latest Updates', count: 5 },
+                        // { type: 'latestUpdates', label: '📣 Latest Updates', title: 'Latest Updates', count: 5 },
                         { type: 'divider', label: '⎯⎯ Divider' },
                         { type: 'announcements', label: '📢 Announcements', items: [] },
-                        { type: 'events', label: "🎫 What's Happening", items: [] },
+                        { type: 'events', label: "🎫 What's Happening (Events)", items: [] },
                         { type: 'academic_calendar', label: '📅 Academic Calendar', items: [] },
-                        { type: 'image_text', label: '🖼️ Image + Text', image: '', text: '' },
+                        // { type: 'image_text', label: '🖼️ Image + Text', image: '', text: '' },
                         { type: 'gallery', label: '🖼️ Gallery', images: [] },
                         { type: 'testimonials', label: '⭐ Testimonials', items: [] },
                         { type: 'why_choose_us', label: '🎯 Why Choose Us', items: [] },

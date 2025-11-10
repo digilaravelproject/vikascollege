@@ -58,9 +58,10 @@
                                 class="w-full p-2 border rounded" placeholder="Block Heading">
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-600">Subheading</label>
-                            <input type="text" x-model="block.subheading" @input="pushHistoryDebounced"
-                                class="w-full p-2 border rounded" placeholder="Block Subheading">
+                            <label class="text-sm font-medium text-gray-600">Content</label>
+                            <textarea x-model="block.text" @input="pushHistoryDebounced"
+                                class="w-full p-2 border rounded">
+                            </textarea>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-600">Button Text</label>
@@ -76,6 +77,16 @@
                 </div>
             </template>
 
+            {{-- Gallery Block Settings --}}
+            <template x-if="block.type === 'gallery'">
+                <div class="grid grid-cols-1 gap-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                </div>
+            </template>
             {{-- ⭐️ ENHANCED: 'sectionLinks' block --}}
             <template x-if="block.type === 'sectionLinks'">
                 <div class="space-y-4">
@@ -109,7 +120,7 @@
             </template>
 
             {{-- 'latestUpdates' block --}}
-            <template x-if="block.type === 'latestUpdates'">
+            {{-- <template x-if="block.type === 'latestUpdates'">
                 <div class="space-y-3">
                     <div>
                         <label class="text-sm font-medium text-gray-600">Title</label>
@@ -117,11 +128,89 @@
                             class="w-full p-2 border rounded" placeholder="Latest Updates">
                     </div>
                 </div>
+            </template> --}}
+
+            {{-- Events Block Settings --}}
+            <template x-if="block.type === 'events'">
+                <div class="grid grid-cols-1 gap-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Section Description</label>
+                        <textarea x-model="block.section_description" @input="pushHistoryDebounced" rows="3"
+                            class="w-full p-2 border rounded"></textarea>
+                    </div>
+                </div>
+            </template>
+            {{-- Academic Calendar Block Settings --}}
+            <template x-if="block.type === 'academic_calendar'">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Item Count</label>
+                        <input type="number" min="1" x-model.number="block.item_count" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                </div>
+            </template>
+            {{-- Testimonials Block Settings --}}
+            <template x-if="block.type === 'testimonials'">
+                <div class="grid grid-cols-1 gap-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                </div>
+            </template>
+            {{-- Why Choose Us Block Settings --}}
+            <template x-if="block.type === 'why_choose_us'">
+                <div class="grid grid-cols-1 gap-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Section Description</label>
+                        <textarea x-model="block.section_description" @input="pushHistoryDebounced" rows="3"
+                            class="w-full p-2 border rounded"></textarea>
+                    </div>
+                </div>
             </template>
 
             {{-- 'divider' block --}}
             <template x-if="block.type === 'divider'">
                 <hr class="my-4 border-gray-300 border-dashed">
+            </template>
+            <template x-if="block.type === 'announcements'">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Section Title</label>
+                        <input type="text" x-model="block.section_title" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Content Type</label>
+                        <select x-model="block.content_type" @change="pushHistoryDebounced"
+                            class="w-full p-2 bg-white border rounded">
+                            <option value="student">Student Corner</option>
+                            <option value="faculty">Faculty Corner</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Display Count</label>
+                        <input type="number" min="1" x-model.number="block.display_count" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded">
+                    </div>
+                </div>
             </template>
 
             {{-- =================================== --}}
@@ -155,7 +244,7 @@
                                     {{-- ✅ LEVEL 3: RECURSIVE DROP AREA (Column Content) --}}
                                     {{-- =================================================================== --}}
 
-                                    {{-- ❗️ FIX: Yahaan se bhi @drop.prevent.stop HATA DIYA GAYA HAI --}}
+
                                     <div class="block-container min-h-[50px] space-y-4"
                                         :data-sortable-container="`{{ $parentPath }}[${blockIndex}].columns[${colIndex}].blocks`">
 
@@ -200,6 +289,7 @@
                                                 {{-- =================================== --}}
 
                                                 {{-- ⭐️ ENHANCED: 'intro' block --}}
+
                                                 <template x-if="childBlock.type === 'intro'">
                                                     <div class="space-y-4">
                                                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -232,11 +322,11 @@
                                                             </div>
                                                             <div>
                                                                 <label
-                                                                    class="text-sm font-medium text-gray-600">Subheading</label>
-                                                                <input type="text" x-model="childBlock.subheading"
+                                                                    class="text-sm font-medium text-gray-600">Content</label>
+                                                                <textarea x-model="childBlock.content"
                                                                     @input="pushHistoryDebounced"
-                                                                    class="w-full p-2 border rounded"
-                                                                    placeholder="Block Subheading">
+                                                                    class="w-full p-2 border rounded">
+                                                                    </textarea>
                                                             </div>
                                                             <div>
                                                                 <label class="text-sm font-medium text-gray-600">Button
@@ -257,7 +347,100 @@
                                                         </div>
                                                     </div>
                                                 </template>
+                                                {{-- ⭐️ ENHANCED: 'Gallery Block Settings' block --}}
+                                                <template x-if="childBlock.type === 'gallery'">
+                                                    <div class="grid grid-cols-1 gap-3">
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Title</label>
+                                                            <input type="text" x-model="childBlock.section_title"
+                                                                @input="pushHistoryDebounced"
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                {{-- ⭐️ ENHANCED: 'Testimonials Block Settings' --}}
+                                                <template x-if="childBlock.type === 'testimonials'">
+                                                    <div class="grid grid-cols-1 gap-3">
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Title</label>
+                                                            <input type="text" x-model="childBlock.section_title"
+                                                                @input="pushHistoryDebounced"
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                {{-- ⭐️ ENHANCED: '' announcment block --}}
+                                                <template x-if="childBlock.type === 'announcements'">
+                                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Title</label>
+                                                            <input type="text" x-model="childBlock.section_title"
+                                                                @input="pushHistoryDebounced"
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Content
+                                                                Type</label>
+                                                            <select x-model="childBlock.content_type"
+                                                                @change="pushHistoryDebounced"
+                                                                class="w-full p-2 bg-white border rounded">
+                                                                <option value="student">Student Corner</option>
+                                                                <option value="faculty">Faculty Corner</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Display
+                                                                Count</label>
+                                                            <input type="number" min="1"
+                                                                x-model.number="childBlock.display_count"
+                                                                @input="pushHistoryDebounced"
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                {{-- ⭐️ ENHANCED: Academic Calendar Block Settings --}}
+                                                <template x-if="childBlock.type === 'academic_calendar'">
+                                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                        <div class="sm:col-span-2">
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Title</label>
+                                                            <input type="text" x-model="childBlock.section_title"
+                                                                @input="pushHistoryDebounced"
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Item
+                                                                Count</label>
+                                                            <input type="number" min="1"
+                                                                x-model.number="childBlock.item_count"
+                                                                @input="pushHistoryDebounced"
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                {{-- ⭐️ ENHANCED: 'Events' block --}}
 
+                                                <template x-if="childBlock.type === 'events'">
+                                                    <div class="grid grid-cols-1 gap-3">
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Title</label>
+                                                            <input type="text" x-model="childBlock.section_title"
+                                                                @input="pushHistoryDebounced"
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Description</label>
+                                                            <textarea x-model="childBlock.section_description"
+                                                                @input="pushHistoryDebounced" rows="3"
+                                                                class="w-full p-2 border rounded"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </template>
                                                 {{-- ⭐️ ENHANCED: 'sectionLinks' block --}}
                                                 <template x-if="childBlock.type === 'sectionLinks'">
                                                     <div class="space-y-4">
@@ -301,16 +484,23 @@
                                                     </div>
                                                 </template>
 
-                                                {{-- 'latestUpdates' block --}}
-                                                <template x-if="childBlock.type === 'latestUpdates'">
-                                                    <div class="space-y-3">
+
+                                                {{-- Why Choose Us Block Settings --}}
+                                                <template x-if="childBlock.type === 'why_choose_us'">
+                                                    <div class="grid grid-cols-1 gap-3">
                                                         <div>
-                                                            <label
-                                                                class="text-sm font-medium text-gray-600">Title</label>
-                                                            <input type="text" x-model="childBlock.title"
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Title</label>
+                                                            <input type="text" x-model="childBlock.section_title"
                                                                 @input="pushHistoryDebounced"
-                                                                class="w-full p-2 border rounded"
-                                                                placeholder="Latest Updates">
+                                                                class="w-full p-2 border rounded">
+                                                        </div>
+                                                        <div>
+                                                            <label class="text-sm font-medium text-gray-600">Section
+                                                                Description</label>
+                                                            <textarea x-model="childBlock.section_description"
+                                                                @input="pushHistoryDebounced" rows="3"
+                                                                class="w-full p-2 border rounded"></textarea>
                                                         </div>
                                                     </div>
                                                 </template>
