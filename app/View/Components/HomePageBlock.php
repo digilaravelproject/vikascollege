@@ -4,6 +4,7 @@ namespace App\View\Components;
 
 use App\Models\AcademicCalendar;
 use App\Models\Announcement;
+use App\Models\EventCategory;
 use App\Models\EventItem;
 use App\Models\GalleryCategory;
 use App\Models\GalleryImage;
@@ -22,15 +23,19 @@ class HomePageBlock extends Component
     public $items; // This will hold dynamic data
     public $title;
     public $description;
+    public $loop;
+    public $eventCategories;
 
     /**
      * Create a new component instance.
      */
-    public function __construct(array $block)
+    public function __construct(array $block, $loop = null)
     {
         $this->block = $block;
         $this->type = $block['type'] ?? 'unknown';
         $this->items = collect(); // Default to empty collection
+        $this->eventCategories = collect();
+        $this->loop = $loop;
 
         // Get title/description
         $this->title = $block['section_title'] ?? $block['title'] ?? '';
@@ -71,8 +76,43 @@ class HomePageBlock extends Component
                 ->get();
         });
     }
-
     private function loadEvents()
+    {
+        // 1. Fetch *all* categories (even if no events)
+        $this->eventCategories = Cache::remember('event_categories_all', 3600, function () {
+            return EventCategory::orderBy('id', 'asc')->get(['id', 'name']);
+        });
+
+        // 2. Fetch upcoming and recent events
+        $this->items = Cache::remember('all_events_for_homepage', 3600, function () {
+            $upcoming = EventItem::with('category')
+                ->where('event_date', '>=', now())
+                ->orderBy('event_date', 'asc')
+                ->get();
+
+            $recent = EventItem::with('category')
+                ->where('event_date', '<', now())
+                ->orderBy('event_date', 'desc')
+                ->take(10)
+                ->get();
+
+            return $upcoming->merge($recent);
+        });
+
+        // 3. Format data for Alpine.js
+        $this->items = $this->items->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'title' => $item->title,
+                'formatted_date' => $item->event_date ? $item->event_date->format('l, jS F Y') : '',
+                'location' => $item->venue,
+                'category_id' => $item->category->id ?? null,
+                'image_url' => $item->image ? asset('storage/' . $item->image) : 'https://via.placeholder.com/400x250',
+            ];
+        });
+    }
+
+    private function loadEvents_old()
     {
         $cacheKey = "events:homepage_block";
 
@@ -80,21 +120,49 @@ class HomePageBlock extends Component
             $upcoming = EventItem::with('category')
                 ->where('event_date', '>=', now())
                 ->orderBy('event_date', 'asc')
-                ->take(3)
+                ->take(10)
                 ->get();
 
             if ($upcoming->isEmpty()) {
                 return EventItem::with('category')
                     ->where('event_date', '<', now())
                     ->orderBy('event_date', 'desc')
-                    ->take(3)
+                    ->take(10)
                     ->get();
             }
             return $upcoming;
         });
+        dd('Events', $this->items);
     }
-
     private function loadAcademicCalendar()
+    {
+        $count = $this->block['item_count'] ?? 7;
+        $cacheKey = "academic_calendar:homepage:count:{$count}";
+
+        $this->items = Cache::remember($cacheKey, 3600, function () use ($count) {
+
+            // 1. Pehle UPCOMING events dhoondein
+            $upcoming = AcademicCalendar::where('status', 1)
+                ->where('event_datetime', '>=', now()->startOfDay())
+                ->orderBy('event_datetime', 'asc') // Aane waale pehle
+                ->take($count)
+                ->get();
+
+            // 2. Agar UPCOMING event nahi milte hain (khaali hai)
+            if ($upcoming->isEmpty()) {
+                // Toh RECENT PAST events dhoondein
+                return AcademicCalendar::where('status', 1)
+                    ->where('event_datetime', '<', now()->startOfDay())
+                    ->orderBy('event_datetime', 'desc') // Sabse naye (past) waale pehle
+                    ->take($count)
+                    ->get();
+            }
+
+            // 3. Agar upcoming events mile hain, toh unhe return karein
+            return $upcoming;
+        });
+    }
+    private function loadAcademicCalendar_old()
     {
         $count = $this->block['item_count'] ?? 7;
         $cacheKey = "academic_calendar:homepage:count:{$count}";

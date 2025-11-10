@@ -1,10 +1,13 @@
-{{-- Updated typography --}}
-<h2 class="text-3xl font-extrabold text-center text-gray-900 mb-10 tracking-tight">{{ $title }}</h2>
+<h2 class="text-3xl font-extrabold text-center text-gray-900 mb-12 tracking-tight" data-aos="fade-up">
+    {{ $title }}
+</h2>
 
 @if ($items->isEmpty())
-    <p class="text-center text-gray-500">No announcements found.</p>
+    <p class="text-center text-gray-500" data-aos="fade-up" data-aos-delay="100">
+        No announcements found.
+    </p>
 @else
-    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm border">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm border" data-aos="fade-up" data-aos-delay="100">
         <ul class="space-y-4 divide-y divide-gray-100">
             @foreach ($items as $item)
                 <li class="pt-4 first:pt-0">

@@ -1,39 +1,82 @@
-{{-- Updated typography --}}
-<h2 class="text-3xl font-extrabold text-center text-gray-900 mb-10 tracking-tight">{{ $title }}</h2>
+<section class="py-16 md:py-24 bg-white">
 
-@if ($items->isEmpty())
-    <p class="text-center text-gray-500">No calendar items found.</p>
-@else
-    <div class="flow-root max-w-2xl mx-auto">
-        <ul class="-mb-8">
-            @foreach ($items as $item)
-                <li>
-                    <div class="relative pb-8">
-                        @if (!$loop->last)
-                            <span class="absolute top-4 left-5 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                        @endif
-                        <div class="relative flex space-x-4">
-                            <div>
-                                <span
-                                    class="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full ring-8 ring-white">
-                                    <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                        fill="currentColor">
-                                        <path fill-rule="evenodd"
-                                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="flex-1 min-w-0 pt-1.5">
-                                <p class="text-sm text-gray-500">
-                                    {{ $item->event_datetime->format('M d, Y') }}
-                                </p>
-                                <p class="font-semibold text-lg text-gray-800">{{ $item->title }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            @endforeach
-        </ul>
+    {{-- Title and Description (Exact Match: Font-Serif, Spacing) --}}
+    <div class="text-center mb-16" data-aos="fade-up">
+        {{-- Title: Bold Serif (Playfair Display equivalent), Large size, Dark color --}}
+        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-gray-900 tracking-tight mb-4">
+            Academic Calendar
+        </h2>
+
+        {{-- Description: Light Gray, centered, correct line height --}}
+        {{-- <p class="mb-10 text-lg text-gray-700 max-w-4xl mx-auto font-normal leading-normal">
+            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
+            industry's standard dummy text ever since the 1500s.
+        </p> --}}
     </div>
-@endif
+
+    {{-- Conditional Rendering --}}
+    @if ($items->isEmpty())
+        {{-- Empty State (Simple text) --}}
+        <p class="text-center text-gray-500" data-aos="fade-up" data-aos-delay="100">
+            No calendar items found.
+        </p>
+    @else
+        {{-- Card Grid (Exact Match: Layout, Card Styling, Typography) --}}
+        <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 px-4 sm:px-6"
+            data-aos="fade-up" data-aos-delay="100">
+
+            @foreach ($items as $item)
+                {{-- Card Container --}}
+                <div class="flex flex-col bg-gray-50 p-6 sm:p-8 rounded-none shadow-none transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                    data-aos="fade-up" data-aos-delay="{{ $loop->index * 150 }}">
+
+                    {{-- Date Section --}}
+                    <div class="pb-6 border-b border-gray-300 mb-6">
+                        {{-- Day --}}
+                        <p class="text-5xl font-extrabold text-red-600 mb-1 leading-none">
+                            {{ $item->event_datetime->format('d') }}
+                        </p>
+                        {{-- Month and Year --}}
+                        <p class="text-xl font-normal text-gray-900">
+                            {{ $item->event_datetime->format('F Y') }}
+                        </p>
+                    </div>
+
+                    {{-- Event Title --}}
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 leading-snug">
+                        {{ $item->title }}
+                    </h3>
+
+                    {{-- Time (Bold, Red Accent) --}}
+                    <div class="mb-4">
+                        <p class="text-lg font-extrabold text-red-600">
+                            {{ $item->event_datetime->format('g:i A') }}
+                            -
+                            {{ $item->end_time ? $item->end_time->format('g:i A') : '10:00 AM' }}
+                        </p>
+                    </div>
+
+                    {{-- Description --}}
+                    <p class="text-sm text-gray-600 flex-grow">
+                        {{ $item->description ?? 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.' }}
+                    </p>
+                </div>
+            @endforeach
+        </div>
+    @endif
+</section>
+
+{{-- ========================================= --}}
+{{-- Scripts: AOS Animation --}}
+{{-- ========================================= --}}
+@push('script')
+    {{-- AOS Library --}}
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true,            // Animation plays once
+            duration: 800,         // Default duration
+            easing: 'ease-in-out', // Smooth easing
+        });
+    </script>
+@endpush

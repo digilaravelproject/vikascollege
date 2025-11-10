@@ -1,5 +1,4 @@
-<div class="text-center">
-    {{-- Updated typography --}}
+<div class="text-center" data-aos="fade-up">
     <h2 class="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">{{ $title }}</h2>
     @if ($description)
         <p class="mb-10 text-lg text-gray-600 max-w-2xl mx-auto">{{ $description }}</p>
@@ -7,10 +6,11 @@
 </div>
 
 @if ($items->isEmpty())
-    <p class="text-center text-gray-500">No items found.</p>
+    <p class="text-center text-gray-500" data-aos="fade-up" data-aos-delay="100">
+        No items found.
+    </p>
 @else
-    {{-- Card UI (border, shadow) hata kar clean flat icon grid banaya --}}
-    <div class="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-x-8 gap-y-12 md:grid-cols-3" data-aos="fade-up" data-aos-delay="100">
         @foreach ($items as $item)
             <div class="p-4 text-center">
                 @if ($item->icon_or_image)
