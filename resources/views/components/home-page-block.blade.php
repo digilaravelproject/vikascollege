@@ -37,18 +37,17 @@
             'loop' => $loop // $loop ko nested blocks me pass karein
         ])
     @else
-            <section class="w-full py-12 md:py-20 {{ $loop && $loop->even ? 'bg-gray-50' : 'bg-white' }}">
-            {{-- Content ko max-width container me rakhenge --}}
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <section class="w-full py-4 md:py-8 {{ $loop && $loop->even ? 'bg-gray-50' : 'bg-white' }}">
+             {{-- Content ko max-width container me rakhenge --}}
+                            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                      @include($includePath, [
+                        'block' => $block, // Pura block pass karein
+                        'items' => $items, // DB se laaya hua data
+                        'title' => $title, // DB se laaya hua title
+                        'description' => $description, // DB se laaya hua description
+                    ])
 
-                   @include($includePath, [
-                    'block' => $block, // Pura block pass karein
-                    'items' => $items, // DB se laaya hua data
-                    'title' => $title, // DB se laaya hua title
-                    'description' => $description, // DB se laaya hua description
-                ])
-
-         </div>
-         </section>
-    @endif
+                     </div>
+                     </section>
+        @endif
 @endif

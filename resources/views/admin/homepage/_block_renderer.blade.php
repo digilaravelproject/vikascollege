@@ -220,6 +220,11 @@
                 <div class="space-y-4">
                     {{-- 1️⃣ Grid Layout Selector --}}
                     <div>
+                        <label class="text-sm font-medium text-gray-600">Title</label>
+                        <input type="text" x-model="block.title" @input="pushHistoryDebounced"
+                            class="w-full p-2 border rounded" placeholder="Layout Title">
+                    </div>
+                    <div>
                         <label class="text-sm font-medium text-gray-600">Grid Layout</label>
                         <select x-model="block.layout" @change="changeGridLayout(block)"
                             class="w-full p-2 bg-white border rounded">

@@ -1,9 +1,15 @@
 @php
     $columns = $block['columns'] ?? [];
+    $title = $block['title'] ?? '';
 @endphp
 
 <section class="w-full py-16 md:py-24 {{ $loop && $loop->even ? 'bg-gray-50' : 'bg-white' }}">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        @if (!empty($title))
+            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl mb-0 text-center">
+                {{ $title }}
+            </h2>
+        @endif
         <div class="grid grid-cols-12 gap-6">
             @foreach ($columns as $col)
                 @php

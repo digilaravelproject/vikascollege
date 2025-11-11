@@ -29,37 +29,38 @@
                 {{-- Card Container --}}
                 <div class="flex flex-col bg-gray-50 p-6 sm:p-8 rounded-none shadow-none transition-all duration-300 hover:shadow-md hover:-translate-y-1"
                     data-aos="fade-up" data-aos-delay="{{ $loop->index * 150 }}">
+                    <a href="{{ $item->link_href }}">
+                        {{-- Date Section --}}
+                        <div class="pb-6 border-b border-gray-300 mb-6">
+                            {{-- Day --}}
+                            <p class="text-5xl font-extrabold text-red-600 mb-1 leading-none">
+                                {{ $item->event_datetime->format('d') }}
+                            </p>
+                            {{-- Month and Year --}}
+                            <p class="text-xl font-normal text-gray-900">
+                                {{ $item->event_datetime->format('F Y') }}
+                            </p>
+                        </div>
 
-                    {{-- Date Section --}}
-                    <div class="pb-6 border-b border-gray-300 mb-6">
-                        {{-- Day --}}
-                        <p class="text-5xl font-extrabold text-red-600 mb-1 leading-none">
-                            {{ $item->event_datetime->format('d') }}
+                        {{-- Event Title --}}
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 leading-snug">
+                            {{ $item->title }}
+                        </h3>
+
+                        {{-- Time (Bold, Red Accent) --}}
+                        <div class="mb-4">
+                            <p class="text-lg font-extrabold text-red-600">
+                                {{ $item->event_datetime->format('g:i A') }}
+                                -
+                                {{ $item->end_time ? $item->end_time->format('g:i A') : '10:00 AM' }}
+                            </p>
+                        </div>
+
+                        {{-- Description --}}
+                        <p class="text-sm text-gray-600 flex-grow">
+                            {{ $item->description ?? 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.' }}
                         </p>
-                        {{-- Month and Year --}}
-                        <p class="text-xl font-normal text-gray-900">
-                            {{ $item->event_datetime->format('F Y') }}
-                        </p>
-                    </div>
-
-                    {{-- Event Title --}}
-                    <h3 class="text-2xl font-bold text-gray-900 mb-6 leading-snug">
-                        {{ $item->title }}
-                    </h3>
-
-                    {{-- Time (Bold, Red Accent) --}}
-                    <div class="mb-4">
-                        <p class="text-lg font-extrabold text-red-600">
-                            {{ $item->event_datetime->format('g:i A') }}
-                            -
-                            {{ $item->end_time ? $item->end_time->format('g:i A') : '10:00 AM' }}
-                        </p>
-                    </div>
-
-                    {{-- Description --}}
-                    <p class="text-sm text-gray-600 flex-grow">
-                        {{ $item->description ?? 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.' }}
-                    </p>
+                    </a>
                 </div>
             @endforeach
         </div>

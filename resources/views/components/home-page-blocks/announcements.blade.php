@@ -1,30 +1,84 @@
-<h2 class="text-3xl font-extrabold text-center text-gray-900 mb-12 tracking-tight" data-aos="fade-up">
-    {{ $title }}
-</h2>
+@props(['title', 'items'])
 
-@if ($items->isEmpty())
-    <p class="text-center text-gray-500" data-aos="fade-up" data-aos-delay="100">
-        No announcements found.
-    </p>
-@else
-    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-sm border" data-aos="fade-up" data-aos-delay="100">
-        <ul class="space-y-4 divide-y divide-gray-100">
-            @foreach ($items as $item)
-                <li class="pt-4 first:pt-0">
-                    <a href="#" class="font-semibold text-lg text-gray-800 hover:underline hover:text-blue-600">
-                        {{ $item->title }}
-                    </a>
-                    <div class="flex items-center justify-between mt-1">
-                        <span class="text-sm text-gray-500">{{ $item->created_at->format('M d, Y') }}</span>
-                        @if ($item->is_new) {{-- Example condition --}}
-                            <span class="px-2 py-0.5 text-xs font-medium text-white bg-red-500 rounded-full">NEW</span>
-                        @endif
+{{-- === CSS FOR PIXEL PERFECT SCROLLBAR === --}}
+{{-- CSS ko issi file mein add kar raha hoon, jaisa aapne kaha --}}
+<style>
+    .custom-scrollbar-{{ $attributes->get('data-unique-id', 'default') }}::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar-{{ $attributes->get('data-unique-id', 'default') }}::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        /* Scrollbar track color */
+    }
+
+    .custom-scrollbar-{{ $attributes->get('data-unique-id', 'default') }}::-webkit-scrollbar-thumb {
+        background: #1f497d;
+        /* Scrollbar handle color (header jaisa) */
+    }
+</style>
+{{-- === END OF CSS === --}}
+
+
+{{--
+Yeh hai POORA box.
+Aapka <h2> (jo pehle file mein tha) hata diya gaya hai,
+    kyunki $title ab blue bar mein aa raha hai.
+    --}}
+    <div class="w-full bg-white shadow-lg overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+
+        {{--
+        NOTES:
+        - Background Color: #1f497d (Image se)
+        - Font: Bold, Uppercase, Sans-Serif
+        --}}
+        <div class="bg-[#1f497d] text-white text-center font-bold uppercase py-3 px-5">
+            <h3 class="text-xl tracking-wide font-sans">
+                {{ $title }} {{-- Yahaan "STUDENT CORNER" ya "FACULTY CORNER" ayega --}}
+            </h3>
+        </div>
+
+        {{--
+        NOTES:
+        - Height: h-80 (320px) fixed di hai. Aap adjust kar sakte hain.
+        - Scrollbar: 'custom-scrollbar-...' class add ki hai.
+        --}}
+        <div class="p-6 h-80 overflow-y-auto custom-scrollbar-{{ $attributes->get('data-unique-id', 'default') }}">
+
+            @if ($items->isEmpty())
+                <p class="text-gray-500 font-sans">
+                    No announcements found.
+                </p>
+            @else
+                {{--
+                IMAGE-MATCHING CONTENT (Paragraphs)
+                Image mein simple paragraphs hain. Aapka purana code links (<a>) use kar raha tha.
+                    Pixel-perfect ke liye, main paragraphs (p) use kar raha hoon.
+                    --}}
+                    <div class="space-y-4 text-gray-700 font-sans text-sm">
+
+                        @foreach ($items as $item)
+                            {{--
+                            IMPORTANT: Image mein paragraphs hain.
+                            Aapko yahaan $item->description ya $item->content use karna hoga.
+                            Aapke purane code mein $item->title tha, main wohi use kar raha hoon,
+                            lekin <p> tag ke andar.
+                                --}}
+                            <p>
+                                {{ $item->title }}
+                                {{-- Agar description hai toh $item->description use karein --}}
+                            </p>
+                        @endforeach
+
                     </div>
-                </li>
-            @endforeach
-        </ul>
-        <div class="mt-8 text-center">
-            <a href="#" class="font-medium text-blue-600 hover:underline">View All Announcements &rarr;</a>
+            @endif
+
+                {{--
+                NOTES:
+                - Text Color: #c00000 (Image se)
+                --}}
+                <a href="#" class="inline-block mt-5 font-semibold text-[#c00000] hover:underline font-sans">
+                    Read More....
+                </a>
         </div>
     </div>
-@endif
