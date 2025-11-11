@@ -19,7 +19,23 @@
         ->map(fn($v, $k) => "{$k}: {$v}")
         ->implode('; ');
 @endphp
+<style>
+    .prose .ql-align-center,
+.prose [class~="ql-align-center"] {
+    text-align: center;
+}
 
+.prose .ql-align-right,
+.prose [class~="ql-align-right"] {
+    text-align: right;
+}
+
+.prose .ql-align-justify,
+.prose [class~="ql-align-justify"] {
+    text-align: justify;
+}
+</style>
+<script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 @switch($type)
     {{-- ==================== SECTION (Original) ==================== --}}
     @case('section')
