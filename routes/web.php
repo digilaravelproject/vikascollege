@@ -5,9 +5,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TrustController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('homepage');
-});
+// 1. Root Redirection: '/' will redirect to '/vikas'
+Route::redirect('/', '/vikas');
+
+// 2. EXCLUDED ROUTES: Dashboard, Profile, Auth, and Admin routes
+// These routes will NOT have the 'vikas' prefix.
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -19,21 +21,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Route::get('/the-trust', function () {
-//     return "The Trust";
-// })->name('the-trust');
-
-Route::get('/the-trust/{slug?}', [TrustController::class, 'index'])->name('trust.index');
-
-// Route to render the PDF viewer
-// Route::get('/render-pdf', [PdfViewerController::class, 'show'])
-//     ->middleware(VerifyPdfFile::class)
-//     ->name('pdf.viewer');
-
 require __DIR__ . '/auth.php'; // Breeze authentication routes
 require __DIR__ . '/admin.php'; // Admin routes
 
-// 🧩 Finally — the dynamic page slug route
-Route::get('{slug}', [PageController::class, 'show'])
-    ->where('slug', '^[a-zA-Z0-9\-_\/]+$')
-    ->name('page.view');
+// 3. PUBLIC ROUTES GROUP: Applying the 'vikas' prefix to all public URLs
+Route::prefix('vikas')->group(function () {
+
+    // URL: /vikas
+    Route::get('/', function () {
+        return view('homepage');
+    })->name('homepage');
+
+    // URL: /vikas/the-trust
+    Route::get('/the-trust/{slug?}', [TrustController::class, 'index'])->name('trust.index');
+
+    // URL: /vikas/{slug} (Dynamic Pages)
+    // Note: Since the prefix is 'vikas', we only need '/{slug}' here.
+    Route::get('/{slug}', [PageController::class, 'show'])
+        ->where('slug', '^[a-zA-Z0-9\-_\/]+$')
+        ->name('page.view');
+});

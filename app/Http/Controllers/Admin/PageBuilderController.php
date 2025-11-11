@@ -63,7 +63,7 @@ class PageBuilderController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:pages,slug',
             'content' => 'nullable',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:20480',
         ]);
 
         try {
@@ -114,7 +114,7 @@ class PageBuilderController extends Controller
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:pages,slug,' . $page->id,
             'content' => 'nullable',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:20480',
         ]);
 
         try {
@@ -269,7 +269,7 @@ class PageBuilderController extends Controller
     {
         // 1. Validation (Same as before)
         $validated = $request->validate([
-            'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:51200',
+            'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:81920',
             'base_path' => 'nullable|string|in:storage,wp-content',
             'custom_name' => 'nullable|string|max:255',
         ]);
