@@ -101,41 +101,149 @@
     @break
 
     {{-- ==================== PDF (Original & Working) ==================== --}}
-    @case('pdf')
-        @if (!empty($block['src']))
-            <div class="my-6">
-                <div id="pdf-viewer" class="w-full max-h-[700px] border rounded-lg shadow-inner overflow-auto relative">
-                    <div id="pdf-loading-message"
-                        class="p-8 text-center text-gray-500 font-semibold bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
-                        <div class="animate-pulse space-y-4">
-                            <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mx-auto"></div>
-                            <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mx-auto"></div>
-                            <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6 mx-auto"></div>
-                        </div>
-                        <p class="mt-4 text-sm flex items-center justify-center gap-2">
-                            <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                            </svg>
-                            Loading PDF...
-                        </p>
+    @case('pdf_old')
+    @if (!empty($block['src']))
+
+        {{-- 1. PDF ko preload karein (yeh ab bhi zaroori hai) --}}
+        <link rel="preload" href="{{ $block['src'] }}" as="fetch" crossorigin="anonymous">
+
+        {{-- 2. SECURITY (Aadha-Adhura): Print ko CSS se block karein --}}
+        <style>
+            @media print {
+                .pdf-iframe-wrapper {
+                    display: none !important;
+                }
+            }
+        </style>
+
+        <div class="my-6 pdf-iframe-wrapper">
+            {{--
+                3. Naya Viewer: Simple IFRAME
+                Humne URL mein #toolbar=0 add kiya hai taaki download/print buttons
+                jo default dikhte hain, woh chhup jaayein.
+            --}}
+            <iframe
+                src="{{ $block['src'] }}#toolbar=0"
+                width="100%"
+                height="700"
+                class="border rounded-lg shadow-inner"
+
+                {{-- 4. SPEED: Native Lazy Loading --}}
+                loading="lazy"
+
+                {{-- 5. SECURITY (Aadha-Adhura): Right-click block karein --}}
+                oncontextmenu="return false;"
+            >
+                PDF load nahi ho paayi.
+            </iframe>
+        </div>
+
+        {{-- 6. SECURITY: Ctrl+P aur Ctrl+S ab bhi block karein --}}
+        <script>
+            if (!window.pdfJsGlobalKeysAdded) {
+                document.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey && e.key === 'p') || (e.ctrlKey && e.key === 's')) {
+                        e.preventDefault();
+                    }
+                });
+                window.pdfJsGlobalKeysAdded = true;
+            }
+        </script>
+    @endif
+@break
+   @case('pdf')
+    @if (!empty($block['src']))
+
+        {{-- ⭐️ NYA FIX: Hum loop ki jagah ek unique ID yahaan generate karenge --}}
+        @php $uniqueId = 'pdf_viewer_' . uniqid(); @endphp
+
+        {{-- 1. SPEED: PDF ko background mein preload karein --}}
+        <link rel="preload" href="{{ $block['src'] }}" as="fetch" crossorigin="anonymous">
+
+        {{-- 2. SECURITY: Print ko CSS se block karein --}}
+        <style>
+            @media print {
+                .pdf-viewer-wrapper-{{ $uniqueId }} {
+                    display: none !important;
+                }
+            }
+        </style>
+
+        {{-- Humne poore block ko ek wrapper div mein daal diya hai --}}
+        <div class="my-6 pdf-viewer-wrapper-{{ $uniqueId }}">
+
+            {{-- ⭐️ FIX: Yahaan $loop->index ki jagah $uniqueId ka istemal karein --}}
+            <div id="{{ $uniqueId }}_container" class="w-full max-h-[700px] border rounded-lg shadow-inner overflow-auto relative" data-pdf-url="{{ $block['src'] }}">
+
+                {{-- Loading Skeleton --}}
+                {{-- ⭐️ FIX: Yahaan bhi $uniqueId ka istemal karein --}}
+                <div id="{{ $uniqueId }}_loading"
+                    class="p-8 text-center text-gray-500 font-semibold bg-gray-50 dark:bg-gray-800 rounded-lg h-full">
+                    <div class="animate-pulse space-y-4">
+                        <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mx-auto"></div>
+                        <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2 mx-auto"></div>
+                        <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6 mx-auto"></div>
                     </div>
+                    <p class="mt-4 text-sm flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+                        Loading PDF...
+                    </p>
                 </div>
             </div>
+        </div>
 
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-            <script>
-                const url = '{{ $block['src'] }}';
-                const viewer = document.getElementById('pdf-viewer');
-                const loadingMessage = document.getElementById('pdf-loading-message');
+        {{-- PDF.js library ko 'defer' ke saath load karein --}}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+
+        {{-- 3. LAZY LOADING + SECURITY SCRIPT --}}
+        <script>
+            // ⭐️ SECURITY: Ctrl+P (Print) aur Ctrl+S (Save) ko block karein
+            if (!window.pdfJsGlobalKeysAdded) {
+                document.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey && e.key === 'p') || (e.ctrlKey && e.key === 's')) {
+                        e.preventDefault();
+                    }
+                });
+                window.pdfJsGlobalKeysAdded = true;
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                {{-- ⭐️ FIX: Javascript mein bhi $uniqueId ka istemal karein --}}
+                const viewer = document.getElementById('{{ $uniqueId }}_container');
+                const loadingMessage = document.getElementById('{{ $uniqueId }}_loading');
+
+                // Zaroori check: Agar element hai tabhi aage badhein
+                if (viewer) {
+                    const url = viewer.dataset.pdfUrl;
+
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                loadPdf(url, viewer, loadingMessage);
+                                observer.unobserve(viewer);
+                            }
+                        });
+                    }, {
+                        rootMargin: '100px'
+                    });
+
+                    observer.observe(viewer);
+                }
+            });
+
+            // (Poora loadPdf function waisa hi rahega jaisa pehle tha)
+            function loadPdf(url, viewer, loadingMessage) {
                 const devicePixelRatio = window.devicePixelRatio || 1;
                 const baseScale = 1.2;
                 let pdfDoc = null;
                 const renderedPages = new Set();
 
-                // Disable selection and right-click to prevent content copying
+                // ⭐️ SECURITY: Right-click aur Text Selection block karein
                 viewer.style.userSelect = "none";
                 viewer.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -145,12 +253,9 @@
                 // Load PDF file
                 pdfjsLib.getDocument(url).promise.then(pdf => {
                     pdfDoc = pdf;
-
                     const initialPages = Math.min(3, pdfDoc.numPages);
                     for (let i = 1; i <= initialPages; i++) renderPage(i);
-
                     if (loadingMessage) loadingMessage.remove();
-
                     if (pdfDoc.numPages > initialPages) renderVisiblePages();
                 }).catch(err => {
                     console.error('PDF load error:', err);
@@ -161,79 +266,57 @@
                     }
                 });
 
-                // Render individual page
+                // (Baaki ka rendering code waisa hi hai)
                 function renderPage(pageNumber) {
                     if (renderedPages.has(pageNumber)) return;
-
                     pdfDoc.getPage(pageNumber).then(page => {
-                        const viewport = page.getViewport({
-                            scale: baseScale * devicePixelRatio
-                        });
+                        const viewport = page.getViewport({ scale: baseScale * devicePixelRatio });
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
                         const pageContainer = document.createElement('div');
-
                         pageContainer.className = 'pdf-page-container';
                         pageContainer.style.width = '100%';
                         pageContainer.style.marginBottom = "1rem";
                         pageContainer.style.height = `${viewport.height / devicePixelRatio}px`;
-
                         canvas.width = viewport.width;
                         canvas.height = viewport.height;
                         canvas.style.width = "100%";
                         canvas.style.height = "auto";
                         canvas.style.display = "block";
-
                         pageContainer.appendChild(canvas);
                         viewer.appendChild(pageContainer);
-
-                        const renderTask = page.render({
-                            canvasContext: context,
-                            viewport: viewport
-                        });
-
+                        const renderTask = page.render({ canvasContext: context, viewport: viewport });
                         renderTask.promise.then(() => {
                             renderedPages.add(pageNumber);
                         });
                     });
                 }
-
-                // Lazy load visible pages
                 function renderVisiblePages() {
                     if (!pdfDoc) return;
-
                     const viewerTop = viewer.scrollTop;
                     const viewerBottom = viewerTop + viewer.clientHeight;
                     const pageHeightEstimate = viewer.scrollHeight / pdfDoc.numPages;
-
                     for (let i = 1; i <= pdfDoc.numPages; i++) {
                         const pageTop = (i - 1) * pageHeightEstimate;
                         const pageBottom = pageTop + pageHeightEstimate;
-
                         if ((pageBottom >= viewerTop - 300) && (pageTop <= viewerBottom + 300)) {
                             renderPage(i);
                         }
                     }
                 }
-
-                // Remove pages far outside the viewport to save memory
                 function cleanupOffscreenPages() {
                     const pages = viewer.querySelectorAll('.pdf-page-container');
                     const viewerTop = viewer.scrollTop;
                     const viewerBottom = viewerTop + viewer.clientHeight;
-
                     pages.forEach((page, index) => {
                         const pageTop = page.offsetTop;
                         const pageBottom = pageTop + page.offsetHeight;
-
                         if (pageBottom < viewerTop - 1000 || pageTop > viewerBottom + 1000) {
                             page.remove();
                             renderedPages.delete(index + 1);
                         }
                     });
                 }
-
-                // Debounce scroll events for smoother performance
                 let scrollTimeout;
                 viewer.addEventListener('scroll', () => {
                     clearTimeout(scrollTimeout);
@@ -242,12 +325,11 @@
                         cleanupOffscreenPages();
                     }, 150);
                 });
-
-                // Re-render visible pages when window resizes
                 window.addEventListener('resize', renderVisiblePages);
-            </script>
-        @endif
-    @break
+            }
+        </script>
+    @endif
+@break
 
     {{-- ==================== NEW: EMBED (YouTube, Vimeo, etc.) ==================== --}}
     @case('embed')

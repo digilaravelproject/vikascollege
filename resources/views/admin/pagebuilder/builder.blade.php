@@ -958,10 +958,10 @@
                         Swal.fire({
                             title: 'Insert Link',
                             html: `<input id="swal-link-url" class="swal2-input" placeholder="https://example.com" style="width: 100%;">
-                                                   <select id="swal-link-target" class="swal2-select" style="width: 100%; margin-top: 10px;">
-                                                        <option value="_blank" selected>New Tab (_blank)</option>
-                                                        <option value="_self">Same Tab (_self)</option>
-                                                   </select>`,
+                                               <select id="swal-link-target" class="swal2-select" style="width: 100%; margin-top: 10px;">
+                                                    <option value="_blank" selected>New Tab (_blank)</option>
+                                                    <option value="_self">Same Tab (_self)</option>
+                                               </select>`,
                             preConfirm: () => ({
                                 url: document.getElementById('swal-link-url').value,
                                 target: document.getElementById('swal-link-target').value ||
@@ -1005,12 +1005,12 @@
                         } = await Swal.fire({
                             title: "Upload Options",
                             html: `
-                                                    <input id="custom_name" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
-                                                    <select id="base_path" class="swal2-select" style="width: 100%; margin-top: 10px;">
-                                                        <option value="storage" selected>storage</option>
-                                                        <option value="wp-content">wp-content</option>
-                                                    </select>
-                                                `,
+                                                <input id="custom_name" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
+                                                <select id="base_path" class="swal2-select" style="width: 100%; margin-top: 10px;">
+                                                    <option value="storage" selected>storage</option>
+                                                    <option value="wp-content">wp-content</option>
+                                                </select>
+                                            `,
                             focusConfirm: false,
                             preConfirm: () => ({
                                 custom_name: document.getElementById("custom_name").value,

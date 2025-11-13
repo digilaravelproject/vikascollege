@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Page;
 use App\Models\Menu;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache; // 1. Cache facade import karein
+use Illuminate\Support\Facades\Cache; // Cache facade
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PageController extends Controller
@@ -16,23 +16,27 @@ class PageController extends Controller
     public function show($slug)
     {
         try {
-            // 2. Poore data ko 'page:view:SLUG' key ke saath 24 ghante (86400 sec) ke liye cache karein
+            // 1. Poore page view ko 24 ghante ke liye cache karein
             $viewData = Cache::remember('page:view:' . $slug, 86400, function () use ($slug) {
 
-                // 1️⃣ Fetch active page (ye pehle jaisa hi hai)
+                // 1️⃣ Fetch active page
                 $activeSection = Page::where('slug', $slug)
                     ->where('status', true)
                     ->firstOrFail(); // Agar nahi mila toh ModelNotFoundException throw karega
 
-                // 2️⃣ Find related menu (thoda behtar kiya gaya)
-                $activeMenu = Menu::where('status', true) // Status pehle check karein
+                // 2️⃣ Find related menu (Eager load 'parent' for optimization)
+                $activeMenu = Menu::with('parent') // ⭐️ N+1 problem se bachne ke liye
+                    ->where('status', true)
                     ->whereHas('page', function ($q) use ($activeSection) {
                         $q->where('id', $activeSection->id);
                     })
                     ->first();
 
                 if (!$activeMenu) {
-                    $activeMenu = Menu::where('url', $slug)->where('status', true)->first();
+                    $activeMenu = Menu::with('parent') // ⭐️ Yahaan bhi
+                        ->where('url', $slug)
+                        ->where('status', true)
+                        ->first();
                 }
 
                 // 3️⃣ Prepare sidebar menus
@@ -43,11 +47,15 @@ class PageController extends Controller
                     // getTopParent() function ab internally cached hai
                     $topParent = $this->getTopParent($activeMenu);
 
-                    // Yeh heavy query ab cache ho jaayegi
-                    $menus = Menu::with(['childrenRecursive.page']) // Recursive load
-                        ->where('id', $topParent->id)
-                        ->where('status', true) // Active menus hi laayein
-                        ->get();
+                    // 🚀🚀 NAYA OPTIMIZATION: Nested Caching 🚀🚀
+                    // Ab hum sirf menu tree ko alag se cache karenge.
+                    $menus = Cache::remember('menu:sidebar:' . $topParent->id, 86400, function () use ($topParent) {
+                        Log::info("Caching sidebar menu for: " . $topParent->id); // Log karein jab cache bane
+                        return Menu::with(['childrenRecursive.page']) // Recursive load
+                            ->where('id', $topParent->id)
+                            ->where('status', true)
+                            ->get();
+                    });
                 }
 
                 // 4️⃣ Decode JSON content
@@ -64,7 +72,6 @@ class PageController extends Controller
             // 6️⃣ Cached data se view render karein
             return view('frontend.pages.show', $viewData);
         } catch (ModelNotFoundException $e) {
-            // Cache closure ke andar se throw hua exception yahaan pakda jaayega
             Log::error("Page or Menu not found for slug: {$slug}", ['exception' => $e->getMessage()]);
             abort(404, 'Page not found.');
         } catch (\Throwable $e) {
@@ -75,11 +82,11 @@ class PageController extends Controller
 
 
     /**
-     * Get the top-most parent menu (Ab yeh cached hai).
+     * Get the top-most parent menu (Yeh pehle se hi cached hai, perfect).
      */
     private function getTopParent(Menu $menu)
     {
-        // 3. Har menu ke top parent ko 24 ghante ke liye cache karein
+        // Har menu ke top parent ko 24 ghante ke liye cache karein
         return Cache::remember('menu:top_parent:' . $menu->id, 86400, function () use ($menu) {
             try {
                 if ($menu->parent_id) {

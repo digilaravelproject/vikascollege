@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Models\Menu; // ⭐️ CACHE: Menu model ko import karein
 use Exception;
 use Illuminate\Contracts\View\View as ViewView;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -12,18 +13,22 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache; // ⭐️ CACHE: Cache import karein
+use Illuminate\Support\Facades\Artisan; // ⭐️ CACHE: Artisan import karein
 use Illuminate\Support\Str;
 
 class PageBuilderController extends Controller
 {
     use AuthorizesRequests;
+
+    // ... (index, create, store methods mein koi change nahi) ...
+
     /**
      * Display a listing of the pages.
-     *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
     public function index(): ViewView|RedirectResponse
     {
+        // ... (No change) ...
         $this->authorize('view pages');
         try {
             $pages = Page::latest()->get();
@@ -36,11 +41,10 @@ class PageBuilderController extends Controller
 
     /**
      * Show the form for creating a new page.
-     *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
     public function create(): ViewView|RedirectResponse
     {
+        // ... (No change) ...
         $this->authorize('create pages');
         try {
             return view('admin.pagebuilder.create');
@@ -52,12 +56,10 @@ class PageBuilderController extends Controller
 
     /**
      * Store a newly created page in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request): RedirectResponse
     {
+        // ... (No change, lekin store ke baad bhi cache warm kar sakte hain) ...
         $this->authorize('create pages');
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -70,11 +72,14 @@ class PageBuilderController extends Controller
             $validated['slug'] = $validated['slug'] ?: Str::slug($validated['title']);
 
             if ($request->hasFile('image')) {
-                // Re-using the private helper for simplicity and cleaner store logic
                 $validated['image'] = $this->storeRegularFile($request->file('image'), 'uploads/pages');
             }
 
             Page::create($validated);
+
+            // ⭐️ CACHE: Naya page bana hai, toh sabhi cache ko warm kar lein
+            Artisan::call('cache:warm-pages');
+
             return redirect()->route('admin.pagebuilder.index')->with('success', 'Page created successfully!');
         } catch (Exception $e) {
             Log::error('PageBuilder Store Error: ' . $e->getMessage());
@@ -84,12 +89,10 @@ class PageBuilderController extends Controller
 
     /**
      * Show the form for editing the specified page.
-     *
-     * @param \App\Models\Page $page
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
     public function edit(Page $page): ViewView|RedirectResponse
     {
+        // ... (No change) ...
         $this->authorize('edit pages');
         try {
             return view('admin.pagebuilder.edit', compact('page'));
@@ -101,10 +104,6 @@ class PageBuilderController extends Controller
 
     /**
      * Update a specific page in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Page $page
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Page $page): RedirectResponse
     {
@@ -120,11 +119,18 @@ class PageBuilderController extends Controller
         try {
             if ($request->hasFile('image')) {
                 $this->deleteOldFile($page->image);
-                // Re-using the private helper for file storage
                 $validated['image'] = $this->storeRegularFile($request->file('image'), 'uploads/pages');
             }
 
             $page->update($validated);
+
+            // ⭐️ CACHE INTEGRATION START ⭐️
+            // 1. Purana page aur menu cache clear karein
+            $this->clearAllCaches($page);
+            // 2. Naya cache banne ke liye command run karein
+            Artisan::call('cache:warm-pages');
+            // ⭐️ CACHE INTEGRATION END ⭐️
+
             return redirect()->route('admin.pagebuilder.index')->with('success', 'Page updated successfully!');
         } catch (Exception $e) {
             Log::error('PageBuilder Update Error: ' . $e->getMessage());
@@ -134,17 +140,23 @@ class PageBuilderController extends Controller
 
     /**
      * Remove the specified page from storage.
-     *
-     * @param \App\Models\Page $page
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Page $page): RedirectResponse
     {
         $this->authorize('delete pages');
         try {
-            // Delete associated image before deleting the page record
+            // ⭐️ CACHE INTEGRATION START ⭐️
+            // Delete karne se pehle page aur menu cache clear karein
+            $this->clearAllCaches($page);
+
+            // Ab file aur page delete karein
             $this->deleteOldFile($page->image);
             $page->delete();
+
+            // Cache warm command chalayein (taaki naya state cache ho)
+            Artisan::call('cache:warm-pages');
+            // ⭐️ CACHE INTEGRATION END ⭐️
+
             return back()->with('success', 'Page deleted successfully!');
         } catch (Exception $e) {
             Log::error('PageBuilder Delete Error: ' . $e->getMessage());
@@ -155,48 +167,33 @@ class PageBuilderController extends Controller
 
     /**
      * ADDED: Toggle the status of the specified page.
-     *
-     * @param \App\Models\Page $page
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function toggleStatus(Page $page): RedirectResponse
     {
-        $this->authorize('manage menus');
+        $this->authorize('manage menus'); // (Aapne 'manage menus' use kiya tha, wahi rakha hai)
 
         try {
-            // Step 1: Toggle the page status (true to false, false to true)
+            // Step 1: Toggle the page status
             $page->update(['status' => !$page->status]);
 
             // Step 2: Check if the page has a related menu
             if ($page->menu) {
                 // If the page has a related menu, also toggle the status of the menu
-                $page->menu->update(['status' => !$page->menu->status]);
+                $page->menu->update(['status' => $page->status]); // ⭐️ FIX: Menu status page status jaisa hona chahiye
             }
 
-            // Step 3: Determine success message based on the page status
-            $message = $page->status ? 'Page enabled successfully!' : 'Page disabled successfully!';
+            // ⭐️ CACHE INTEGRATION START ⭐️
+            // 1. Purana page aur menu cache clear karein
+            $this->clearAllCaches($page);
+            // 2. Naya cache banne ke liye command run karein
+            Artisan::call('cache:warm-pages');
+            // ⭐️ CACHE INTEGRATION END ⭐️
 
-            // If the menu was also updated, add a note about that
-            if ($page->menu && $page->menu->status === false) {
-                $message .= ' Menu item also disabled.';
+            // Step 3: Determine success message
+            $message = $page->status ? 'Page enabled successfully!' : 'Page disabled successfully!';
+            if ($page->menu) {
+                $message .= ' Related menu item also updated.';
             }
-
-            return back()->with('success', $message);
-        } catch (Exception $e) {
-            // Log any errors that occur during the status toggle
-            Log::error('PageBuilder Toggle Status Error: ' . $e->getMessage());
-            return back()->with('error', 'Failed to update page status.');
-        }
-    }
-
-    public function toggleStatus_old(Page $page): RedirectResponse
-    {
-        try {
-            // Page ki current status ko ulta kar dein (true to false, false to true)
-            $page->update(['status' => !$page->status]);
-
-            // Status ke hisaab se message set karein
-            $message = $page->status ? 'Page enabled successfully!' : 'Page disabled successfully!';
 
             return back()->with('success', $message);
         } catch (Exception $e) {
@@ -204,17 +201,16 @@ class PageBuilderController extends Controller
             return back()->with('error', 'Failed to update page status.');
         }
     }
+
+    // ... (toggleStatus_old method delete kar sakte hain) ...
 
     /**
      * Show the page builder interface for the specified page.
-     *
-     * @param \App\Models\Page $page
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
     public function builder(Page $page): ViewView|RedirectResponse
     {
+        // ... (No change) ...
         $this->authorize('edit pages');
-
         try {
             return view('admin.pagebuilder.builder', compact('page'));
         } catch (Exception $e) {
@@ -225,12 +221,8 @@ class PageBuilderController extends Controller
 
     /**
      * Save the page builder content (JSON) to the specified page.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Page $page
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function saveBuilder(Request $request, Page $page): JsonResponse // Note: Only returns JsonResponse now
+    public function saveBuilder(Request $request, Page $page): JsonResponse
     {
         $this->authorize('edit pages');
 
@@ -241,106 +233,87 @@ class PageBuilderController extends Controller
         try {
             $page->update(['content' => $validated['content']]);
 
-            // ✅ THE FIX: Return a JSON object on success
+            // ⭐️ CACHE INTEGRATION START ⭐️
+            // 1. Purana page aur menu cache clear karein
+            $this->clearAllCaches($page);
+
+            // 2. Naya cache banne ke liye command run karein (QUEUE MEIN)
+            // Yeh JSON response hai, isliye response fast hona chahiye.
+            // `Artisan::queue` command ko background mein chala dega.
+            // Iske liye aapka queue driver (e.g., database, redis) setup hona chahiye.
+            // Agar queue setup nahi hai, toh `Artisan::call` use karein.
+            Artisan::queue('cache:warm-pages');
+            // ⭐️ CACHE INTEGRATION END ⭐️
+
             return response()->json([
                 'success' => true,
-                'message' => 'Page saved successfully!'
+                'message' => 'Page saved! Cache is rebuilding in background.' // Message update kiya
             ]);
         } catch (Exception $e) {
             Log::error('PageBuilder Save Error: ' . $e->getMessage());
-
-            // This part was already correct!
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to save content.'
-            ], 500); // Also good to add a 500 status on server error
+            ], 500);
         }
     }
 
-    /**
-     * Handle AJAX media upload for the page builder.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Page $page
-     * @return \Illuminate\Http\JsonResponse
-     */
+    // ... (uploadMedia method mein koi change nahi) ...
+
     /** ✅ Media upload via AJAX */
     public function uploadMedia(Request $request, Page $page): JsonResponse
     {
-        // 1. Validation (Same as before)
+        // ... (No change) ...
         $validated = $request->validate([
             'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:81920',
             'base_path' => 'nullable|string|in:storage,wp-content',
             'custom_name' => 'nullable|string|max:255',
         ]);
-
         try {
             $file = $request->file('file');
             $mime = $file->getMimeType();
             $customName = $validated['custom_name'] ?? null;
-            // 2. Determine Subfolder (Unchanged)
             $subFolder = match (true) {
                 str_starts_with($mime, 'image/') => 'uploads/images',
                 str_starts_with($mime, 'video/') => 'uploads/videos',
-                $mime === 'application/pdf' && $customName => 'uploads', // if custom_name present
-                $mime === 'application/pdf' => 'uploads/pdfs',           // otherwise default
+                $mime === 'application/pdf' && $customName => 'uploads',
+                $mime === 'application/pdf' => 'uploads/pdfs',
                 default => null,
             };
-
             if (!$subFolder) {
                 return response()->json(['success' => false, 'message' => 'Unsupported file type.'], 422);
             }
-
-            // ------------------ FILENAME LOGIC FIX START (Raw Custom Name Priority) ------------------
             $ext = $file->getClientOriginalExtension();
             $rawPathAndName = trim($validated['custom_name'] ?? '');
             $finalName = '';
-
-            // CRITICAL FIX: Custom name ko pura filename manenge, lekin extension add karenge.
             if ($rawPathAndName) {
-                // Filename part nikalna
                 $filenamePart = pathinfo($rawPathAndName, PATHINFO_FILENAME);
-
-                // Filename ke path component ko directory adjustment ke liye nikalna
                 $customPath = trim(pathinfo($rawPathAndName, PATHINFO_DIRNAME), './');
-
-                // Filename ko ussi roop mein rakhenge, lekin extension confirm karenge
                 $finalName = $filenamePart . '.' . $ext;
-
-                // IMPORTANT: Agar custom path diya gaya hai, to use $subFolder mein merge karna
                 if ($customPath && $customPath !== '/') {
                     $subFolder = trim($subFolder . '/' . $customPath, '/');
                 }
             } else {
-                // Agar custom_name nahi diya, to original name use karo
                 $finalName = $file->getClientOriginalName();
             }
-            // ------------------ FILENAME LOGIC FIX END ------------------
-
             $basePath = $validated['base_path'] ?? 'wp-content';
-            $directory = "{$basePath}/{$subFolder}";
-
-            // 4. Store File
+            // $directory = "{$basePath}/{$subFolder}";
             if ($basePath === 'wp-content') {
+                $directory = "vikas/wp-content/{$subFolder}";
                 $targetPath = public_path($directory);
-
                 if (!is_dir($targetPath)) {
                     if (!mkdir($targetPath, 0775, true)) {
                         throw new Exception("Failed to create directory: {$targetPath}");
                     }
                 }
-
                 $file->move($targetPath, $finalName);
                 $url = asset("{$directory}/{$finalName}");
                 $finalDirectory = $directory;
             } else {
-                // Laravel Storage method (storage/app/public)
                 $path = $file->storeAs($subFolder, $finalName, 'public');
                 $url = Storage::url($path);
                 $finalDirectory = "storage/{$subFolder}";
             }
-
-            // 5. Return Success Response
             return response()->json([
                 'success' => true,
                 'url' => $url,
@@ -354,19 +327,13 @@ class PageBuilderController extends Controller
     }
 
 
-    /**
-     * Stores a regular file (e.g., image upload from CRUD forms) using Laravel Storage.
-     * Replaces the redundant handleFileUpload logic in store/update.
-     *
-     * @param \Illuminate\Http\UploadedFile $file
-     * @param string $path
-     * @return string|null The stored file path relative to the 'public' disk.
-     */
+    // ... (storeRegularFile aur deleteOldFile methods mein koi change nahi) ...
+
     private function storeRegularFile($file, string $path): ?string
     {
+        // ... (No change) ...
         try {
             if ($file) {
-                // Generates a unique filename and stores it.
                 return $file->store($path, 'public');
             }
             return null;
@@ -376,21 +343,54 @@ class PageBuilderController extends Controller
         }
     }
 
-    /**
-     * Deletes an old file from the storage/app/public disk.
-     *
-     * @param string|null $filePath
-     * @return void
-     */
     private function deleteOldFile(?string $filePath): void
     {
+        // ... (No change) ...
         try {
             if ($filePath && Storage::disk('public')->exists($filePath)) {
                 Storage::disk('public')->delete($filePath);
             }
         } catch (Exception $e) {
             Log::warning('Delete Old File Warning: ' . $e->getMessage());
-            // Warning instead of error, as deletion failure shouldn't stop CRUD operations
+        }
+    }
+
+    // ⭐️⭐️⭐️ NYA HELPER FUNCTION ⭐️⭐️⭐️
+    /**
+     * Clears all relevant caches for a page and its related menu.
+     *
+     * @param \App\Models\Page $page
+     * @return void
+     */
+    private function clearAllCaches(Page $page): void
+    {
+        try {
+            // 1. Page cache ko clear karein
+            Cache::forget('page:view:' . $page->slug);
+            Log::info("Cache cleared for page: " . $page->slug);
+
+            // 2. Agar page se juda menu hai, toh menu cache bhi clear karein
+            // Yeh zaroori hai taaki menu mein 'active' state ya naya/purana link sahi ho
+            if ($page->menu) {
+                $menu = $page->menu; // Load the related menu
+
+                // Is menu ka 'top_parent' cache clear karein
+                Cache::forget('menu:top_parent:' . $menu->id);
+
+                // Ab top parent find karein (non-cached way)
+                // (Iske liye Menu model mein 'parent' relationship hona zaroori hai)
+                $current = $menu;
+                while ($current->parent_id && $current->parent) {
+                    $current = $current->parent;
+                }
+
+                // Top parent mil gaya, ab sidebar cache clear karein
+                Cache::forget('menu:sidebar:' . $current->id);
+                Log::info("Cache cleared for sidebar menu: " . $current->id);
+            }
+        } catch (Exception $e) {
+            // Agar menu ya parent relationship fail ho, toh log karein
+            Log::error('Failed to clear menu cache for page ID ' . $page->id . ': ' . $e->getMessage());
         }
     }
 }
