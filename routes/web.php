@@ -6,7 +6,10 @@ use App\Http\Controllers\TrustController;
 use Illuminate\Support\Facades\Route;
 
 // 1. Root Redirection: '/' will redirect to '/vikas'
-Route::redirect('/', '/vikas');
+Route::redirect('/vikas', '/');
+Route::get('/', function () {
+    return view('homepage');
+})->name('homepage');
 
 // 2. EXCLUDED ROUTES: Dashboard, Profile, Auth, and Admin routes
 // These routes will NOT have the 'vikas' prefix.
@@ -28,9 +31,7 @@ require __DIR__ . '/admin.php'; // Admin routes
 Route::prefix('vikas')->group(function () {
 
     // URL: /vikas
-    Route::get('/', function () {
-        return view('homepage');
-    })->name('homepage');
+
 
     // URL: /vikas/the-trust
     Route::get('/the-trust/{slug?}', [TrustController::class, 'index'])->name('trust.index');

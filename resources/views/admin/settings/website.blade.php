@@ -36,10 +36,10 @@
         @endif
 
         {{--
-          MODIFIED:
-          - Added x-data="{ activeTab: 'general' }" to manage tabs.
-          - Added Tab Navigation.
-          - Wrapped each card in a div with x-show="activeTab === '...'"
+         MODIFIED:
+         - Added x-data="{ activeTab: 'general' }" to manage tabs.
+         - Added Tab Navigation.
+         - Wrapped each card in a div with x-show="activeTab === '...'"
         --}}
         <form action="{{ route('admin.website-settings.update') }}" method="POST" enctype="multipart/form-data"
             class="space-y-6" x-data="settingsForm()" @submit="showSavingAlert">
@@ -123,7 +123,8 @@
                                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                     <div>
                                         <label for="college_logo" class="block mb-1.5 text-sm font-medium text-gray-700">College Logo</label>
-                                        <input type="file" id="college_logo" name="college_logo" accept="image/*"
+                                        {{-- FIX: Updated accept attribute --}}
+                                        <input type="file" id="college_logo" name="college_logo" accept="image/png, image/jpeg, image/webp, image/svg+xml"
                                             class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:bg-gray-100 file:border-0 file:px-3 file:py-2.5 file:me-3 file:text-gray-700 file:font-medium">
                                         <p class="mt-1.5 text-xs text-gray-500">Recommended: SVG, PNG, or JPG (max 2MB)</p>
                                         @if ($data['college_logo'])
@@ -132,16 +133,18 @@
                                     </div>
                                     <div>
                                         <label for="favicon" class="block mb-1.5 text-sm font-medium text-gray-700">Favicon</label>
-                                        <input type="file" id="favicon" name="favicon" accept="image/png, image/x-icon"
+                                        {{-- FIX: Updated accept attribute --}}
+                                        <input type="file" id="favicon" name="favicon" accept="image/png, image/x-icon, image/svg+xml"
                                         class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:bg-gray-100 file:border-0 file:px-3 file:py-2.5 file:me-3 file:text-gray-700 file:font-medium">
-                                        <p class="mt-1.5 text-xs text-gray-500">Recommended: 32x32 PNG or ICO</p>
+                                        <p class="mt-1.5 text-xs text-gray-500">Recommended: 32x32 PNG, ICO, or SVG</p>
                                         @if ($data['favicon'])
                                         <img src="{{ asset('storage/' . $data['favicon']) }}" class="object-contain w-16 h-16 p-2 mt-3 bg-gray-100 border border-gray-200 rounded-lg">
                                         @endif
                                     </div>
                                     <div>
-                                        <label for="top_banner_image" class="block mb-1.5 text-sm font-medium text-gray-700">top_banner_image</label>
-                                        <input type="file" id="top_banner_image" name="top_banner_image" accept="image/*"
+                                        <label for="top_banner_image" class="block mb-1.5 text-sm font-medium text-gray-700">Top Banner Image</label>
+                                        {{-- FIX: Updated accept attribute --}}
+                                        <input type="file" id="top_banner_image" name="top_banner_image" accept="image/png, image/jpeg, image/webp, image/svg+xml"
                                             class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:bg-gray-100 file:border-0 file:px-3 file:py-2.5 file:me-3 file:text-gray-700 file:font-medium">
                                         <p class="mt-1.5 text-xs text-gray-500">Recommended: SVG, PNG, or JPG (max 2MB)</p>
                                         @if ($data['top_banner_image'])
@@ -285,9 +288,10 @@
                                     </div>
                                     <div class="md:col-span-3">
                                         <label for="meta_image" class="block mb-1.5 text-sm font-medium text-gray-700">Meta Image (Social Share)</label>
-                                        <input type="file" id="meta_image" name="meta_image" accept="image/png, image/jpeg, image/webp"
+                                        {{-- FIX: Updated accept attribute --}}
+                                        <input type="file" id="meta_image" name="meta_image" accept="image/png, image/jpeg, image/webp, image/svg+xml"
                                             class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:bg-gray-100 file:border-0 file:px-3 file:py-2.5 file:me-3 file:text-gray-700 file:font-medium">
-                                        <p class="mt-1.5 text-xs text-gray-500">Recommended: 1200x630px (JPG, PNG, WEBP)</p>
+                                        <p class="mt-1.5 text-xs text-gray-500">Recommended: 1200x630px (JPG, PNG, WEBP, SVG)</p>
                                         @if ($data['meta_image'])
                                             <img src="{{ asset('storage/' . $data['meta_image']) }}" class="object-contain w-auto h-32 p-2 mt-3 bg-gray-100 border border-gray-200 rounded-lg">
                                         @endif
@@ -306,7 +310,8 @@
                             <div class="p-6 space-y-4">
                                 <div>
                                     <label for="banner_media" class="block mb-1.5 text-sm font-medium text-gray-700">Upload New Media</label>
-                                    <input type="file" id="banner_media" name="banner_media[]" accept="image/*,video/*" multiple
+                                    {{-- FIX: Made accept more explicit --}}
+                                    <input type="file" id="banner_media" name="banner_media[]" accept="image/png, image/jpeg, image/webp, image/svg+xml, video/mp4, video/mov, video/avi" multiple
                                         class="w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:bg-gray-100 file:border-0 file:px-3 file:py-2.5 file:me-3 file:text-gray-700 file:font-medium">
                                     <p class="mt-1.5 text-xs text-gray-500">
                                         <strong class="text-red-600">Warning:</strong> Uploading new media will <strong class="underline">delete and replace</strong> all existing ones.

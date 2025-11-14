@@ -65,11 +65,14 @@ class WebsiteSettingController extends Controller
             'banner_subheading' => 'nullable|string|max:255',
             'banner_button_text' => 'nullable|string|max:100',
             'banner_button_link' => 'nullable|url',
-            'college_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
-            'top_banner_image' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
-            'favicon' => 'nullable|image|mimes:jpg,jpeg,png,ico,webp|max:1024',
+
+            // FIX: Removed 'image' rule, kept 'mimes'
+            'college_logo' => 'nullable|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            'top_banner_image' => 'nullable|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            'favicon' => 'nullable|mimes:jpg,jpeg,png,ico,webp,svg|max:1024',
+
             'banner_media' => 'nullable|array', // Validate as array
-            'banner_media.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,avi|max:51200', // 50MB
+            'banner_media.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg,mp4,mov,avi|max:51200', // 50MB
 
             // Contact & Social & Footer
             'address' => 'nullable|string|max:500',
@@ -90,7 +93,9 @@ class WebsiteSettingController extends Controller
             // SEO Settings (ADDED)
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'meta_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+
+            // FIX: Removed 'image' rule, added 'svg' to mimes
+            'meta_image' => 'nullable|mimes:jpg,jpeg,png,webp,svg|max:2048',
         ]);
 
         DB::beginTransaction();
@@ -98,7 +103,7 @@ class WebsiteSettingController extends Controller
             // Save general settings
             foreach ($validated as $key => $value) {
                 // MODIFIED: Added 'meta_image' to skip list
-                if (in_array($key, ['college_logo', 'favicon', 'banner_media', 'meta_image'])) {
+                if (in_array($key, ['college_logo', 'top_banner_image', 'favicon', 'banner_media', 'meta_image'])) {
                     continue;
                 }
                 if ($key === 'footer_links' && is_array($value)) {
@@ -143,16 +148,21 @@ class WebsiteSettingController extends Controller
                 if ($oldImage = Setting::get('meta_image')) {
                     Storage::disk('public')->delete($oldImage);
                 }
-                // Store in 'seo' folder
-                $path = $request->file('meta_image')->store('seo', 'public');
 
-                // Optimize it
-                try {
-                    $fullPath = Storage::disk('public')->path($path);
-                    $optimizerChain = OptimizerChainFactory::create();
-                    $optimizerChain->optimize($fullPath);
-                } catch (\Exception $e) {
-                    Log::warning("Could not optimize meta_image {$path}: " . $e->getMessage());
+                $file = $request->file('meta_image'); // Get file object
+                $path = $file->store('seo', 'public'); // Store in 'seo' folder
+
+                // FIX: Only optimize if it's NOT an SVG
+                if ($file->getMimeType() !== 'image/svg+xml' && $file->getClientOriginalExtension() !== 'svg') {
+                    try {
+                        $fullPath = Storage::disk('public')->path($path);
+                        $optimizerChain = OptimizerChainFactory::create();
+                        $optimizerChain->optimize($fullPath);
+                    } catch (\Exception $e) {
+                        Log::warning("Could not optimize meta_image {$path}: " . $e->getMessage());
+                    }
+                } else {
+                    Log::info("Skipped optimization for SVG meta_image: {$path}");
                 }
 
                 Setting::set('meta_image', $path);
@@ -341,31 +351,38 @@ class WebsiteSettingController extends Controller
      */
     private function compressImage($file, $key)
     {
-        $path = 'banners/' . uniqid('img_') . '.webp';
+        $mime = $file->getMimeType();
+        $ext = $file->getClientOriginalExtension();
 
-        // Use Storage::disk('public') to get the full path for optimization
-        $fullPath = Storage::disk('public')->path($path);
+        // FIX: Handle SVG differently
+        if ($mime === 'image/svg+xml' || $ext === 'svg') {
+            // Just store the SVG without optimization or extension change
+            $path = $file->store('banners', 'public');
+            Log::info("SVG banner saved (no optimization): {$path}");
+        } else {
+            // Original logic for raster images (JPG, PNG)
+            // Note: Your original code forces .webp extension but doesn't convert.
+            $path = 'banners/' . uniqid('img_') . '.webp';
+            $fullPath = Storage::disk('public')->path($path);
+            Storage::disk('public')->makeDirectory(dirname($path));
 
-        // Ensure directory exists
-        Storage::disk('public')->makeDirectory(dirname($path));
+            // Save original as WebP
+            file_put_contents($fullPath, file_get_contents($file->getRealPath()));
 
-        // Save original as WebP
-        file_put_contents($fullPath, file_get_contents($file->getRealPath()));
-
-        // Optimize
-        try {
-            $optimizerChain = OptimizerChainFactory::create();
-            $optimizerChain->optimize($fullPath);
-        } catch (\Exception $e) {
-            Log::warning("Could not optimize image {$path}. Using unoptimized version. Error: " . $e->getMessage());
+            // Optimize
+            try {
+                $optimizerChain = OptimizerChainFactory::create();
+                $optimizerChain->optimize($fullPath);
+                Log::info("Image banner saved (optimized): {$path}");
+            } catch (\Exception $e) {
+                Log::warning("Could not optimize image {$path}. Using unoptimized version. Error: " . $e->getMessage());
+            }
         }
 
         Setting::set($key, json_encode([
             'type' => 'image',
             'path' => $path, // Save the relative public path
         ]));
-
-        Log::info("Image banner saved: {$path}");
     }
 
     /**
