@@ -13,139 +13,142 @@ class AnnouncementController extends Controller
     use AuthorizesRequests;
 
     /**
-     * Display a listing of the resource.
+     * Normalize link value
      */
+    private function normalizeLink(?string $link): ?string
+    {
+        if (!$link) {
+            return null;
+        }
+
+        // Trim spaces
+        $link = trim($link);
+
+        // Fix internal spaces → %20
+        $link = str_replace(' ', '%20', $link);
+
+        // If not full URL or /storage, convert to storage path
+        if (!Str::startsWith($link, ['http://', 'https://', '/storage'])) {
+            $link = '/storage/' . ltrim($link, '/');
+        }
+
+        return $link;
+    }
+
     public function index()
     {
-        try {
-            $this->authorize('view announcements');
-            $announcements = Announcement::latest()->paginate(15);
-            return view('admin.announcements.index', compact('announcements'));
-        } catch (\Exception $e) {
-            Log::error("Error fetching announcements: " . $e->getMessage());
-            return back()->with('error', 'Failed to load announcements.');
-        }
+        $this->authorize('view announcements');
+
+        $announcements = Announcement::latest()->paginate(15);
+        return view('admin.announcements.index', compact('announcements'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        try {
-            $this->authorize('create announcements');
-            return view('admin.announcements.create');
-        } catch (\Exception $e) {
-            Log::error("Error opening create announcement form: " . $e->getMessage());
-            return back()->with('error', 'Failed to open create announcement form.');
-        }
+        $this->authorize('create announcements');
+        return view('admin.announcements.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        $this->authorize('create announcements');
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string',
+            'type' => 'required|in:student,faculty',
+            'status' => 'nullable|boolean',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'link' => 'nullable|string|max:500',
+        ]);
+
         try {
-            $this->authorize('create announcements');
+            // Normalize link
+            $validated['link'] = $this->normalizeLink($validated['link'] ?? null);
 
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'content' => 'required|string',
-                'type' => 'required|in:student,faculty',
-                'status' => 'nullable|boolean',
-                'meta_title' => 'nullable|string|max:255',
-                'meta_description' => 'nullable|string|max:500',
-            ]);
-
-            // Set the status to true if not provided
             $validated['status'] = (bool)($validated['status'] ?? true);
 
             Announcement::create($validated);
-            return redirect()->route('admin.announcements.index')->with('success', 'Announcement created successfully');
+
+            return redirect()
+                ->route('admin.announcements.index')
+                ->with('success', 'Announcement created successfully');
         } catch (\Exception $e) {
-            Log::error("Error creating announcement: " . $e->getMessage());
-            return back()->withInput()->with('error', 'Failed to create announcement.');
+            Log::error("Announcement Store Error: " . $e->getMessage(), ['data' => $validated]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Something went wrong while creating announcement.');
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Announcement $announcement)
-    {
-        // Redirecting to index as the show method is not required
-        return redirect()->route('admin.announcements.index');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Announcement $announcement)
     {
-        try {
-            $this->authorize('edit announcements');
-            return view('admin.announcements.edit', compact('announcement'));
-        } catch (\Exception $e) {
-            Log::error("Error opening edit announcement form: " . $e->getMessage());
-            return back()->with('error', 'Failed to open edit announcement form.');
-        }
+        $this->authorize('edit announcements');
+        return view('admin.announcements.edit', compact('announcement'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Announcement $announcement)
     {
-        try {
-            $this->authorize('edit announcements');
+        $this->authorize('edit announcements');
 
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'content' => 'required|string',
-                'type' => 'required|in:student,faculty',
-                'status' => 'nullable|boolean',
-                'meta_title' => 'nullable|string|max:255',
-                'meta_description' => 'nullable|string|max:500',
-            ]);
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string',
+            'type' => 'required|in:student,faculty',
+            'status' => 'nullable|boolean',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'link' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            // Normalize link
+            $validated['link'] = $this->normalizeLink($validated['link'] ?? null);
 
             $validated['status'] = (bool)($validated['status'] ?? $announcement->status);
+            log::info('', ['data' => $validated]);
             $announcement->update($validated);
 
-            return redirect()->route('admin.announcements.index')->with('success', 'Announcement updated successfully');
+            return redirect()
+                ->route('admin.announcements.index')
+                ->with('success', 'Announcement updated successfully');
         } catch (\Exception $e) {
-            Log::error("Error updating announcement: " . $e->getMessage());
-            return back()->withInput()->with('error', 'Failed to update announcement.');
+            Log::error("Announcement Update Error: " . $e->getMessage(), ['data' => $validated]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Something went wrong while updating announcement.');
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Announcement $announcement)
     {
+        $this->authorize('delete announcements');
+
         try {
-            $this->authorize('delete announcements');
             $announcement->delete();
+
             return back()->with('success', 'Announcement deleted successfully');
         } catch (\Exception $e) {
-            Log::error("Error deleting announcement: " . $e->getMessage());
+            Log::error("Announcement Delete Error: " . $e->getMessage());
+
             return back()->with('error', 'Failed to delete announcement.');
         }
     }
 
-    /**
-     * Publish the specified resource.
-     */
     public function publish(Announcement $announcement)
     {
-        try {
-            $this->authorize('publish announcements');
+        $this->authorize('publish announcements');
 
+        try {
             $announcement->update(['status' => true]);
+
             return back()->with('success', 'Announcement published successfully');
         } catch (\Exception $e) {
-            Log::error("Error publishing announcement: " . $e->getMessage());
+            Log::error("Announcement Publish Error: " . $e->getMessage());
+
             return back()->with('error', 'Failed to publish announcement.');
         }
     }

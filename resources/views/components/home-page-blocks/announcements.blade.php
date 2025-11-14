@@ -58,27 +58,26 @@ Aapka <h2> (jo pehle file mein tha) hata diya gaya hai,
                     <div class="space-y-4 text-gray-700 font-sans text-sm">
 
                         @foreach ($items as $item)
-                            {{--
-                            IMPORTANT: Image mein paragraphs hain.
-                            Aapko yahaan $item->description ya $item->content use karna hoga.
-                            Aapke purane code mein $item->title tha, main wohi use kar raha hoon,
-                            lekin <p> tag ke andar.
-                                --}}
                             <p>
-                                {{ $item->title }}
-                                {{-- Agar description hai toh $item->description use karein --}}
+                                @if ($item->link)
+                                    <a href="{{ $item->link }}" target="_blank" class="text-[#1f497d] hover:underline font-medium">
+                                        {{ $item->title }}
+                                    </a>
+                                @else
+                                    {{ $item->title }}
+                                @endif
                             </p>
                         @endforeach
 
                     </div>
             @endif
 
-                {{--
-                NOTES:
-                - Text Color: #c00000 (Image se)
-                --}}
-                <a href="#" class="inline-block mt-5 font-semibold text-[#c00000] hover:underline font-sans">
-                    Read More....
-                </a>
+                @if ($items->first()?->link)
+                    <a href="{{ $items->first()->link }}" target="_blank"
+                        class="inline-block mt-5 font-semibold text-[#c00000] hover:underline font-sans">
+                        Read More....
+                    </a>
+                @endif
+
         </div>
     </div>
