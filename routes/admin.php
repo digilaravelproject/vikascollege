@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\LeadAdminController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\PageBuilderController;
 use App\Http\Controllers\Admin\RolePermissionController;
+use App\Http\Controllers\Admin\SmtpSettingController;
 use App\Http\Controllers\Admin\TrustSectionController;
 use App\Http\Controllers\Admin\WebsiteSettingController;
 use App\Http\Controllers\Admin\HomepageSetupController;
@@ -129,4 +131,10 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::post('/set-env', 'setAppEnv')->name('set-env');
         Route::post('/toggle-debug', 'toggleDebug')->name('toggle-debug');
     });
+
+    Route::get('smtp-settings', [SmtpSettingController::class, 'index'])->name('smtp.index');
+    Route::post('smtp-settings', [SmtpSettingController::class, 'store'])->name('smtp.store');
+
+    Route::get('leads/admissions', [LeadAdminController::class, 'admissions'])->name('leads.admissions');
+    Route::get('leads/enquiries', [LeadAdminController::class, 'enquiries'])->name('leads.enquiries');
 });

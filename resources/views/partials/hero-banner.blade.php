@@ -135,7 +135,7 @@
 @endif
 
 {{-- 3. NOTICE BOARD BUTTON (Aligned to the Right, Slightly Above Center) --}}
-<button type="button" id="open-notice-modal"
+{{-- <button type="button" id="open-notice-modal"
         class="animate-pulse fixed z-40 right-0 top-1/2 -translate-y-1/2
                bg-white text-blue-800 font-semibold
                p-4 rounded-l-xl shadow-lg   py-3 px-3
@@ -147,7 +147,8 @@
     <span
     class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-md ring-2 ring-white">
 </span>
-</button>
+</button> --}}
+
 
 
 

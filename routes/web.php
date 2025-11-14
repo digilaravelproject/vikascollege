@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Frontend\LeadController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TrustController;
@@ -30,7 +31,10 @@ require __DIR__ . '/admin.php'; // Admin routes
 // 3. PUBLIC ROUTES GROUP: Applying the 'vikas' prefix to all public URLs
 Route::prefix('vikas')->group(function () {
 
-    // URL: /vikas
+    Route::post('/send-otp', [LeadController::class, 'sendOtp'])->name('send.otp');
+    Route::post('/verify-otp', [LeadController::class, 'verifyOtp'])->name('verify.otp');
+    Route::post('/submit-admission', [LeadController::class, 'submitAdmission'])->name('submit.admission');
+    Route::post('/submit-enquiry', [LeadController::class, 'submitEnquiry'])->name('submit.enquiry');
 
 
     // URL: /vikas/the-trust

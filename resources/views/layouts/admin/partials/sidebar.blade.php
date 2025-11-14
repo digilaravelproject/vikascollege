@@ -149,7 +149,49 @@
                 The Trust
             </a>
         </div>
+        {{-- Section: Leads Management (YAHAN ADD KAREIN) --}}
+        <h3 class="px-3 pt-6 pb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+            Leads Management
+        </h3>
+        <div class="space-y-1">
 
+            {{-- Dropdown: Leads --}}
+            @php
+                $isLeadsActive = request()->routeIs('admin.leads*');
+            @endphp
+            <div x-data="{ leadsMenuOpen: {{ $isLeadsActive ? 'true' : 'false' }} }">
+                {{-- Dropdown Toggle Button --}}
+                <button @click="leadsMenuOpen = !leadsMenuOpen" class="flex items-center justify-between w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                {{ $isLeadsActive
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                    <span class="flex items-center gap-3">
+                        <i class="w-5 bi bi-person-lines-fill"></i>
+                        Leads
+                    </span>
+                    <i class="bi bi-chevron-down transition-transform duration-200"
+                        :class="{ 'rotate-180': leadsMenuOpen }"></i>
+                </button>
+
+                {{-- Dropdown Content --}}
+                <div x-show="leadsMenuOpen" x-transition class="pl-5 space-y-1 mt-1 border-l border-gray-200 ml-2.5">
+                    <a href="{{ route('admin.leads.admissions') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                    {{ request()->routeIs('admin.leads.admissions')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                        <i class="w-5 bi bi-person-check-fill"></i>
+                        Admissions
+                    </a>
+                    <a href="{{ route('admin.leads.enquiries') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+                    {{ request()->routeIs('admin.leads.enquiries')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                        <i class="w-5 bi bi-question-circle-fill"></i>
+                        Enquiries
+                    </a>
+                </div>
+            </div>
+        </div>
         {{-- Section: Access Control --}}
         <h3 class="px-3 pt-6 pb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
             Access Control
@@ -189,6 +231,13 @@
     : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
                 <i class="w-5 bi bi-code-slash"></i>
                 Developer Settings
+            </a>
+            <a href="{{ route('admin.smtp.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150
+            {{ request()->routeIs('admin.smtp*')
+    ? 'bg-indigo-50 text-indigo-600 font-semibold'
+    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' }}">
+                <i class="w-5 bi bi-envelope-fill"></i>
+                SMTP Settings
             </a>
         </div>
     </nav>
