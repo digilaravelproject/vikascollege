@@ -64,7 +64,7 @@ class HomePageBlock extends Component
 
     private function loadAnnouncements()
     {
-        $count = $this->block['display_count'] ?? 5;
+        $count = $this->block['display_count'] ?? 40;
         $type = $this->block['content_type'] ?? 'student';
         $cacheKey = "announcements:type:{$type}:count:{$count}";
 
@@ -93,7 +93,6 @@ class HomePageBlock extends Component
             $recent = EventItem::with('category')
                 ->where('event_date', '<', now())
                 ->orderBy('event_date', 'desc')
-                ->take(10)
                 ->get();
 
             return $upcoming->merge($recent);
@@ -136,35 +135,35 @@ class HomePageBlock extends Component
     }
     private function loadAcademicCalendar()
     {
-        $count = $this->block['item_count'] ?? 7;
-        $cacheKey = "academic_calendar:homepage:count:{$count}";
+        $count = $this->block['item_count'] ?? 40;
+        $cacheKey = "academic_calendar:homepage:merged:count:{$count}";
 
+        // Result $this->items me store ho raha hai
         $this->items = Cache::remember($cacheKey, 3600, function () use ($count) {
 
-            // 1. Pehle UPCOMING events dhoondein
-            $upcoming = AcademicCalendar::where('status', 1)
+            // 1. Future Events (Aaj aur aane waale) -> Order: 12, 15, 20...
+            $future = AcademicCalendar::where('status', 1)
                 ->where('event_datetime', '>=', now()->startOfDay())
-                ->orderBy('event_datetime', 'asc') // Aane waale pehle
-                ->take($count)
+                ->orderBy('event_datetime', 'asc')
                 ->get();
 
-            // 2. Agar UPCOMING event nahi milte hain (khaali hai)
-            if ($upcoming->isEmpty()) {
-                // Toh RECENT PAST events dhoondein
-                return AcademicCalendar::where('status', 1)
-                    ->where('event_datetime', '<', now()->startOfDay())
-                    ->orderBy('event_datetime', 'desc') // Sabse naye (past) waale pehle
-                    ->take($count)
-                    ->get();
-            }
+            // 2. Past Events (Jo beet gaye) -> Order: 9, 8, 5...
+            $past = AcademicCalendar::where('status', 1)
+                ->where('event_datetime', '<', now()->startOfDay())
+                ->orderBy('event_datetime', 'desc')
+                ->get();
 
-            // 3. Agar upcoming events mile hain, toh unhe return karein
-            return $upcoming;
+            // 3. Merge: Future pehle, fir Past
+            // Variable name $upcoming hi rakha hai jaisa aapne kaha
+            $upcoming = $future->merge($past);
+
+            // 4. Limit lagakar return karein
+            return $upcoming->take($count);
         });
     }
     private function loadAcademicCalendar_old()
     {
-        $count = $this->block['item_count'] ?? 7;
+        $count = $this->block['item_count'] ?? 40;
         $cacheKey = "academic_calendar:homepage:count:{$count}";
 
         $this->items = Cache::remember($cacheKey, 3600, function () use ($count) {

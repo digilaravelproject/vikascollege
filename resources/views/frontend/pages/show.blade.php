@@ -33,7 +33,7 @@
                             // Only level 2+ menus are expandable
                             $html .=
                                 '<div class="flex items-center justify-between w-full">
-                                    <a href="' .
+                                                    <a href="' .
                                 e($url) .
                                 '" class="flex-1 block px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg ' .
                                 ($isActive
@@ -42,20 +42,20 @@
                                 '">' .
                                 e($menu->title) .
                                 '
-                                    </a>
-                                    <button @click="open = !open"
-                                        class="px-2 text-gray-600 transition hover:text-[#013954] focus:outline-none"
-                                        title="Toggle submenu">
-                                        <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6" />
-                                        </svg>
-                                        <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
-                                        </svg>
-                                    </button>
-                                </div>';
+                                                    </a>
+                                                    <button @click="open = !open"
+                                                        class="px-2 text-gray-600 transition hover:text-[#013954] focus:outline-none"
+                                                        title="Toggle submenu">
+                                                        <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6" />
+                                                        </svg>
+                                                        <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 15l-6-6-6 6" />
+                                                        </svg>
+                                                    </button>
+                                                </div>';
                         } else {
                             // Normal link for all other levels
                             $html .=

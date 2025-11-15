@@ -12,17 +12,50 @@ class GalleryImageController extends Controller
 {
     use AuthorizesRequests;
 
-    /**
-     * Display a listing of the resource.
-     */
+    // -------------------
+    // Helper: Convert image to WebP
+    // -------------------
+    private function convertToWebp($file, $path)
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $imagePath = $file->getRealPath();
+
+        switch ($extension) {
+            case 'jpeg':
+            case 'jpg':
+                $image = imagecreatefromjpeg($imagePath);
+                break;
+            case 'png':
+                $image = imagecreatefrompng($imagePath);
+                imagepalettetotruecolor($image);
+                imagealphablending($image, true);
+                imagesavealpha($image, true);
+                break;
+            case 'gif':
+                $image = imagecreatefromgif($imagePath);
+                break;
+            default:
+                return null;
+        }
+
+        $webpName = uniqid() . '.webp';
+        $fullPath = storage_path("app/public/$path/" . $webpName);
+
+        imagewebp($image, $fullPath, 80); // 80% quality
+        imagedestroy($image);
+
+        return "$path/$webpName";
+    }
+
+    // -------------------
+    // Index
+    // -------------------
     public function index()
     {
         try {
-            $this->authorize('view gallery images'); // Add permission check
-            // Fetch all categories for the filter tabs
+            $this->authorize('view gallery images');
             $categories = GalleryCategory::orderBy('name')->get(['id', 'name']);
 
-            // Fetch images with category relationship
             $images = GalleryImage::with('category')
                 ->latest()
                 ->paginate(24);
@@ -34,13 +67,13 @@ class GalleryImageController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    // -------------------
+    // Create
+    // -------------------
     public function create()
     {
         try {
-            $this->authorize('upload gallery images'); // Add permission check
+            $this->authorize('upload gallery images');
             $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
             return view('admin.gallery.images.create', compact('categories'));
         } catch (\Exception $e) {
@@ -49,21 +82,26 @@ class GalleryImageController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // -------------------
+    // Store
+    // -------------------
     public function store(Request $request)
     {
         try {
-            $this->authorize('upload gallery images'); // Add permission check
+            $this->authorize('upload gallery images');
 
             $validated = $request->validate([
                 'category_id' => 'required|exists:gallery_categories,id',
-                'image' => 'required|image|max:8192',
+                'image' => 'required|image|mimes:jpg,jpeg,png,webp,gif,svg,bmp,tiff|max:15360', // 15MB
                 'title' => 'nullable|string|max:255',
             ]);
 
-            $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
+            // Convert to WebP
+            $webpPath = $this->convertToWebp($request->file('image'), 'uploads/gallery');
+            if (!$webpPath) {
+                return back()->with('error', 'Unsupported image format.');
+            }
+            $validated['image'] = $webpPath;
 
             GalleryImage::create($validated);
 
@@ -76,13 +114,13 @@ class GalleryImageController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    // -------------------
+    // Edit
+    // -------------------
     public function edit(GalleryImage $galleryImage)
     {
         try {
-            $this->authorize('edit gallery images'); // Add permission check
+            $this->authorize('edit gallery images');
             $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
             return view('admin.gallery.images.edit', [
                 'image' => $galleryImage,
@@ -94,22 +132,33 @@ class GalleryImageController extends Controller
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    // -------------------
+    // Update
+    // -------------------
     public function update(Request $request, GalleryImage $galleryImage)
     {
         try {
-            $this->authorize('edit gallery images'); // Add permission check
+            $this->authorize('edit gallery images');
 
             $validated = $request->validate([
                 'category_id' => 'required|exists:gallery_categories,id',
-                'image' => 'nullable|image|max:8192',
+                'image' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif,svg,bmp,tiff|max:15360', // 15MB
                 'title' => 'nullable|string|max:255',
             ]);
 
             if ($request->hasFile('image')) {
-                $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
+                // Delete old image
+                if ($galleryImage->image && file_exists(storage_path('app/public/' . $galleryImage->image))) {
+                    unlink(storage_path('app/public/' . $galleryImage->image));
+                }
+
+                // Convert new image to WebP
+                $webpPath = $this->convertToWebp($request->file('image'), 'uploads/gallery');
+                if (!$webpPath) {
+                    return back()->with('error', 'Unsupported image format.');
+                }
+
+                $validated['image'] = $webpPath;
             }
 
             $galleryImage->update($validated);
@@ -123,13 +172,19 @@ class GalleryImageController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // -------------------
+    // Destroy
+    // -------------------
     public function destroy(GalleryImage $galleryImage)
     {
         try {
-            $this->authorize('delete gallery images'); // Add permission check
+            $this->authorize('delete gallery images');
+
+            // Delete image file
+            if ($galleryImage->image && file_exists(storage_path('app/public/' . $galleryImage->image))) {
+                unlink(storage_path('app/public/' . $galleryImage->image));
+            }
+
             $galleryImage->delete();
 
             return back()->with('success', 'Image deleted successfully.');

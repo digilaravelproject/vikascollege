@@ -344,28 +344,55 @@
     {{-- ======================================================================
     BUTTON
 ====================================================================== --}}
-    @case('button')
-        @php
-            $buttonHref = $block['href'] ?? '#';
-            $buttonTarget = ($block['target'] ?? '_self') === '_blank' ? '_blank' : '_self';
-            $buttonText = $block['text'] ?? ($block['content'] ?? 'Click Here');
+@case('button')
+    @php
+        $buttonHref = $block['href'] ?? '#';
+        $buttonTarget = ($block['target'] ?? '_self');
+        $buttonText = $block['text'] ?? ($block['content'] ?? null);
+        $buttonImage = $block['src'] ?? null;
+        $displayMode = $block['display_mode'] ?? 'default';
+        $alignClass = match ($block['align'] ?? 'left') {
+            'center' => 'justify-center',
+            'right' => 'justify-end',
+            default => 'justify-start',
+        };
+    @endphp
 
-            $align = match ($block['align'] ?? 'left') {
-                'center' => 'text-center',
-                'right' => 'text-right',
-                default => 'text-left',
-            };
-        @endphp
+    {{-- Inline → NO flex. Normal → flex alignment --}}
+    <div class="{{ $displayMode === 'inline' ? '' : 'my-6 flex ' . $alignClass }}">
 
-        <div class="my-6 {{ $align }}">
+        @if ($buttonImage)
+            {{-- ⭐ CLEAN SQUARE TILE (No blur, bigger image, less radius) ⭐ --}}
             <a href="{{ $buttonHref }}" target="{{ $buttonTarget }}"
-                rel="{{ $buttonTarget === '_blank' ? 'noopener noreferrer' : '' }}"
-                class="inline-block px-5 py-2 font-medium text-white transition-colors duration-200 bg-blue-600
-               rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                {{ $buttonText }}
+                class="w-[250px] p-2 bg-white shadow-lg border border-gray-200
+                       rounded-xl hover:shadow-2xl hover:scale-[1.03]
+                       transition-all duration-300">
+
+                {{-- BIG Square Image --}}
+                <div class="w-full aspect-square overflow-hidden rounded-lg">
+                    <img src="{{ $buttonImage }}" class="w-full h-full object-cover">
+                </div>
+
+                @if ($buttonText)
+                    <span class="mt-3 block text-sm font-semibold text-gray-800 text-center">
+                        {{ $buttonText }}
+                    </span>
+                @endif
+
             </a>
-        </div>
-    @break
+
+        @else
+            {{-- Normal Button --}}
+            <a href="{{ $buttonHref }}" target="{{ $buttonTarget }}"
+                class="inline-block px-8 py-3 text-lg font-semibold text-white
+                       bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700
+                       hover:shadow-2xl hover:scale-[1.05] transition-all">
+                {{ $buttonText ?? 'Click Here' }}
+            </a>
+        @endif
+    </div>
+@break
+
 
     {{-- ======================================================================
     CODE BLOCK

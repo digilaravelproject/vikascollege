@@ -265,7 +265,11 @@ class PageBuilderController extends Controller
     {
         // ... (No change) ...
         $validated = $request->validate([
-            'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:81920',
+            // 'file' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,webm,mov,pdf|max:81920',
+            'file' => 'required|file|mimes:jpg,jpeg,png,gif,bmp,svg,webp,
+            mp4,mov,avi,wmv,flv,mkv,webm,
+            pdf|max:81920',
+
             'base_path' => 'nullable|string|in:storage,wp-content',
             'custom_name' => 'nullable|string|max:255',
         ]);

@@ -6,7 +6,6 @@
 <style>
     /* --- Base Layout --- */
     .student-life-section {
-        max-width: 1280px;
         margin: 0 auto;
         padding: 3rem 1.5rem;
         font-family: 'Georgia', 'Times New Roman', serif;
@@ -17,21 +16,6 @@
     .student-life-heading {
         text-align: center;
         margin-bottom: 2.5rem;
-    }
-
-    .student-life-heading h2 {
-        font-size: 2.6rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        color: #111827;
-        line-height: 1.2;
-    }
-
-    .student-life-heading h2 span {
-        font-weight: 400;
-        color: #6b7280;
-        font-size: 2.3rem;
-        margin-left: 0.25rem;
     }
 
     /* --- Tabs --- */
@@ -87,15 +71,15 @@
         width: 100%;
         break-inside: avoid;
         margin-bottom: 1.25rem;
-        border-radius: 0.5rem;
-        overflow: hidden;
         position: relative;
+        /* Caption ke liye zaroori */
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
+        cursor: pointer;
 
-    .masonry-item:hover {
-        transform: translateY(-3px);
+        /* === AAPKI REQUEST: BORDER RADIUS NAHI === */
+        border-radius: 0;
+        overflow: hidden;
+        /* Sharp corners ke liye yeh important hai */
     }
 
     .masonry-item img {
@@ -104,17 +88,17 @@
         display: block;
     }
 
-    /* --- Caption --- */
+    /* --- Caption (Overlay, Bottom-Left) --- */
     .image-caption {
         position: absolute;
-        bottom: 6px;
-        left: 8px;
-        background: rgba(0, 0, 0, 0.55);
-        color: #fff;
+        bottom: 0;
+        left: 0;
+        background: rgb(255 255 255);
+        color: #000000;
         font-size: 0.9rem;
         font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 4px;
+        padding: 4px 12px;
+        opacity: 1;
     }
 
     /* --- View Link --- */
@@ -135,6 +119,7 @@
 </style>
 @endpushOnce
 
+{{-- HTML (Overlay structure) --}}
 @if ($items->isEmpty())
     <p class="text-center text-gray-500">No gallery categories found.</p>
 @else
@@ -142,9 +127,7 @@
 
         {{-- Heading --}}
         <div class="student-life-heading" data-aos="fade-up">
-            <h2>
-                {{ $title }}
-            </h2>
+            <h1>{{ $title }}</h1>
         </div>
 
         {{-- Tabs --}}
@@ -164,18 +147,25 @@
                     <div x-show="activeTab === '{{ $category->slug }}'" x-transition style="display: none;">
                         <div class="masonry-grid">
                             @forelse ($category->images as $image)
-                                <div class="masonry-item" data-aos="fade-up" data-aos-delay="{{ $loop->index * 60 }}">
-                                    <a href="{{ asset('storage/' . $image->image) }}" data-fancybox="gallery-{{ $category->slug }}"
-                                        data-caption="{{ $image->title ?? '' }}">
-                                        <img src="{{ asset('storage/' . $image->image) }}" alt="{{ $image->title ?? 'Image' }}">
-                                        <div class="image-caption">
-                                            {{ $image->title ?? 'Image' }}
-                                        </div>
-                                    </a>
-                                </div>
+                                {{-- .masonry-item ab <a> tag hai --}}
+                                    <a href="{{ asset('storage/' . $image->image) }}" class="masonry-item" {{-- Class yahan <a> tag
+                                        par hai --}}
+                                        data-fancybox="gallery-{{ $category->slug }}"
+                                        data-caption="{{ $image->title ?? '' }}"
+                                        data-aos="fade-up"
+                                        data-aos-delay="{{ $loop->index * 60 }}">
+
+                                        <img src="{{ asset('storage/' . $image->image) }}" alt="{{ $image->title ?? '' }}">
+
+                                        {{-- Caption <a> ke andar hai --}}
+                                            <div class="image-caption">
+                                                {{ $image->title ?? 'Image' }}
+                                            </div>
+
+                                        </a>
                             @empty
-                                <p class="text-gray-500 text-center">No images found in this category.</p>
-                            @endforelse
+                                        <p class="text-gray-500 text-center">No images found in this category.</p>
+                                    @endforelse
                         </div>
                     </div>
                 @endforeach
@@ -193,10 +183,18 @@
 <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script>
 <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 <script>
+    // Initialize AOS
     AOS.init({
         once: true,
         duration: 700,
         offset: 100
+    });
+
+    // Initialize Fancybox and show only caption
+    Fancybox.bind("[data-fancybox]", {
+        showClass: false,
+        hideClass: false,
+        caption: (fancybox, carousel, slide) => slide.$trigger?.dataset.caption || ''
     });
 </script>
 @endpushOnce

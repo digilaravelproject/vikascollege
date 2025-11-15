@@ -3,10 +3,10 @@
     $title = $block['title'] ?? '';
 @endphp
 
-<section class="w-full py-16 md:py-24 {{ $loop && $loop->even ? 'bg-gray-50' : 'bg-white' }}">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<section class="w-full py-8 md:py-12 {{ $loop && $loop->even ? 'bg-gray-50' : 'bg-white' }}">
+    <div class="max-w-[90rem] mx-auto px-1 sm:px-2 lg:px-4">
         @if (!empty($title))
-            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl mb-0 text-center">
+            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl mb-2 text-center">
                 {{ $title }}
             </h2>
         @endif

@@ -214,46 +214,102 @@
                                                         {{-- 9. SUB-BLOCK FORM: Changed to grid-cols-1 (mobile) and
                                                         sm:grid-cols-2 (desktop) --}}
                                                         <template x-if="sub.type === 'button'">
-                                                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                                                <div>
-                                                                    <label class="text-sm font-medium text-gray-600">Button
-                                                                        Text</label>
-                                                                    <input type="text" x-model="sub.text"
-                                                                        @input="pushHistory"
-                                                                        class="w-full p-2 border rounded"
-                                                                        placeholder="Click Here">
+                                                            <div class="space-y-3">
+                                                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                                                                    <div>
+                                                                        <label
+                                                                            class="text-sm font-medium text-gray-600">Button
+                                                                            Text</label>
+                                                                        <input type="text" x-model="sub.text"
+                                                                            @input="pushHistory"
+                                                                            class="w-full p-2 border rounded"
+                                                                            placeholder="Click Here">
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <label
+                                                                            class="text-sm font-medium text-gray-600">Button
+                                                                            Link (URL)</label>
+                                                                        <input type="text" x-model="sub.href"
+                                                                            @input="pushHistory"
+                                                                            class="w-full p-2 border rounded"
+                                                                            placeholder="https://...">
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <label
+                                                                            class="text-sm font-medium text-gray-600">Alignment</label>
+                                                                        <select x-model="sub.align" @change="pushHistory"
+                                                                            class="w-full p-2 border rounded bg-white">
+                                                                            <option value="left">Left</option>
+                                                                            <option value="center">Center</option>
+                                                                            <option value="right">Right</option>
+                                                                        </select>
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <label
+                                                                            class="text-sm font-medium text-gray-600">Target</label>
+                                                                        <select x-model="sub.target" @change="pushHistory"
+                                                                            class="w-full p-2 border rounded bg-white">
+                                                                            <option value="_self">Same Tab (_self)</option>
+                                                                            <option value="_blank">New Tab (_blank)</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label
+                                                                            class="text-sm font-medium text-gray-600">Display
+                                                                            Mode</label>
+                                                                        <select x-model="block.displayMode"
+                                                                            @change="pushHistory"
+                                                                            class="w-full p-2 border rounded bg-white">
+                                                                            <option value="default">Default</option>
+                                                                            <option value="inline">Inline</option>
+                                                                        </select>
+                                                                    </div>
+
                                                                 </div>
-                                                                <div>
-                                                                    <label class="text-sm font-medium text-gray-600">Button
-                                                                        Link (URL)</label>
-                                                                    <input type="text" x-model="sub.href"
-                                                                        @input="pushHistory"
-                                                                        class="w-full p-2 border rounded"
-                                                                        placeholder="https://...">
-                                                                </div>
-                                                                <div>
-                                                                    <label
-                                                                        class="text-sm font-medium text-gray-600">Alignment</label>
-                                                                    <select x-model="sub.align" @change="pushHistory"
-                                                                        class="w-full p-2 border rounded bg-white">
-                                                                        <option value="left">Left</option>
-                                                                        <option value="center">Center</option>
-                                                                        <option value="right">Right</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div>
-                                                                    <label
-                                                                        class="text-sm font-medium text-gray-600">Target</label>
-                                                                    <select x-model="sub.target" @change="pushHistory"
-                                                                        class="w-full p-2 border rounded bg-white">
-                                                                        <option value="_self">Same Tab (_self)
-                                                                        </option>
-                                                                        <option value="_blank">New Tab (_blank)
-                                                                        </option>
-                                                                    </select>
+
+                                                                <div
+                                                                    class="p-3 border border-gray-200 rounded-lg bg-gray-100">
+                                                                    <h4 class="mb-2 text-sm font-medium text-gray-700">
+                                                                        Optional Image/Icon</h4>
+
+                                                                    <div class="text-center">
+
+                                                                        <template x-if="sub.src">
+                                                                            <div>
+                                                                                <img :src="sub.src"
+                                                                                    class="max-w-[100px] max-h-[100px] mx-auto rounded" />
+                                                                                <div class="flex justify-center gap-2 mt-2">
+                                                                                    <button
+                                                                                        @click="removeMediaFromSub(block, sub.id)"
+                                                                                        class="px-2 py-1 text-xs bg-red-100 rounded">Remove
+                                                                                        Image</button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </template>
+
+                                                                        <template x-if="!sub.src">
+                                                                            <label class="block cursor-pointer">
+                                                                                <input type="file" accept="image/*"
+                                                                                    @change="handleFileUpload($event, sub.id, 'image', block)"
+                                                                                    class="hidden" />
+                                                                                <div
+                                                                                    class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-100">
+                                                                                    <p class="text-sm text-gray-500">🖼️
+                                                                                        Click to upload button image/icon
+                                                                                    </p>
+                                                                                </div>
+                                                                            </label>
+                                                                        </template>
+
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </template>
+
 
                                                         <template x-if="sub.type === 'embed'">
                                                             <div class="space-y-2">
@@ -453,36 +509,83 @@
 
                             {{-- 11. ROOT FORM: Changed to grid-cols-1 (mobile) and sm:grid-cols-2 (desktop) --}}
                             <template x-if="block.type === 'button'">
-                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-600">Button Text</label>
-                                        <input type="text" x-model="block.text" @input="pushHistory"
-                                            class="w-full p-2 border rounded" placeholder="Click Here">
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600">Button Text</label>
+                                            <input type="text" x-model="block.text" @input="pushHistory"
+                                                class="w-full p-2 border rounded" placeholder="Click Here">
+                                        </div>
+
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600">Button Link (URL)</label>
+                                            <input type="text" x-model="block.href" @input="pushHistory"
+                                                class="w-full p-2 border rounded" placeholder="https://...">
+                                        </div>
+
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600">Alignment</label>
+                                            <select x-model="block.align" @change="pushHistory"
+                                                class="w-full p-2 border rounded bg-white">
+                                                <option value="left">Left</option>
+                                                <option value="center">Center</option>
+                                                <option value="right">Right</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600">Target</label>
+                                            <select x-model="block.target" @change="pushHistory"
+                                                class="w-full p-2 border rounded bg-white">
+                                                <option value="_self">Same Tab (_self)</option>
+                                                <option value="_blank">New Tab (_blank)</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-600">Display Mode</label>
+                                            <select x-model="block.displayMode" @change="pushHistory"
+                                                class="w-full p-2 border rounded bg-white">
+                                                <option value="default">Default</option>
+                                                <option value="inline">Inline</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-600">Button Link (URL)</label>
-                                        <input type="text" x-model="block.href" @input="pushHistory"
-                                            class="w-full p-2 border rounded" placeholder="https://...">
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-600">Alignment</label>
-                                        <select x-model="block.align" @change="pushHistory"
-                                            class="w-full p-2 border rounded bg-white">
-                                            <option value="left">Left</option>
-                                            <option value="center">Center</option>
-                                            <option value="right">Right</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium text-gray-600">Target</label>
-                                        <select x-model="block.target" @change="pushHistory"
-                                            class="w-full p-2 border rounded bg-white">
-                                            <option value="_self">Same Tab (_self)</option>
-                                            <option value="_blank">New Tab (_blank)</option>
-                                        </select>
+
+                                    <div class="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                        <h4 class="mb-2 text-sm font-medium text-gray-700">Optional Image/Icon</h4>
+                                        <div class="text-center">
+
+                                            <template x-if="block.src">
+                                                <div>
+                                                    <img :src="block.src"
+                                                        class="max-w-[100px] max-h-[100px] mx-auto rounded" />
+                                                    <div class="flex justify-center gap-2 mt-2">
+                                                        <button @click="removeMedia(block.id)"
+                                                            class="px-2 py-1 text-xs bg-red-100 rounded">Remove
+                                                            Image</button>
+                                                    </div>
+                                                </div>
+                                            </template>
+
+                                            <template x-if="!block.src">
+                                                <label class="block cursor-pointer">
+                                                    <input type="file" accept="image/*"
+                                                        @change="handleFileUpload($event, block.id, 'image')"
+                                                        class="hidden" />
+                                                    <div
+                                                        class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-100">
+                                                        <p class="text-sm text-gray-500">🖼️ Click to upload button
+                                                            image/icon</p>
+                                                    </div>
+                                                </label>
+                                            </template>
+
+                                        </div>
                                     </div>
                                 </div>
                             </template>
+
 
                             <template x-if="block.type === 'embed'">
                                 <div class="space-y-2">
@@ -649,7 +752,9 @@
                     text: 'Click Here',
                     href: '#',
                     align: 'left',
-                    target: '_self'
+                    target: '_self',
+                    displayMode: 'default',
+                    src: ''
                 },
                 {
                     type: 'divider',
@@ -1154,10 +1259,10 @@
                         Swal.fire({
                             title: 'Insert Link',
                             html: `<input id="swal-link-url" class="swal2-input" placeholder="https://example.com" style="width: 100%;">
-                                                       <select id="swal-link-target" class="swal2-select" style="width: 100%; margin-top: 10px;">
-                                                            <option value="_blank" selected>New Tab (_blank)</option>
-                                                            <option value="_self">Same Tab (_self)</option>
-                                                       </select>`,
+                                                                                               <select id="swal-link-target" class="swal2-select" style="width: 100%; margin-top: 10px;">
+                                                                                                    <option value="_blank" selected>New Tab (_blank)</option>
+                                                                                                    <option value="_self">Same Tab (_self)</option>
+                                                                                               </select>`,
                             preConfirm: () => ({
                                 url: document.getElementById('swal-link-url').value,
                                 target: document.getElementById('swal-link-target').value ||
@@ -1201,12 +1306,12 @@
                         } = await Swal.fire({
                             title: "Upload Options",
                             html: `
-                                                        <input id="custom_name" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
-                                                        <select id="base_path" class="swal2-select" style="width: 100%; margin-top: 10px;">
-                                                            <option value="storage" selected>storage</option>
-                                                            <option value="wp-content">wp-content</option>
-                                                        </select>
-                                                    `,
+                                                                                                <input id="custom_name" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
+                                                                                                <select id="base_path" class="swal2-select" style="width: 100%; margin-top: 10px;">
+                                                                                                    <option value="storage" selected>storage</option>
+                                                                                                    <option value="wp-content">wp-content</option>
+                                                                                                </select>
+                                                                                            `,
                             focusConfirm: false,
                             preConfirm: () => ({
                                 custom_name: document.getElementById("custom_name").value,

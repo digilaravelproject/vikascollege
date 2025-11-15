@@ -1,6 +1,5 @@
 {{-- Alpine.js component initialization --}}
-<div x-data="eventTabs({{ $eventCategories->toJson() }}, {{ $items->toJson() }})" x-init="init()" {{-- Container width
-    and padding --}} class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+<div x-data="eventTabs({{ $eventCategories->toJson() }}, {{ $items->toJson() }})" x-init="init()">
 
     {{-- 1. Title and Description (Exact Match) --}}
     <div class="text-center" data-aos="fade-up" data-aos-duration="800">
@@ -68,7 +67,8 @@
 
                 {{-- Content: Padding and Typography --}}
                 <div class="p-4 sm:p-5 flex-1 flex flex-col">
-                    <h3 class="text-lg font-bold text-gray-800 mb-1">
+                    <h3 class="text-lg font-bold text-gray-800 mb-1"
+                        style="font-size: 1.1rem !important; font-weight: 900 !important;">
                         <a href="#" class="hover:text-blue-600 transition-colors" x-text="item.title"></a>
                     </h3>
                     <p class="text-sm text-gray-600 font-normal mb-0" x-text="item.formatted_date"></p>
