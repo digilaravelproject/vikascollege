@@ -4,11 +4,47 @@ namespace App\Http\Controllers;
 
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TestimonialController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Helper: Convert image to WebP format.
+     */
+    private function convertToWebp($file, $path)
+    {
+        $extension = strtolower($file->getClientOriginalExtension());
+        $imagePath = $file->getRealPath();
+
+        switch ($extension) {
+            case 'jpeg':
+            case 'jpg':
+                $image = imagecreatefromjpeg($imagePath);
+                break;
+            case 'png':
+                $image = imagecreatefrompng($imagePath);
+                imagepalettetotruecolor($image);
+                imagealphablending($image, true);
+                imagesavealpha($image, true);
+                break;
+            case 'gif':
+                $image = imagecreatefromgif($imagePath);
+                break;
+            default:
+                return null;
+        }
+
+        $webpName = uniqid() . '.webp';
+        $fullPath = storage_path("app/public/$path/" . $webpName);
+
+        imagewebp($image, $fullPath, 80); // Convert to WebP with 80% quality
+        imagedestroy($image);
+
+        return "$path/$webpName";
+    }
+
+    /**
+     * Display a listing of the testimonials.
      */
     public function index()
     {
@@ -17,7 +53,7 @@ class TestimonialController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new testimonial.
      */
     public function create()
     {
@@ -25,34 +61,41 @@ class TestimonialController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created testimonial in storage.
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'student_name' => 'required|string|max:255',
-            'student_image' => 'nullable|image|max:4096',
-            'testimonial_text' => 'required|string|max:1000',
-            'status' => 'nullable|boolean',
-        ]);
-        if ($request->hasFile('student_image')) {
-            $validated['student_image'] = $request->file('student_image')->store('uploads/testimonials', 'public');
+        try {
+            $validated = $request->validate([
+                'student_name' => 'required|string|max:255',
+                'student_image' => 'nullable|image|max:15360', // 15MB limit
+                'testimonial_text' => 'required|string|max:1000',
+                'status' => 'nullable|boolean',
+            ]);
+
+            if ($request->hasFile('student_image')) {
+                // Convert to WebP format
+                $webpPath = $this->convertToWebp($request->file('student_image'), 'uploads/testimonials');
+                if (!$webpPath) {
+                    return back()->with('error', 'Unsupported image format.');
+                }
+                $validated['student_image'] = $webpPath;
+            }
+
+            // Ensure status is set correctly
+            $validated['status'] = (bool)($validated['status'] ?? false);
+
+            Testimonial::create($validated);
+
+            return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial created');
+        } catch (\Exception $e) {
+            Log::error("Error creating testimonial: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create testimonial.');
         }
-        $validated['status'] = (bool)($validated['status'] ?? false);
-        Testimonial::create($validated);
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial created');
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Testimonial $testimonial)
-    {
-        return redirect()->route('admin.testimonials.index');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified testimonial.
      */
     public function edit(Testimonial $testimonial)
     {
@@ -60,30 +103,62 @@ class TestimonialController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified testimonial in storage.
      */
     public function update(Request $request, Testimonial $testimonial)
     {
-        $validated = $request->validate([
-            'student_name' => 'required|string|max:255',
-            'student_image' => 'nullable|image|max:4096',
-            'testimonial_text' => 'required|string|max:1000',
-            'status' => 'nullable|boolean',
-        ]);
-        if ($request->hasFile('student_image')) {
-            $validated['student_image'] = $request->file('student_image')->store('uploads/testimonials', 'public');
+        try {
+            $validated = $request->validate([
+                'student_name' => 'required|string|max:255',
+                'student_image' => 'nullable|image|max:15360', // 15MB limit
+                'testimonial_text' => 'required|string|max:1000',
+                'status' => 'nullable|boolean',
+            ]);
+
+            if ($request->hasFile('student_image')) {
+                // Delete old image if exists
+                if ($testimonial->student_image && file_exists(storage_path('app/public/' . $testimonial->student_image))) {
+                    unlink(storage_path('app/public/' . $testimonial->student_image));
+                }
+
+                // Convert new image to WebP
+                $webpPath = $this->convertToWebp($request->file('student_image'), 'uploads/testimonials');
+                if (!$webpPath) {
+                    return back()->with('error', 'Unsupported image format.');
+                }
+
+                $validated['student_image'] = $webpPath;
+            }
+
+            // Ensure status is correctly updated
+            $validated['status'] = (bool)($validated['status'] ?? $testimonial->status);
+
+            $testimonial->update($validated);
+
+            return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial updated');
+        } catch (\Exception $e) {
+            Log::error("Error updating testimonial: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update testimonial.');
         }
-        $validated['status'] = (bool)($validated['status'] ?? $testimonial->status);
-        $testimonial->update($validated);
-        return redirect()->route('admin.testimonials.index')->with('success', 'Testimonial updated');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified testimonial from storage.
      */
     public function destroy(Testimonial $testimonial)
     {
-        $testimonial->delete();
-        return back()->with('success', 'Testimonial deleted');
+        try {
+            // Delete image file if exists
+            if ($testimonial->student_image && file_exists(storage_path('app/public/' . $testimonial->student_image))) {
+                unlink(storage_path('app/public/' . $testimonial->student_image));
+            }
+
+            $testimonial->delete();
+
+            return back()->with('success', 'Testimonial deleted');
+        } catch (\Exception $e) {
+            Log::error("Error deleting testimonial: " . $e->getMessage());
+            return back()->with('error', 'Failed to delete testimonial.');
+        }
     }
 }

@@ -89,10 +89,11 @@
                     </thead>
 
                     <tbody class="bg-white divide-y divide-gray-200">
+                        {{-- Level 1: Main Menu (parent_id is null) --}}
                         @forelse($menus->where('parent_id', null)->sortBy('order') as $menu)
-                        <tbody x-data="{ open: true }" class="group">
+                        <tbody x-data="{ open: false }" class="group">
 
-                            {{-- MODIFIED: Cleaner hover state --}}
+                            {{-- Level 1 Row --}}
                             <tr class="transition cursor-pointer bg-gray-50 hover:bg-gray-100" @click="open = !open">
                                 <td class="flex items-center px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">
                                     <i :class="open ? 'bi bi-caret-down-fill' : 'bi bi-caret-right-fill'"
@@ -100,21 +101,87 @@
                                     <i class="text-blue-600 bi bi-folder-fill me-2"></i>
                                     {{ $menu->title }}
                                 </td>
-                                {{-- ADDED: URL data, responsive --}}
                                 <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
                                     {{ $menu->url }}
                                 </td>
-                                {{-- MODIFIED: Responsive --}}
                                 <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">—</td>
-                                {{-- MODIFIED: Responsive --}}
                                 <td class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
                                     {{ $menu->order }}</td>
-                                {{-- MODIFIED: Responsive, themed toggle to blue, added focus rings --}}
                                 <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" x-data="{ checked: {{ $menu->status ? 'true' : 'false' }} }" x-model="checked"
                                             @change="
-                                                    fetch('{{ route('admin.menus.toggle-status', $menu->id) }}', {
+                                                fetch('{{ route('admin.menus.toggle-status', $menu->id) }}', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                    },
+                                                    body: JSON.stringify({ status: checked })
+                                                })
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if(data.success){
+                                                        $dispatch('notify', { message: 'Status updated!', type: 'success' })
+                                                    } else {
+                                                        $dispatch('notify', { message: 'Failed to update status', type: 'error' })
+                                                    }
+                                                })
+                                            "
+                                            class="sr-only peer">
+                                        <div
+                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
+                                                peer peer-checked:after:translate-x-5 peer-checked:after:border-white
+                                                after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                                after:bg-white after:border-gray-300 after:border after:rounded-full
+                                                after:h-5 after:w-5 after:transition-all
+                                                peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out">
+                                        </div>
+                                    </label>
+                                </td>
+                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('admin.menus.edit', $menu->id) }}"
+                                            class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                        <form action="{{ route('admin.menus.destroy', $menu->id) }}" method="POST"
+                                            class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                @click.prevent="
+                                                    confirmModalTitle = 'Delete Menu';
+                                                    confirmModalMessage = 'Are you sure you want to delete this menu? This action cannot be undone.';
+                                                    formToSubmit = $el.closest('form');
+                                                    showConfirmModal = true;
+                                                "
+                                                class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {{-- Level 2: Submenu --}}
+                            @foreach ($menus->where('parent_id', $menu->id)->sortBy('order') as $child)
+                                <tr x-show="open" x-transition class="transition bg-white hover:bg-gray-50">
+                                    <td class="flex items-center px-10 py-4 text-gray-700 whitespace-nowrap">
+                                        <i class="text-gray-400 bi bi-arrow-return-right me-2"></i>
+                                        {{ $child->title }}
+                                    </td>
+                                    <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                        {{ $child->url }}
+                                    </td>
+                                    <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
+                                        {{ $menu->title }}</td>
+                                    <td class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                        {{ $child->order }}</td>
+                                    <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" x-data="{ checked: {{ $child->status ? 'true' : 'false' }} }" x-model="checked"
+                                                @change="
+                                                    fetch('{{ route('admin.menus.toggle-status', $child->id) }}', {
                                                         method: 'POST',
                                                         headers: {
                                                             'Content-Type': 'application/json',
@@ -131,66 +198,63 @@
                                                         }
                                                     })
                                                 "
-                                            class="sr-only peer">
-                                        <div
-                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
+                                                class="sr-only peer">
+                                            <div
+                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
                                                     peer peer-checked:after:translate-x-5 peer-checked:after:border-white
                                                     after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                                                     after:bg-white after:border-gray-300 after:border after:rounded-full
                                                     after:h-5 after:w-5 after:transition-all
                                                     peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out">
+                                            </div>
+                                        </label>
+                                    </td>
+                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <a href="{{ route('admin.menus.edit', $child->id) }}"
+                                                class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </a>
+                                            <form action="{{ route('admin.menus.destroy', $child->id) }}" method="POST"
+                                                class="inline">
+                                                @csrf @method('DELETE')
+                                                <button type="submit"
+                                                    @click.prevent="
+                                                        confirmModalTitle = 'Delete Submenu';
+                                                        confirmModalMessage = 'Are you sure you want to delete this submenu? This action cannot be undone.';
+                                                        formToSubmit = $el.closest('form');
+                                                        showConfirmModal = true;
+                                                    "
+                                                    class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
                                         </div>
-                                    </label>
-                                </td>
-                                {{-- MODIFIED: Refined action buttons --}}
-                                <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.menus.edit', $menu->id) }}"
-                                            class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
-                                        <form action="{{ route('admin.menus.destroy', $menu->id) }}" method="POST"
-                                            class="inline">
-                                            @csrf @method('DELETE')
-                                            {{-- MODIFIED: Replaced onclick with @click.prevent to trigger custom modal --}}
-                                            <button type="submit"
-                                                @click.prevent="
-                                                    confirmModalTitle = 'Delete Menu';
-                                                    confirmModalMessage = 'Are you sure you want to delete this menu? This action cannot be undone.';
-                                                    formToSubmit = $el.closest('form');
-                                                    showConfirmModal = true;
-                                                "
-                                                class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
 
-                            {{-- ENHANCED: Added subtle bg-white for striping --}}
-                            @foreach ($menus->where('parent_id', $menu->id)->sortBy('order') as $child)
-                                <tr x-show="open" x-transition class="transition bg-white hover:bg-gray-50">
-                                    <td class="flex items-center px-10 py-4 text-gray-700 whitespace-nowrap">
-                                        <i class="text-gray-400 bi bi-arrow-return-right me-2"></i>
-                                        {{ $child->title }}
-                                    </td>
-                                    {{-- ADDED: URL data, responsive --}}
-                                    <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
-                                        {{ $child->url }}
-                                    </td>
-                                    {{-- MODIFIED: Responsive --}}
-                                    <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
-                                        {{ $menu->title }}</td>
-                                    {{-- MODIFIED: Responsive --}}
-                                    <td class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
-                                        {{ $child->order }}</td>
-                                    {{-- MODIFIED: Responsive, themed toggle to blue --}}
-                                    <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" x-data="{ checked: {{ $child->status ? 'true' : 'false' }} }" x-model="checked"
-                                                @change="
-                                                        fetch('{{ route('admin.menus.toggle-status', $child->id) }}', {
+                                {{-- Level 3: Sub-Submenu --}}
+                                @foreach ($menus->where('parent_id', $child->id)->sortBy('order') as $subchild)
+                                    <tr x-show="open" x-transition class="transition bg-gray-50/50 hover:bg-gray-100">
+                                        <td
+                                            class="flex items-center py-4 italic text-gray-600 px-14 whitespace-nowrap">
+                                            <i class="text-gray-400 bi bi-dash-lg me-2"></i>
+                                            {{ $subchild->title }}
+                                        </td>
+                                        <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                            {{ $subchild->url }}
+                                        </td>
+                                        <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
+                                            {{ $child->title }}</td>
+                                        <td
+                                            class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                            {{ $subchild->order }}</td>
+                                        <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" x-data="{ checked: {{ $subchild->status ? 'true' : 'false' }} }"
+                                                    x-model="checked"
+                                                    @change="
+                                                        fetch('{{ route('admin.menus.toggle-status', $subchild->id) }}', {
                                                             method: 'POST',
                                                             headers: {
                                                                 'Content-Type': 'application/json',
@@ -207,68 +271,63 @@
                                                             }
                                                         })
                                                     "
-                                                class="sr-only peer">
-                                            <div
-                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
+                                                    class="sr-only peer">
+                                                <div
+                                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
                                                         peer peer-checked:after:translate-x-5 peer-checked:after:border-white
                                                         after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                                                         after:bg-white after:border-gray-300 after:border after:rounded-full
                                                         after:h-5 after:w-5 after:transition-all
                                                         peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out">
+                                                </div>
+                                            </label>
+                                        </td>
+                                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <a href="{{ route('admin.menus.edit', $subchild->id) }}"
+                                                    class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </a>
+                                                <form action="{{ route('admin.menus.destroy', $subchild->id) }}"
+                                                    method="POST" class="inline">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit"
+                                                        @click.prevent="
+                                                            confirmModalTitle = 'Delete Sub-Submenu';
+                                                            confirmModalMessage = 'Are you sure you want to delete this item? This action cannot be undone.';
+                                                            formToSubmit = $el.closest('form');
+                                                            showConfirmModal = true;
+                                                        "
+                                                        class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+                                                        <i class="bi bi-trash"></i> Delete
+                                                    </button>
+                                                </form>
                                             </div>
-                                        </label>
-                                    </td>
-                                    <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.menus.edit', $child->id) }}"
-                                                class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
-                                                <i class="bi bi-pencil-square"></i> Edit
-                                            </a>
-                                            <form action="{{ route('admin.menus.destroy', $child->id) }}" method="POST"
-                                                class="inline">
-                                                @csrf @method('DELETE')
-                                                {{-- MODIFIED: Replaced onclick with @click.prevent to trigger custom modal --}}
-                                                <button type="submit"
-                                                    @click.prevent="
-                                                        confirmModalTitle = 'Delete Submenu';
-                                                        confirmModalMessage = 'Are you sure you want to delete this submenu? This action cannot be undone.';
-                                                        formToSubmit = $el.closest('form');
-                                                        showConfirmModal = true;
-                                                    "
-                                                    class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
 
-                                {{-- ENHANCED: Added subtle bg-gray-50/50 for striping --}}
-                                @foreach ($menus->where('parent_id', $child->id)->sortBy('order') as $subchild)
-                                    <tr x-show="open" x-transition class="transition bg-gray-50/50 hover:bg-gray-100">
-                                        <td
-                                            class="flex items-center py-4 italic text-gray-600 px-14 whitespace-nowrap">
-                                            <i class="text-gray-400 bi bi-dash-lg me-2"></i>
-                                            {{ $subchild->title }}
-                                        </td>
-                                        {{-- ADDED: URL data, responsive --}}
-                                        <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
-                                            {{ $subchild->url }}
-                                        </td>
-                                        {{-- MODIFIED: Responsive --}}
-                                        <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
-                                            {{ $child->title }}</td>
-                                        {{-- MODIFIED: Responsive --}}
-                                        <td
-                                            class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
-                                            {{ $subchild->order }}</td>
-                                        {{-- MODIFIED: Responsive, themed toggle to blue --}}
-                                        <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" x-data="{ checked: {{ $subchild->status ? 'true' : 'false' }} }"
-                                                    x-model="checked"
-                                                    @change="
-                                                            fetch('{{ route('admin.menus.toggle-status', $subchild->id) }}', {
+                                    {{-- ADDED: Fourth level of nesting (Sub-Sub-Submenu) --}}
+                                    @foreach ($menus->where('parent_id', $subchild->id)->sortBy('order') as $subsubchild)
+                                        <tr x-show="open" x-transition class="transition bg-gray-100/50 hover:bg-gray-200">
+                                            <td
+                                                class="flex items-center py-4 italic text-gray-500 px-16 whitespace-nowrap">
+                                                <i class="text-gray-300 bi bi-dot me-2 text-xl"></i>
+                                                {{ $subsubchild->title }}
+                                            </td>
+                                            <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                                {{ $subsubchild->url }}
+                                            </td>
+                                            <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
+                                                {{ $subchild->title }}</td>
+                                            <td
+                                                class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                                {{ $subsubchild->order }}</td>
+                                            <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" x-data="{ checked: {{ $subsubchild->status ? 'true' : 'false' }} }"
+                                                        x-model="checked"
+                                                        @change="
+                                                            fetch('{{ route('admin.menus.toggle-status', $subsubchild->id) }}', {
                                                                 method: 'POST',
                                                                 headers: {
                                                                     'Content-Type': 'application/json',
@@ -285,60 +344,62 @@
                                                                 }
                                                             })
                                                         "
-                                                    class="sr-only peer">
-                                                <div
-                                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
+                                                        class="sr-only peer">
+                                                    <div
+                                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
                                                             peer peer-checked:after:translate-x-5 peer-checked:after:border-white
                                                             after:content-[''] after:absolute after:top-[2px] after:left-[2px]
                                                             after:bg-white after:border-gray-300 after:border after:rounded-full
                                                             after:h-5 after:w-5 after:transition-all
                                                             peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out">
+                                                    </div>
+                                                </label>
+                                            </td>
+                                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <a href="{{ route('admin.menus.edit', $subsubchild->id) }}"
+                                                        class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
+                                                        <i class="bi bi-pencil-square"></i> Edit
+                                                    </a>
+                                                    <form action="{{ route('admin.menus.destroy', $subsubchild->id) }}"
+                                                        method="POST" class="inline">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit"
+                                                            @click.prevent="
+                                                                confirmModalTitle = 'Delete Sub-Sub-Submenu';
+                                                                confirmModalMessage = 'Are you sure you want to delete this item? This action cannot be undone.';
+                                                                formToSubmit = $el.closest('form');
+                                                                showConfirmModal = true;
+                                                            "
+                                                            class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
+                                                            <i class="bi bi-trash"></i> Delete
+                                                        </button>
+                                                    </form>
                                                 </div>
-                                            </label>
-                                        </td>
-                                        <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            <div class="flex items-center justify-center gap-2">
-                                                <a href="{{ route('admin.menus.edit', $subchild->id) }}"
-                                                    class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
-                                                    <i class="bi bi-pencil-square"></i> Edit
-                                                </a>
-                                                <form action="{{ route('admin.menus.destroy', $subchild->id) }}"
-                                                    method="POST" class="inline">
-                                                    @csrf @method('DELETE')
-                                                    {{-- MODIFIED: Replaced onclick with @click.prevent to trigger custom modal --}}
-                                                    <button type="submit"
-                                                        @click.prevent="
-                                                            confirmModalTitle = 'Delete Sub-Submenu';
-                                                            confirmModalMessage = 'Are you sure you want to delete this item? This action cannot be undone.';
-                                                            formToSubmit = $el.closest('form');
-                                                            showConfirmModal = true;
-                                                        "
-                                                        class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
-                                                        <i class="bi bi-trash"></i> Delete
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    {{-- END ADDED: Fourth level of nesting --}}
+
                                 @endforeach
                             @endforeach
                         </tbody>
-                    @empty
-                        {{-- ADDED: Empty state row --}}
-                        <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                <i class="text-4xl text-gray-300 bi bi-list-ul"></i>
-                                <p class="mt-2 text-lg font-medium">No menus found</p>
-                                <p class="text-sm">Get started by creating a new menu.</p>
-                            </td>
-                        </tr>
-                    @endforelse
+                        @empty
+                            {{-- ADDED: Empty state row --}}
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <i class="text-4xl text-gray-300 bi bi-list-ul"></i>
+                                    <p class="mt-2 text-lg font-medium">No menus found</p>
+                                    <p class="text-sm">Get started by creating a new menu.</p>
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        {{-- ENHANCED: "Sweet" notification toast with progress bar --}}
+        {{-- ENHANCED: "Sweet" notification toast with progress bar (Unchanged) --}}
         <div x-data="{
             show: false,
             message: '',
@@ -372,7 +433,6 @@
             :class="{ 'bg-blue-600': type === 'success', 'bg-red-600': type === 'error' }" role="alert">
 
             <div class="flex items-start p-4">
-                <!-- Icon -->
                 <div class="flex-shrink-0">
                     <template x-if="type === 'success'">
                         <i class="text-2xl text-white bi bi-check-circle-fill"></i>
@@ -382,14 +442,12 @@
                     </template>
                 </div>
 
-                <!-- Message -->
                 <div class="ml-3 w-0 flex-1 pt-0.5">
                     <p class="font-bold text-white" x-text="message"></p>
                     <p class="mt-1 text-sm text-white/80"
                         x-text="type === 'success' ? 'Update successful!' : 'An error occurred.'"></p>
                 </div>
 
-                <!-- Close Button -->
                 <div class="flex flex-shrink-0 ml-4">
                     <button @click="show = false; clearInterval(timer);"
                         class="inline-flex transition rounded-md text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
@@ -400,23 +458,20 @@
                 </div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="h-1" :class="{ 'bg-blue-800/50': type === 'success', 'bg-red-800/50': type === 'error' }">
                 <div class="h-1 bg-white/50" :style="`width: ${progress}%`"></div>
             </div>
         </div>
 
 
-        {{-- ADDED: Beautiful Confirmation Modal --}}
+        {{-- ADDED: Beautiful Confirmation Modal (Unchanged) --}}
         <div x-show="showConfirmModal" style="display: none;"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-_            class="fixed inset-0 z-40 flex items-center justify-center p-4">
-            <!-- Backdrop -->
+            class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div @click="showConfirmModal = false; formToSubmit = null;" class="absolute inset-0 bg-gray-900/50"></div>
 
-            <!-- Modal Panel -->
             <div x-show="showConfirmModal"
                 x-transition:enter="ease-out duration-300"
                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
@@ -453,4 +508,3 @@ _            class="fixed inset-0 z-40 flex items-center justify-center p-4">
 
     </div>
 @endsection
-

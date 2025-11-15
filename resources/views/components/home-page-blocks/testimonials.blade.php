@@ -1,23 +1,23 @@
 <div x-data="{
-        items: {{ $items->toJson() }},
-        currentIndex: 0,
-        perPage: 2,
-        get transformValue() {
-            return `translateX(-${this.currentIndex * (100 / this.perPage)}%)`;
-        },
-        next() {
-            if (this.currentIndex < this.items.length - this.perPage) this.currentIndex++;
-        },
-        prev() {
-            if (this.currentIndex > 0) this.currentIndex--;
-        },
-        init() {
-            if (window.innerWidth < 1024) this.perPage = 1;
-            window.addEventListener('resize', () => {
-                this.perPage = window.innerWidth < 1024 ? 1 : 2;
-            });
-        }
-    }" x-init="init()" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-20 relative">
+    items: {{ $items->toJson() }},
+    currentIndex: 0,
+    perPage: 2,
+    get transformValue() {
+        return `translateX(-${this.currentIndex * (100 / this.perPage)}%)`;
+    },
+    next() {
+        if (this.currentIndex < this.items.length - this.perPage) this.currentIndex++;
+    },
+    prev() {
+        if (this.currentIndex > 0) this.currentIndex--;
+    },
+    init() {
+        if (window.innerWidth < 1024) this.perPage = 1;
+        window.addEventListener('resize', () => {
+            this.perPage = window.innerWidth < 1024 ? 1 : 2;
+        });
+    }
+}" x-init="init()">
 
     <!-- Title and Description -->
     <div class="text-center mb-10" data-aos="fade-up">

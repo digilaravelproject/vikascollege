@@ -14,7 +14,7 @@
     <header class="w-full bg-white shadow-md border-b border-gray-200">
         {{-- Container padding ko responsive banaya gaya hai (sm:px-6 lg:px-8) --}}
         <div class="container mx-auto flex items-center justify-between px-6 sm:px-8 lg:px-20 py-2">
-            @if($topBannerImage)
+            @if ($topBannerImage)
                 {{-- Left: Banner/Logo Image (Asset path use kiya gaya hai) --}}
                 <div class="flex-shrink-0 transform transition-transform duration-300 ease-in-out text-center sm:text-left">
                     {{-- Image height ko mobile ke liye chhota kiya gaya hai (h-12) --}}
@@ -26,14 +26,21 @@
             {{-- Font styling ko nav tag se hata diya gaya hai taaki 'a' tags use handle kar sakein --}}
             <nav class="hidden lg:flex items-center h-full space-x-0">
                 {{-- NOTE: Links ko new styling di gayi hai: text-black, text-xs, font-medium, uppercase --}}
-                <a href="#"
-                    class="h-full flex items-center px-2 border-b-2 border-transparent text-black font-medium text-xs uppercase hover:border-red-600 hover:text-red-600 transition duration-200">Home</a>
-                <a href="#"
-                    class="h-full flex items-center px-2 border-b-2 border-transparent text-black font-medium text-xs uppercase hover:border-red-600 hover:text-red-600 transition duration-200">About</a>
-                <a href="#"
-                    class="h-full flex items-center px-2 border-b-2 border-transparent text-black font-medium text-xs uppercase hover:border-red-600 hover:text-red-600 transition duration-200">Services</a>
-                <a href="#"
-                    class="h-full flex items-center px-2 border-b-2 border-transparent text-black font-medium text-xs uppercase hover:border-red-600 hover:text-red-600 transition duration-200">Contact</a>
+                @foreach ($menus as $menu)
+                    @php
+                        $order = (string) $menu->order;
+
+                        // Show only items starting with "100"
+                        if (!str_starts_with($order, '100')) {
+                            continue;
+                        }
+                    @endphp
+
+                    <a href="{{ $menu->link }}"
+                        class="h-full flex items-center px-2 border-b-2 border-transparent text-black font-medium text-xs uppercase hover:border-red-600 hover:text-red-600 transition duration-200">
+                        {{ $menu->title }}</a>
+                @endforeach
+
             </nav>
 
             {{-- Right: MOBILE MENU BUTTON (Vertically centered) --}}
@@ -92,7 +99,8 @@
 
                         {{-- Sub-Menu (Level 2/3/4) --}}
                         @if ($menu->children->count())
-                            <div x-show="openSub" x-cloak x-transition class="bg-gray-50 border-l-4 border-red-600"> {{-- Left
+                            <div x-show="openSub" x-cloak x-transition class="bg-gray-50 border-l-4 border-red-600">
+                                {{-- Left
                                 Border for Visual Hierarchy --}}
                                 @foreach ($menu->children as $child)
                                     {{-- Level 2 Item: Indented, Medium Text --}}

@@ -62,8 +62,17 @@
         <div class="flex items-center justify-between py-4">
             {{-- DESKTOP NAVIGATION --}}
             <div class="justify-center flex-1 hidden lg:flex">
-                <ul class="flex items-center space-x-6">
+                <ul class="flex items-center space-x-4 whitespace-nowrap">
                     @foreach ($menus as $menu)
+                        @php
+                            // Convert to string
+                            $order = (string) $menu->order;
+
+                            // Skip items starting with "00"
+                            if (str_starts_with($order, '100')) {
+                                continue;
+                            }
+                        @endphp
 
                         {{--  logic check: is this a mega menu? --}}
                         @php
