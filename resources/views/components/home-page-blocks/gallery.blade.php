@@ -148,11 +148,8 @@
                         <div class="masonry-grid">
                             @forelse ($category->images as $image)
                                 {{-- .masonry-item ab <a> tag hai --}}
-                                    <a href="{{ asset('storage/' . $image->image) }}" class="masonry-item" {{-- Class yahan <a> tag
-                                        par hai --}}
-                                        data-fancybox="gallery-{{ $category->slug }}"
-                                        data-caption="{{ $image->title ?? '' }}"
-                                        data-aos="fade-up"
+                                    <div class="masonry-item" data-fancybox="gallery-{{ $category->slug }}"
+                                        data-caption="{{ $image->title ?? '' }}" data-aos="fade-up"
                                         data-aos-delay="{{ $loop->index * 60 }}">
 
                                         <img src="{{ asset('storage/' . $image->image) }}" alt="{{ $image->title ?? '' }}">
@@ -162,10 +159,10 @@
                                                 {{ $image->title ?? 'Image' }}
                                             </div>
 
-                                        </a>
+                                    </div>
                             @empty
-                                        <p class="text-gray-500 text-center">No images found in this category.</p>
-                                    @endforelse
+                                    <p class="text-gray-500 text-center">No images found in this category.</p>
+                                @endforelse
                         </div>
                     </div>
                 @endforeach
