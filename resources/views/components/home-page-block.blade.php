@@ -1,63 +1,129 @@
-<div class="page-block-wrapper">
-    {{--
-        Yeh file ek router ki tarah kaam karti hai.
-        $block variable (static data) aur $items, $title, $description variables (dynamic data)
-        component class (PageBlock.php) se automatically pass ho rahe hain.
-    --}}
-    @switch($type)
-        @case('intro')
-            @include('components.home-page-blocks.intro', ['block' => $block])
-            @break
+@php
+    // $loop variable ko PageBlock.php class se pass karna hoga
+    // (Aapko PageBlock.php me public $loop; add karna pad sakta hai)
+    $loop = $loop ?? null;
 
-        @case('sectionLinks')
-            @include('components.home-page-blocks.section-links', ['block' => $block])
-            @break
+    // Default view path
+    $includePath = null;
 
-        @case('latestUpdates')
-            @include('components.home-page-blocks.latest-updates', ['items' => $items, 'title' => $title])
-            @break
+    // Baki sab blocks ke liye unka view path set karein
+    $includePath = match ($type) {
+        'intro' => 'components.home-page-blocks.intro',
+        'sectionLinks' => 'components.home-page-blocks.section-links',
+        // 'latestUpdates' => 'components.home-page-blocks.latest-updates',
+        'announcements' => 'components.home-page-blocks.announcements',
+        'events' => 'components.home-page-blocks.events',
+        'academic_calendar' => 'components.home-page-blocks.academic-calendar',
+        // 'image_text' => 'components.home-page-blocks.image-text', // Yeh 'intro' jaisa lag raha hai, iska naam 'image_text' hai
+        'gallery' => 'components.home-page-blocks.gallery',
+        'testimonials' => 'components.home-page-blocks.testimonials',
+        'why_choose_us' => 'components.home-page-blocks.why-choose-us',
+        'divider' => 'components.home-page-blocks.divider',
+        'layout_grid' => 'components.home-page-blocks.layout-grid',
+        'social-connects' => 'components.home-page-blocks.social-connects',
+        default => null
+    };
 
-        @case('announcements')
-            @include('components.home-page-blocks.announcements', ['items' => $items, 'title' => $title])
-            @break
+@endphp
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Marcellus&display=swap');
 
-        @case('events')
-            @include('components.home-page-blocks.events', [
-                'items' => $items,
-                'title' => $title,
-                'description' => $description,
+    :root {
+        --header-font: "Marcellus", serif !important;
+    }
+
+    /* GLOBAL HEADING RENDER OPTIMIZATION */
+    h1,
+    h2,
+    h3,
+    .header-title {
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        font-weight: 800 !important;
+        /* Marcellus default elegant weight */
+        color: #013954 !important;
+        /* classy dark color */
+        letter-spacing: 0.3px !important;
+        /* subtle premium spacing */
+    }
+
+    /* ================================
+   H1 (Main Big Title)
+================================ */
+    h1,
+    .header-title.h1 {
+        font-family: var(--header-font) !important;
+        font-size: clamp(34px, 6vw, 42px) !important;
+        line-height: 52px !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        margin-bottom: 20px !important;
+    }
+
+    /* ================================
+   H2 (Section Heading)
+================================ */
+    h2,
+    .header-title.h2 {
+        font-family: var(--header-font) !important;
+        font-size: clamp(28px, 5vw, 34px) !important;
+        line-height: 44px !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        margin-bottom: 18px !important;
+    }
+
+    /* ================================
+   H3 (Sub-heading)
+================================ */
+    h3,
+    .header-title.h3 {
+        font-family: var(--header-font) !important;
+        font-size: clamp(22px, 4vw, 28px) !important;
+        line-height: 36px !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        margin-bottom: 14px !important;
+    }
+
+    /* ================================
+   DEFAULT .header-title (H2-style)
+================================ */
+    .header-title {
+        font-family: var(--header-font) !important;
+        font-size: clamp(28px, 5vw, 34px) !important;
+        line-height: 44px !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        margin-bottom: 18px !important;
+    }
+</style>
+
+
+@if ($includePath)
+    @if ($type === 'divider')
+        {{-- Divider ko wrapper/padding nahi chahiye --}}
+        @include($includePath)
+
+    @elseif ($type === 'layout_grid')
+        {{-- Layout Grid ka wrapper alag hai (yeh recursive hai) --}}
+        @include($includePath, [
+            'block' => $block,
+            'loop' => $loop // $loop ko nested blocks me pass karein
+        ])
+    @else
+            <section class="w-full py-2 md:py-6 bg-white">
+                      {{-- <section class="w-full py-2 md:py-6 {{ $loop && $loop->even ? 'bg-gray-50' : 'bg-white' }}"> --}}
+                     {{-- Content ko max-width container me rakhenge --}}
+                       <div class="max-w-[90rem] mx-auto px-1 sm:px-2 lg:px-4">
+             @include($includePath, [
+                'block' => $block, // Pura block pass karein
+                'items' => $items, // DB se laaya hua data
+                'title' => $title, // DB se laaya hua title
+                'description' => $description, // DB se laaya hua description
             ])
-            @break
 
-        @case('academic_calendar')
-            @include('components.home-page-blocks.academic-calendar', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('image_text')
-            @include('components.home-page-blocks.image-text', ['block' => $block])
-            @break
-
-        @case('gallery')
-            @include('components.home-page-blocks.gallery', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('testimonials')
-            @include('components.home-page-blocks.testimonials', ['items' => $items, 'title' => $title])
-            @break
-
-        @case('why_choose_us')
-            @include('components.home-page-blocks.why-choose-us', [
-                'items' => $items,
-                'title' => $title,
-                'description' => $description,
-            ])
-            @break
-
-        @case('divider')
-            @include('components.home-page-blocks.divider')
-            @break
-
-        @default
-            {{-- Aap yahan ek default view ya error dikha sakte hain --}}
-            @endswitch
-</div>
+                             </div>
+                             </section>
+        @endif
+@endif

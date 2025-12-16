@@ -43,7 +43,7 @@
                     <input type="hidden" name="full_content" id="full_content_input"
                         value="{{ old('full_content', $item?->full_content) }}">
                     <div id="quill-editor" style="min-height: 250px;"
-                        class="bg-white rounded-lg border border-gray-300">
+                        class="bg-white border border-gray-300 rounded-lg">
                         {!! old('full_content', $item?->full_content) !!}
                     </div>
                 </div>
@@ -100,6 +100,15 @@
                         placeholder="Enter venue"
                         class="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
+                {{-- External Link (NEW CODE) --}}
+                <div>
+                    <label for="link" class="block mb-1.5 text-sm font-medium text-gray-700">
+                        External Link <span class="text-xs font-normal text-gray-500">(Registration/More Info)</span>
+                    </label>
+                    <input type="text" id="link" name="link" value="{{ old('link', $item?->link) }}"
+                        placeholder="https://example.com/register"
+                        class="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
 
                 {{-- Image Upload & Preview --}}
                 <div>
@@ -108,7 +117,7 @@
                         class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer">
                     <template x-if="imagePreview">
                         <img :src="imagePreview"
-                            class="object-cover w-full h-32 mt-3 rounded-lg shadow-sm border border-gray-200">
+                            class="object-cover w-full h-32 mt-3 border border-gray-200 rounded-lg shadow-sm">
                     </template>
                 </div>
             </div>
@@ -124,7 +133,7 @@
             <div>
                 <label for="slug" class="block mb-1.5 text-sm font-medium text-gray-700">Slug (auto-generated)</label>
                 <input type="text" id="slug" name="slug" x-model="slug"
-                    class="w-full px-3 py-2 text-sm text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    class="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <p class="mt-1.5 text-xs text-gray-500">Auto-fills from title. You can edit manually.</p>
             </div>
 

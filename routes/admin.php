@@ -11,16 +11,22 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\EventCategoryController;
 use App\Http\Controllers\EventItemController;
 use App\Http\Controllers\AcademicCalendarController;
+use App\Http\Controllers\Admin\CacheController;
+use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\SiteManagementController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\GalleryCategoryController;
 use App\Http\Controllers\GalleryImageController;
 use App\Http\Controllers\TestimonialController;
 use App\Http\Controllers\WhyChooseUsController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\SmtpSettingController;
+use App\Http\Controllers\Admin\LeadAdminController;
 
 // Authentication
 Route::get('admin', [AuthenticatedSessionController::class, 'create']);
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
+Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () {
 
     Route::get('/dashboard', function () {
         $pendingTestimonials = \App\Models\Testimonial::where('status', false)->count();
@@ -60,7 +66,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
         Route::get('/create', [PageBuilderController::class, 'create'])->name('create');
         Route::post('/store', [PageBuilderController::class, 'store'])->name('store');
         Route::get('/edit/{page}', [PageBuilderController::class, 'edit'])->name('edit');
-        Route::post('/update/{page}', [PageBuilderController::class, 'update'])->name('update');
+        Route::match(['post', 'put'], '/update/{page}', [PageBuilderController::class, 'update'])->name('update');
         Route::delete('/delete/{page}', [PageBuilderController::class, 'destroy'])->name('delete');
         Route::post('{page}/toggle-status', [PageBuilderController::class, 'toggleStatus'])
             ->name('toggleStatus');
@@ -93,4 +99,42 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->grou
     Route::post('notifications/{notification}/toggle-status', [NotificationController::class, 'toggleStatus'])->name('notifications.toggle-status');
     Route::post('notifications/{notification}/toggle-featured', [NotificationController::class, 'toggleFeatured'])->name('notifications.toggle-featured');
     Route::post('notifications/{notification}/toggle-feature-on-top', [NotificationController::class, 'toggleFeatureOnTop'])->name('notifications.toggle-feature-on-top');
+
+    // Media Managemnet
+    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+    Route::post('/media/upload', [MediaController::class, 'store'])->name('media.store');
+    Route::post('/media/delete', [MediaController::class, 'destroy'])->name('media.destroy');
+
+    // --- User Management Routes ---
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('users', [UserController::class, 'store'])->name('users.store');
+    Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+    // Aap delete ke liye bhi add kar sakte hain:
+    // Route::delete('users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+
+    // Cache
+    Route::prefix('site-management')->name('site.')->controller(SiteManagementController::class)->group(function () {
+
+        // Page dikhane ka route
+        Route::get('/', 'index')->name('index');
+
+        // --- Action Routes (Sabko POST mein badal diya hai) ---
+
+        // Cache actions ke liye `name('cache.')` add karein taaki purane routes kaam karein
+        Route::post('/clear-all-cache', 'clearAllCache')->name('cache.clear-all');
+        Route::post('/re-optimize', 'reOptimizeApp')->name('cache.re-optimize');
+
+        // Naye routes
+        Route::post('/toggle-maintenance', 'toggleMaintenance')->name('toggle-maintenance');
+        Route::post('/set-env', 'setAppEnv')->name('set-env');
+        Route::post('/toggle-debug', 'toggleDebug')->name('toggle-debug');
+    });
+  Route::get('smtp-settings', [SmtpSettingController::class, 'index'])->name('smtp.index');
+    Route::post('smtp-settings', [SmtpSettingController::class, 'store'])->name('smtp.store');
+
+    Route::get('leads/admissions', [LeadAdminController::class, 'admissions'])->name('leads.admissions');
+    Route::get('leads/enquiries', [LeadAdminController::class, 'enquiries'])->name('leads.enquiries');
 });
+

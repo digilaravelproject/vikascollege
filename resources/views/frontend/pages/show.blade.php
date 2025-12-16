@@ -97,7 +97,7 @@
             {{-- Render the menu --}}
             <aside class="space-y-2 md:sticky md:top-24 h-fit">
                 <h2 class="pb-2 mb-4 text-lg font-semibold text-gray-800 border-b">
-                    {{ $topParent->title ?? 'Sections' }}
+                    {{ $topParent->title ?? $activeSection->title }}
                 </h2>
 
                 {!! renderMenu($menus, $activeSection) !!}
@@ -131,3 +131,6 @@
         </div>
     </section>
 @endsection
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

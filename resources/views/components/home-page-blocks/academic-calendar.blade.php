@@ -1,39 +1,178 @@
-<section class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="mb-6 text-2xl font-bold text-center text-gray-800">{{ $title }}</h2>
+{{-- ========================================= --}}
+{{-- Styles: Swiper CSS & Custom Overrides --}}
+{{-- ========================================= --}}
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+
+<style>
+    /* ---------- ARROWS (fixed: only one icon visible) ---------- */
+    .calendar-swiper .swiper-button-next,
+    .calendar-swiper .swiper-button-prev {
+        color: #DC2626;
+        background: rgba(255, 255, 255, 0.85);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background-size: 12px;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    /* remove default arrows completely */
+    .calendar-swiper .swiper-button-next:after,
+    .calendar-swiper .swiper-button-prev:after {
+        content: '' !important;
+    }
+
+    /* custom SVG icons */
+    .calendar-swiper .swiper-button-next {
+        background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' fill='red' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 3l5 5-5 5' stroke='%23DC2626' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    }
+
+    .calendar-swiper .swiper-button-prev {
+        background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' fill='red' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 3L6 8l5 5' stroke='%23DC2626' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    }
+
+    /* ---------- Pagination active dot ---------- */
+    .swiper-pagination-bullet-active {
+        background: #DC2626 !important;
+    }
+
+    /* ---------- Equal Card Height Wrapper ---------- */
+    .swiper-slide {
+        display: flex;
+        height: auto;
+    }
+
+    .calendar-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    /* ---------- Full description (no limit) ---------- */
+    .calendar-desc {
+        overflow: visible !important;
+    }
+
+    /* ---------- Title with custom size + !important ---------- */
+    .calendar-title {
+        font-size: 22px !important;
+        line-height: 1.3 !important;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<section class="bg-white relative">
+    <div class="text-center mb-12" data-aos="fade-up">
+        <h2 class="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-gray-900 tracking-tight mb-4">
+            {{ $title }}
+        </h2>
+<div class="w-24 h-1.5 bg-[#013954] rounded-full my-4 m-auto"></div>
+    </div>
     @if ($items->isEmpty())
-        <p class="text-center text-gray-500">No calendar items found.</p>
+        <p class="text-center text-gray-500" data-aos="fade-up" data-aos-delay="100">
+            No calendar items found.
+        </p>
     @else
-        <div class="flow-root">
-            <ul class="-mb-8">
-                @foreach ($items as $item)
-                    <li>
-                        <div class="relative pb-8">
-                            @if (!$loop->last)
-                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                            @endif
-                            <div class="relative flex space-x-3">
-                                <div>
-                                    <span
-                                        class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full ring-8 ring-white">
-                                        <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm text-gray-500">
-                                        {{ $item->event_datetime->format('M d, Y') }}
+        <div class="relative px-2 mx-auto sm:px-6" data-aos="fade-up" data-aos-delay="100">
+
+            <div class="swiper calendar-swiper pb-12 px-2">
+                <div class="swiper-wrapper">
+
+                    @foreach ($items as $item)
+                        <div class="swiper-slide">
+
+                            <div class="calendar-card bg-gray-50 p-6 sm:p-8
+                                                    rounded-lg shadow-sm hover:shadow-md
+                                                    hover:-translate-y-1 transition-all duration-300
+                                                    border border-transparent hover:border-gray-200">
+
+                                <a href="{{ $item->link_href }}" class="flex flex-col h-full">
+
+                                    <!-- Date -->
+                                    <div class="pb-5 border-b border-gray-300 mb-5">
+                                        <p class="text-5xl font-extrabold text-red-600 leading-none">
+                                            {{ $item->event_datetime->format('d') }}
+                                        </p>
+                                        <p class="text-xl text-gray-900">
+                                            {{ $item->event_datetime->format('F Y') }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Title (full + !important size) -->
+                                    <h3 class="calendar-title font-bold text-gray-900">
+                                        {{ $item->title }}
+                                    </h3>
+
+                                    <!-- Time -->
+                                    <p class="text-lg font-extrabold text-red-600 mb-4">
+                                        {{ $item->event_datetime->format('g:i A') }} –
+                                        {{ $item->end_time ? $item->end_time->format('g:i A') : '10:00 AM' }}
                                     </p>
-                                    <p class="font-medium text-gray-800">{{ $item->title }}</p>
-                                </div>
+
+                                    <!-- Description (FULL, not cut) -->
+                                    <p class="text-sm text-gray-600 calendar">
+                                        {{ $item->description }}
+                                    </p>
+
+                                </a>
                             </div>
+
                         </div>
-                    </li>
-                @endforeach
-            </ul>
+                    @endforeach
+
+                </div>
+
+                @if($items->count() > 3)
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                @endif
+            </div>
+
         </div>
     @endif
 </section>
+
+
+
+{{-- ========================================= --}}
+{{-- Scripts: AOS & Swiper JS --}}
+{{-- ========================================= --}}
+<script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        AOS.init({
+            once: true,
+            duration: 800,
+            easing: 'ease-in-out'
+        });
+
+        const swiper = new Swiper('.calendar-swiper', {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            grabCursor: true,
+
+            breakpoints: {
+                480: { slidesPerView: 1.4, spaceBetween: 20 },
+                640: { slidesPerView: 2, spaceBetween: 24 },
+                1024: { slidesPerView: 3, spaceBetween: 30 },
+            },
+
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+        });
+
+    });
+</script>

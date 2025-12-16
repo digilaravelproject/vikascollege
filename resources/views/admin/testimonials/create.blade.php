@@ -14,19 +14,12 @@
         </div>
 
         {{-- Validation Errors --}}
-        @if ($errors->any())
-            <div class="flex p-4 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50" role="alert">
-                <i class="bi bi-exclamation-triangle-fill w-5 h-5 mr-3"></i>
-                <div>
-                    <span class="font-medium">Please fix the following errors:</span>
-                    <ul class="mt-1.5 list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+        @if(session('error'))
+            <div class="p-4 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50 mb-4">
+                {{ session('error') }}
             </div>
         @endif
+
 
         <form action="{{ route('admin.testimonials.store') }}" method="POST" enctype="multipart/form-data">
             @csrf

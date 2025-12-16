@@ -4,7 +4,9 @@ namespace App\View\Components;
 
 use App\Models\AcademicCalendar;
 use App\Models\Announcement;
+use App\Models\EventCategory;
 use App\Models\EventItem;
+use App\Models\GalleryCategory;
 use App\Models\GalleryImage;
 use App\Models\Notification;
 use App\Models\Testimonial;
@@ -12,6 +14,7 @@ use App\Models\WhyChooseUs;
 use App\Services\NotificationService;
 use Illuminate\Support\Collection;
 use Illuminate\View\Component;
+use Illuminate\Support\Facades\Cache; // 1. Cache facade import karein
 
 class HomePageBlock extends Component
 {
@@ -20,19 +23,21 @@ class HomePageBlock extends Component
     public $items; // This will hold dynamic data
     public $title;
     public $description;
+    public $loop;
+    public $eventCategories;
 
     /**
      * Create a new component instance.
-     *
-     * @param array $block
      */
-    public function __construct(array $block)
+    public function __construct(array $block, $loop = null)
     {
         $this->block = $block;
         $this->type = $block['type'] ?? 'unknown';
         $this->items = collect(); // Default to empty collection
+        $this->eventCategories = collect();
+        $this->loop = $loop;
 
-        // Get title/description, handling different key names
+        // Get title/description
         $this->title = $block['section_title'] ?? $block['title'] ?? '';
         $this->description = $block['section_description'] ?? '';
 
@@ -49,88 +54,181 @@ class HomePageBlock extends Component
         };
     }
 
-    // --- Private data loading methods ---
+    // --- Private data loading methods (Ab Cache ho gaye) ---
 
     private function loadLatestUpdates()
     {
+        // YEH PEHLE SE HI CACHED HAI (NotificationService se)
         $this->items = (new NotificationService())->getRestNotifications();
     }
 
     private function loadAnnouncements()
     {
-        $count = $this->block['display_count'] ?? 5;
+        $count = $this->block['display_count'] ?? 40;
         $type = $this->block['content_type'] ?? 'student';
-        $this->items = Announcement::where('status', 1)
-            ->where('type', $type)
-            ->latest()
-            ->take($count)
-            ->get();
-    }
+        $cacheKey = "announcements:type:{$type}:count:{$count}";
 
+        $this->items = Cache::remember($cacheKey, 3600, function () use ($count, $type) {
+            return Announcement::where('status', 1)
+                ->where('type', $type)
+                ->latest()
+                ->take($count)
+                ->get();
+        });
+    }
     private function loadEvents()
     {
-        // Get 3 upcoming events
-        $upcoming = EventItem::with('category')
-            ->where('event_date', '>=', now())
-            ->orderBy('event_date', 'asc')
-            ->take(3)
-            ->get();
-
-        // If no upcoming, get 3 recent past events
-        if ($upcoming->isEmpty()) {
-            $this->items = EventItem::with('category')
+        // 1. Fetch Categories
+        $this->eventCategories = Cache::remember('event_categories_all', 3600, function () {
+            return EventCategory::orderBy('id', 'asc')->get(['id', 'name']);
+        });
+    
+        // 2. Fetch Events
+        $this->items = Cache::remember('all_events_for_homepage', 3600, function () {
+            $upcoming = EventItem::with('category')
+                ->where('event_date', '>=', now())
+                ->orderBy('event_date', 'asc')
+                ->get();
+    
+            $recent = EventItem::with('category')
                 ->where('event_date', '<', now())
                 ->orderBy('event_date', 'desc')
-                ->take(3)
                 ->get();
-        } else {
-            $this->items = $upcoming;
-        }
+    
+            return $upcoming->merge($recent);
+        });
+    
+        // 3. Map Data (Added 'link' here)
+        $this->items = $this->items->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'title' => $item->title,
+                'formatted_date' => $item->event_date ? $item->event_date->format('M d, Y') : '', // Shortened date for cards
+                'location' => $item->venue,
+                'category_id' => $item->category->id ?? null,
+                'image_url' => $item->image ? asset('storage/' . $item->image) : 'https://via.placeholder.com/400x250',
+                'link' => $item->link ?? null, // <--- NEW LINK FIELD
+            ];
+        });
     }
 
-    private function loadAcademicCalendar()
+    private function loadEvents_old()
     {
-        $count = $this->block['item_count'] ?? 7;
-        // Get upcoming active calendar items
-        $this->items = AcademicCalendar::where('status', 1)
+        $cacheKey = "events:homepage_block";
+
+        $this->items = Cache::remember($cacheKey, 3600, function () {
+            $upcoming = EventItem::with('category')
+                ->where('event_date', '>=', now())
+                ->orderBy('event_date', 'asc')
+                ->take(10)
+                ->get();
+
+            if ($upcoming->isEmpty()) {
+                return EventItem::with('category')
+                    ->where('event_date', '<', now())
+                    ->orderBy('event_date', 'desc')
+                    ->take(10)
+                    ->get();
+            }
+            return $upcoming;
+        });
+        dd('Events', $this->items);
+    }
+private function loadAcademicCalendar()
+{
+    $count = $this->block['item_count'] ?? 40;
+    $cacheKey = "academic_calendar:homepage:merged:count:{$count}";
+
+    // Result $this->items me store ho raha hai
+    $this->items = Cache::remember($cacheKey, 3600, function () use ($count) {
+
+        // 1. Future Events (Aaj aur aane waale) -> Order: 12, 15, 20...
+        $future = AcademicCalendar::where('status', 1)
             ->where('event_datetime', '>=', now()->startOfDay())
             ->orderBy('event_datetime', 'asc')
-            ->take($count)
             ->get();
-    }
 
+        // 2. Past Events (Jo beet gaye) -> Order: 9, 8, 5...
+        $past = AcademicCalendar::where('status', 1)
+            ->where('event_datetime', '<', now()->startOfDay())
+            ->orderBy('event_datetime', 'desc')
+            ->get();
+
+        // 3. Merge: Future pehle, fir Past
+        // Variable name $upcoming hi rakha hai jaisa aapne kaha
+        $upcoming = $future->merge($past);
+
+        // 4. Limit lagakar return karein
+        return $upcoming->take($count);
+    });
+}
+    private function loadAcademicCalendar_old()
+    {
+        $count = $this->block['item_count'] ?? 40;
+        $cacheKey = "academic_calendar:homepage:count:{$count}";
+
+        $this->items = Cache::remember($cacheKey, 3600, function () use ($count) {
+            return AcademicCalendar::where('status', 1)
+                ->where('event_datetime', '>=', now()->startOfDay())
+                ->orderBy('event_datetime', 'asc')
+                ->take($count)
+                ->get();
+        });
+    }
     private function loadGallery()
     {
-        // Get 8 most recent images from any category
-        $this->items = GalleryImage::with('category')
-            ->latest()
-            ->take(8)
-            ->get();
+        // Cache key badal diya hai
+        $cacheKey = "gallery:homepage:categories:with_images";
+
+        // $this->items me ab Images nahi, Categories aayengi
+        $this->items = Cache::remember($cacheKey, 3600, function () {
+            // Yahan hum GalleryImage nahi, GalleryCategory fetch kar rahe hain
+            // 'galleryImages' aapke relation ka naam hona chahiye (GalleryCategory model me)
+            return GalleryCategory::with(['images' => function ($query) {
+                // Har category ki sirf 8 images load karein (limit)
+                $query->latest()->take(10);
+            }])
+                ->get();
+        });
+    }
+    private function loadGallery_old()
+    {
+        $cacheKey = "gallery:homepage:count:8";
+
+        $this->items = Cache::remember($cacheKey, 3600, function () {
+            return GalleryImage::with('category')
+                ->latest()
+                ->take(8)
+                ->get();
+        });
     }
 
     private function loadTestimonials()
     {
-        // Get all active testimonials
-        $this->items = Testimonial::where('status', 1)
-            ->latest()
-            ->get();
+        $cacheKey = "testimonials:active";
+
+        $this->items = Cache::remember($cacheKey, 3600, function () {
+            return Testimonial::where('status', 1)
+                ->latest()
+                ->get();
+        });
     }
 
     private function loadWhyChooseUs()
     {
-        // Get all items, ordered by sort_order
-        $this->items = WhyChooseUs::orderBy('sort_order')
-            ->get();
+        $cacheKey = "why_choose_us:sorted";
+
+        $this->items = Cache::remember($cacheKey, 3600, function () {
+            return WhyChooseUs::orderBy('sort_order')
+                ->get();
+        });
     }
 
     /**
      * Get the view / contents that represent the component.
-     *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
      */
     public function render()
     {
-        // The view file will handle the switching
         return view('components.home-page-block');
     }
 }

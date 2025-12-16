@@ -56,12 +56,13 @@ class Page extends Model
     }
 
     /**
-     * Ensure slug is always lowercase and trimmed.
+     * Ensure slug is always lowercase, trimmed, and prefixed.
      */
-    public function setSlugAttribute(string $value): void
+   public function setSlugAttribute(string $value): void
     {
         $this->attributes['slug'] = strtolower(trim($value, '/'));
     }
+
 
     /**
      * Ensure title is properly capitalized.

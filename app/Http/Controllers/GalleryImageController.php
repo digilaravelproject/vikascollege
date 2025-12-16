@@ -4,96 +4,193 @@ namespace App\Http\Controllers;
 
 use App\Models\GalleryImage;
 use App\Models\GalleryCategory;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GalleryImageController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    use AuthorizesRequests;
+
+    // -------------------
+    // Helper: Convert image to WebP
+    // -------------------
+    private function convertToWebp($file, $path)
     {
-        // Fetch all categories for the filter tabs
-        $categories = GalleryCategory::orderBy('name')->get(['id', 'name']);
+        $extension = strtolower($file->getClientOriginalExtension());
+        $imagePath = $file->getRealPath();
 
-        // Fetch images with category relationship
-        $images = GalleryImage::with('category')
-            ->latest()
-            ->paginate(24);
-
-        return view('admin.gallery.images.index', compact('images', 'categories'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
-        return view('admin.gallery.images.create', compact('categories'));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:gallery_categories,id',
-            'image' => 'required|image|max:8192',
-            'title' => 'nullable|string|max:255',
-        ]);
-
-        $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
-
-        GalleryImage::create($validated);
-
-        return redirect()
-            ->route('admin.gallery-images.index')
-            ->with('success', 'Image added successfully.');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(GalleryImage $galleryImage)
-    {
-        $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
-        return view('admin.gallery.images.edit', [
-            'image' => $galleryImage,
-            'categories' => $categories
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, GalleryImage $galleryImage)
-    {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:gallery_categories,id',
-            'image' => 'nullable|image|max:8192',
-            'title' => 'nullable|string|max:255',
-        ]);
-
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('uploads/gallery', 'public');
+        switch ($extension) {
+            case 'jpeg':
+            case 'jpg':
+                $image = imagecreatefromjpeg($imagePath);
+                break;
+            case 'png':
+                $image = imagecreatefrompng($imagePath);
+                imagepalettetotruecolor($image);
+                imagealphablending($image, true);
+                imagesavealpha($image, true);
+                break;
+            case 'gif':
+                $image = imagecreatefromgif($imagePath);
+                break;
+            default:
+                return null;
         }
 
-        $galleryImage->update($validated);
+        $webpName = uniqid() . '.webp';
+        $fullPath = storage_path("app/public/$path/" . $webpName);
 
-        return redirect()
-            ->route('admin.gallery-images.index')
-            ->with('success', 'Image updated successfully.');
+        imagewebp($image, $fullPath, 80); // 80% quality
+        imagedestroy($image);
+
+        return "$path/$webpName";
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // -------------------
+    // Index
+    // -------------------
+    public function index()
+    {
+        try {
+            $this->authorize('view gallery images');
+            $categories = GalleryCategory::orderBy('name')->get(['id', 'name']);
+
+            $images = GalleryImage::with('category')
+                ->latest()
+                ->paginate(24);
+
+            return view('admin.gallery.images.index', compact('images', 'categories'));
+        } catch (\Exception $e) {
+            Log::error("Error fetching gallery images: " . $e->getMessage());
+            return back()->with('error', 'Failed to load gallery images.');
+        }
+    }
+
+    // -------------------
+    // Create
+    // -------------------
+    public function create()
+    {
+        try {
+            $this->authorize('upload gallery images');
+            $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
+            return view('admin.gallery.images.create', compact('categories'));
+        } catch (\Exception $e) {
+            Log::error("Error opening create gallery image form: " . $e->getMessage());
+            return back()->with('error', 'Failed to open create gallery image form.');
+        }
+    }
+
+    // -------------------
+    // Store
+    // -------------------
+    public function store(Request $request)
+    {
+        try {
+            $this->authorize('upload gallery images');
+
+            $validated = $request->validate([
+                'category_id' => 'required|exists:gallery_categories,id',
+                'image' => 'required|image|mimes:jpg,jpeg,png,webp,gif,svg,bmp,tiff|max:15360', // 15MB
+                'title' => 'nullable|string|max:255',
+            ]);
+
+            // Convert to WebP
+            $webpPath = $this->convertToWebp($request->file('image'), 'uploads/gallery');
+            if (!$webpPath) {
+                return back()->with('error', 'Unsupported image format.');
+            }
+            $validated['image'] = $webpPath;
+
+            GalleryImage::create($validated);
+
+            return redirect()
+                ->route('admin.gallery-images.index')
+                ->with('success', 'Image added successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error creating gallery image: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to upload image.');
+        }
+    }
+
+    // -------------------
+    // Edit
+    // -------------------
+    public function edit(GalleryImage $galleryImage)
+    {
+        try {
+            $this->authorize('edit gallery images');
+            $categories = GalleryCategory::orderBy('name')->pluck('name', 'id');
+            return view('admin.gallery.images.edit', [
+                'image' => $galleryImage,
+                'categories' => $categories
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error opening edit gallery image form: " . $e->getMessage());
+            return back()->with('error', 'Failed to open edit image form.');
+        }
+    }
+
+    // -------------------
+    // Update
+    // -------------------
+    public function update(Request $request, GalleryImage $galleryImage)
+    {
+        try {
+            $this->authorize('edit gallery images');
+
+            $validated = $request->validate([
+                'category_id' => 'required|exists:gallery_categories,id',
+                'image' => 'nullable|image|mimes:jpg,jpeg,png,webp,gif,svg,bmp,tiff|max:15360', // 15MB
+                'title' => 'nullable|string|max:255',
+            ]);
+
+            if ($request->hasFile('image')) {
+                // Delete old image
+                if ($galleryImage->image && file_exists(storage_path('app/public/' . $galleryImage->image))) {
+                    unlink(storage_path('app/public/' . $galleryImage->image));
+                }
+
+                // Convert new image to WebP
+                $webpPath = $this->convertToWebp($request->file('image'), 'uploads/gallery');
+                if (!$webpPath) {
+                    return back()->with('error', 'Unsupported image format.');
+                }
+
+                $validated['image'] = $webpPath;
+            }
+
+            $galleryImage->update($validated);
+
+            return redirect()
+                ->route('admin.gallery-images.index')
+                ->with('success', 'Image updated successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error updating gallery image: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update image.');
+        }
+    }
+
+    // -------------------
+    // Destroy
+    // -------------------
     public function destroy(GalleryImage $galleryImage)
     {
-        $galleryImage->delete();
+        try {
+            $this->authorize('delete gallery images');
 
-        return back()->with('success', 'Image deleted successfully.');
+            // Delete image file
+            if ($galleryImage->image && file_exists(storage_path('app/public/' . $galleryImage->image))) {
+                unlink(storage_path('app/public/' . $galleryImage->image));
+            }
+
+            $galleryImage->delete();
+
+            return back()->with('success', 'Image deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error deleting gallery image: " . $e->getMessage());
+            return back()->with('error', 'Failed to delete image.');
+        }
     }
 }

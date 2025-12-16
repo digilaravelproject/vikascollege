@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\BlockDirectStorageAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             // 'is_admin' => AdminMiddleware::class,
         ]);
+        // $middleware->append(BlockDirectStorageAccess::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -3,18 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\EventCategory;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class EventCategoryController extends Controller
 {
+    use AuthorizesRequests;
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $categories = EventCategory::latest()->paginate(15);
-        return view('admin.events.categories.index', compact('categories'));
+        try {
+            $this->authorize('view event categories');
+            $categories = EventCategory::latest()->paginate(15);
+            return view('admin.events.categories.index', compact('categories'));
+        } catch (\Exception $e) {
+            Log::error("Error fetching event categories: " . $e->getMessage());
+            return back()->with('error', 'Failed to load event categories.');
+        }
     }
 
     /**
@@ -22,7 +32,13 @@ class EventCategoryController extends Controller
      */
     public function create()
     {
-        return view('admin.events.categories.create');
+        try {
+            $this->authorize('create event categories');
+            return view('admin.events.categories.create');
+        } catch (\Exception $e) {
+            Log::error("Error opening create category form: " . $e->getMessage());
+            return back()->with('error', 'Failed to open create category form.');
+        }
     }
 
     /**
@@ -30,23 +46,24 @@ class EventCategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:event_categories,slug',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-        ]);
-        $validated['slug'] = $validated['slug'] ?: Str::slug($validated['name']);
-        EventCategory::create($validated);
-        return redirect()->route('admin.event-categories.index')->with('success', 'Category created');
-    }
+        try {
+            $this->authorize('create event categories');
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(EventCategory $eventCategory)
-    {
-        return redirect()->route('admin.event-categories.index');
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'slug' => 'nullable|string|max:255|unique:event_categories,slug',
+                'meta_title' => 'nullable|string|max:255',
+                'meta_description' => 'nullable|string|max:500',
+            ]);
+
+            $validated['slug'] = $validated['slug'] ?: Str::slug($validated['name']);
+            EventCategory::create($validated);
+
+            return redirect()->route('admin.event-categories.index')->with('success', 'Category created successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error creating event category: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create category.');
+        }
     }
 
     /**
@@ -54,7 +71,13 @@ class EventCategoryController extends Controller
      */
     public function edit(EventCategory $eventCategory)
     {
-        return view('admin.events.categories.edit', ['category' => $eventCategory]);
+        try {
+            $this->authorize('edit event categories');
+            return view('admin.events.categories.edit', ['category' => $eventCategory]);
+        } catch (\Exception $e) {
+            Log::error("Error opening edit category form: " . $e->getMessage());
+            return back()->with('error', 'Failed to open edit category form.');
+        }
     }
 
     /**
@@ -62,14 +85,23 @@ class EventCategoryController extends Controller
      */
     public function update(Request $request, EventCategory $eventCategory)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:event_categories,slug,' . $eventCategory->id,
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
-        ]);
-        $eventCategory->update($validated);
-        return redirect()->route('admin.event-categories.index')->with('success', 'Category updated');
+        try {
+            $this->authorize('edit event categories');
+
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'slug' => 'required|string|max:255|unique:event_categories,slug,' . $eventCategory->id,
+                'meta_title' => 'nullable|string|max:255',
+                'meta_description' => 'nullable|string|max:500',
+            ]);
+
+            $eventCategory->update($validated);
+
+            return redirect()->route('admin.event-categories.index')->with('success', 'Category updated successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error updating event category: " . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update category.');
+        }
     }
 
     /**
@@ -77,7 +109,13 @@ class EventCategoryController extends Controller
      */
     public function destroy(EventCategory $eventCategory)
     {
-        $eventCategory->delete();
-        return back()->with('success', 'Category deleted');
+        try {
+            $this->authorize('delete event categories');
+            $eventCategory->delete();
+            return back()->with('success', 'Category deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error("Error deleting event category: " . $e->getMessage());
+            return back()->with('error', 'Failed to delete category.');
+        }
     }
 }

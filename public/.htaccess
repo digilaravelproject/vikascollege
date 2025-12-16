@@ -13,6 +13,12 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # Redirect ALL .pdf files to Laravel Routes (Wrapper)
+    # LEKIN agar "?view=raw" laga hai to redirect MAT karo (Page Block ke liye)
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{QUERY_STRING} !view=raw
+    RewriteRule ^.*\.pdf$ index.php [L]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$

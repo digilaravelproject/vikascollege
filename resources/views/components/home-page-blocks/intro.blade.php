@@ -1,78 +1,123 @@
 @php
-    $layout = $block['layout'] ?? 'left';
+    $layout = $block['layout'] ?? 'left'; // 'left', 'right', 'top'
     $image = $block['image'] ?? '';
     $heading = $block['heading'] ?? '';
     $text = $block['text'] ?? '';
-    $btnText = $block['buttonText'] ?? '';
-    $btnHref = $block['buttonHref'] ?? '';
-    $shortText = Str::limit(strip_tags($text), 1500); // Sirf 1500 chars show karega
+    $btnText = $block['buttonText'] ?? 'Read More';
+    $btnHref = $block['buttonLink'] ?? '/#';
+
+    $shortText = Str::limit(strip_tags($text), 700);
 @endphp
 
-<section class="p-6 bg-white rounded-lg shadow-md relative">
-    <div class="grid items-center gap-6 md:gap-10
-           {{ $layout === 'top' ? 'grid-cols-1' : 'md:grid-cols-2' }}
-           {{ $layout === 'right' ? 'md:grid-cols-2' : '' }}">
+{{-- 
+    MAIN GRID:
+    - Reduced Gap: gap-6 md:gap-10 (Pehle gap-8/16 tha)
+    - Compact Layout
+--}}
+<div class="grid gap-6 md:gap-10 items-center 
+     {{ $layout === 'top' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2' }}">
 
-        {{-- Image --}}
-        <div class="
-            {{ $layout === 'right' ? 'md:order-last' : '' }}
-            {{ $layout === 'top' ? 'w-full h-64' : 'h-80' }}
-            overflow-hidden rounded-lg">
-            @if ($image)
-                <img src="{{ $image }}" alt="{{ $heading }}"
-                    class="object-cover w-full h-full transition-transform duration-300 hover:scale-105">
-            @else
-                <div class="flex items-center justify-center w-full h-full bg-gray-200">
-                    <span class="text-gray-500">Image</span>
-                </div>
-            @endif
-        </div>
+    {{-- 
+        1. IMAGE BLOCK 
+        - Mobile: Order 2 (Baad me dikhega)
+        - Height: Optimized for mobile landscape
+    --}}
+    <div class="overflow-hidden rounded-none md:rounded-xl shadow-none md:shadow-xl order-2
+         {{ $layout === 'right' ? 'md:order-last' : 'md:order-first' }}
+         {{ $layout === 'top' ? 'md:order-2' : '' }}"
+         data-aos="{{ $layout === 'right' ? 'fade-left' : ($layout === 'left' ? 'fade-right' : 'fade-up') }}"
+         data-aos-duration="700">
 
-        {{-- Content --}}
-        <div class="space-y-4 {{ $layout === 'top' ? 'text-center' : '' }}">
-            <h2 class="text-3xl font-bold text-gray-800">{{ $heading }}</h2>
-
-            <p class="text-gray-600 text-justify text-wrap" id="short-text-{{ $loop->index ?? 1 }}">
-                {!! $shortText !!}
-                @if (strlen(strip_tags($text)) > 1500)
-                    <button onclick="openModal({{ $loop->index ?? 1 }})" class="text-blue-600 hover:text-blue-800">Read
-                        more</button>
-                @endif
-            </p>
-
-            @if ($btnText && $btnHref)
-                <a href="{{ $btnHref }}"
-                    class="inline-block px-6 py-2 text-white transition-colors bg-blue-600 rounded-md shadow hover:bg-blue-700">
-                    {{ $btnText }}
-                </a>
-            @endif
-        </div>
+        @if ($image)
+            <img src="{{ $image }}" alt="{{ $heading }}"
+                 class="object-cover w-full h-56 sm:h-64 md:h-full md:min-h-[400px] transition-transform duration-500 hover:scale-105"
+                 data-parallax-image> 
+        @else 
+            <div class="flex items-center justify-center w-full h-56 sm:h-64 md:h-full md:min-h-[400px] bg-gray-200 rounded-xl">
+                <span class="text-gray-500">Image Placeholder</span>
+            </div>
+        @endif
     </div>
 
-    {{-- Modal --}}
-    <div id="modal-{{ $loop->index ?? 1 }}"
-        class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white p-2 rounded-lg shadow-lg max-w-lg w-full relative">
-            <button onclick="closeModal({{ $loop->index ?? 1 }})"
-                class="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-2xl">&times;</button>
+    {{-- 
+        2. CONTENT BLOCK 
+        - Mobile: Order 1 (Pehle dikhega)
+        - Padding: py-0 px-2 (0 0.5rem) as requested
+    --}}
+    <div class="py-0 px-2 text-left order-1 
+         {{ $layout === 'right' ? 'md:order-first' : 'md:order-last' }}
+         {{ $layout === 'top' ? 'md:order-1' : '' }}"
+         data-aos="{{ $layout === 'right' ? 'fade-right' : ($layout === 'left' ? 'fade-left' : 'fade-up') }}"
+         data-aos-duration="700" data-aos-delay="200">
 
+        {{-- Heading with !important Left Align --}}
+        <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl"
+            style="text-align: left !important;">
+            {{ $heading }}
+        </h2>
 
-            <h2 class="text-2xl font-bold px-4 mb-4">{{ $heading }}</h2>
-            <div class="text-gray-700 px-4 max-h-[80vh] overflow-y-auto text-justify text-wrap">{!! $text !!}</div>
+        {{-- Decorative line (Margin reduced: my-4) --}}
+        <div class="w-24 h-1.5 bg-[#013954] rounded-full my-4 mr-auto"></div>
 
+        {{-- Text Content --}}
+        <div class="text-lg text-gray-600 leading-relaxed space-y-2 text-justify">
+            {!! $shortText !!}
         </div>
-    </div>
-</section>
 
-{{-- JS --}}
+        {{-- Button (Margin reduced: mt-6) --}}
+        @if ($btnText && $btnHref)
+            <a href="{{ $btnHref }}" 
+               class="inline-block px-7 py-3 mt-6 text-base font-semibold text-white transition-all duration-300 bg-[#013954] rounded-lg shadow-lg
+                      hover:bg-[#013954]/90 hover:-translate-y-1 hover:shadow-xl
+                      focus:outline-none focus:ring-2 focus:ring-[#013954] focus:ring-offset-2">
+                {{ $btnText }}
+            </a>
+        @endif
+    </div>
+</div>
+
+{{-- PARALLAX SCRIPT --}}
+@pushOnce('scripts')
 <script>
-    function openModal(id) {
-        document.getElementById(`modal-${id}`).classList.remove('hidden');
-        document.getElementById(`modal-${id}`).classList.add('flex');
+    document.addEventListener('scroll', function () {
+        throttle(applyParallax, 16)(); 
+    });
+
+    function applyParallax() {
+        const images = document.querySelectorAll('[data-parallax-image]');
+        const isMobile = window.innerWidth < 768;
+        const triggerOffset = window.innerHeight * 0.2; 
+
+        images.forEach(image => {
+            const wrapper = image.closest('div'); 
+            if (!wrapper) return;
+
+            const rect = wrapper.getBoundingClientRect();
+            const elTop = rect.top;
+            const elHeight = rect.height;
+
+            if (elTop < (window.innerHeight - triggerOffset) && (elTop + elHeight) > triggerOffset) {
+                let scrollPercent = (window.innerHeight - elTop) / (window.innerHeight + elHeight);
+                let centeredPercent = scrollPercent - 0.5;
+                let intensity = isMobile ? 15 : 30; 
+                let moveY = centeredPercent * intensity * -1; 
+
+                image.style.transform = `translateY(${moveY.toFixed(2)}px) scale(1.05)`;
+            }
+        });
     }
 
-    function closeModal(id) {
-        document.getElementById(`modal-${id}`).classList.add('hidden');
-        document.getElementById(`modal-${id}`).classList.remove('flex');
+    let throttleTimer = false;
+    function throttle(callback, time) {
+        return function () {
+            if (throttleTimer) return;
+            throttleTimer = true;
+            setTimeout(() => {
+                callback.apply(this, arguments);
+                throttleTimer = false;
+            }, time);
+        }
     }
+    document.addEventListener('DOMContentLoaded', applyParallax);
 </script>
+@endpushOnce

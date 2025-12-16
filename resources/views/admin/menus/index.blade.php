@@ -3,10 +3,10 @@
 @section('title', 'Menu Management')
 
 @section('content')
-    {{-- ADDED: Alpine.js data scope for the new confirmation modal --}}
+    {{-- Alpine.js data scope for the confirmation modal --}}
     <div class="space-y-6" x-data="{ showConfirmModal: false, confirmModalTitle: '', confirmModalMessage: '', formToSubmit: null }">
 
-        {{-- MODIFIED: Increased heading size for better hierarchy --}}
+        {{-- Header --}}
         <div class="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <h1 class="text-3xl font-bold text-gray-900">Menu Management</h1>
             <a href="{{ route('admin.menus.create') }}"
@@ -16,7 +16,7 @@
             </a>
         </div>
 
-        {{-- ENHANCED: Added dismissible button with Alpine.js for "sweeter" alerts --}}
+        {{-- Notifications --}}
         @if (session('success'))
             <div x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-300"
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
@@ -52,33 +52,59 @@
             </div>
         @endif
 
-        {{-- MODIFIED: Stronger shadow and border for a cleaner card --}}
+        {{-- Menu Table Card --}}
         <div class="overflow-hidden bg-white border border-gray-200 shadow-lg rounded-2xl">
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h2 class="text-lg font-semibold text-gray-800">Website Menus</h2>
+                <span class="text-xs text-gray-400 hidden sm:inline-block"><i class="bi bi-arrows-move"></i> Click & Drag to
+                    scroll</span>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-gray-200">
-                    {{-- MODIFIED: Professional admin header style --}}
+            {{--
+            🚀 DRAG-TO-SCROLL IMPLEMENTATION
+            Added cursor-grab styling and Alpine.js logic for mouse events.
+            --}}
+            <div class="overflow-x-auto cursor-grab active:cursor-grabbing" x-data="{
+                isDown: false,
+                startX: 0,
+                scrollLeft: 0,
+                mouseDown(e) {
+                    this.isDown = true;
+                    this.startX = e.pageX - $el.offsetLeft;
+                    this.scrollLeft = $el.scrollLeft;
+                },
+                mouseLeave() {
+                    this.isDown = false;
+                },
+                mouseUp() {
+                    this.isDown = false;
+                },
+                mouseMove(e) {
+                    if (!this.isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - $el.offsetLeft;
+                    const walk = (x - this.startX) * 1.5; // Scroll-fast speed multiplier
+                    $el.scrollLeft = this.scrollLeft - walk;
+                }
+            }" @mousedown="mouseDown"
+                @mouseleave="mouseLeave" @mouseup="mouseUp" @mousemove="mouseMove">
+
+                <table class="min-w-full text-sm divide-y divide-gray-200 select-none"> {{-- Added select-none to prevent
+                    text highlighting while dragging --}}
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col"
                                 class="px-6 py-3 text-xs font-semibold tracking-wider text-left text-gray-500 uppercase">
                                 Title</th>
-                            {{-- ADDED: New URL / Slug column, responsive --}}
                             <th scope="col"
                                 class="hidden px-6 py-3 text-xs font-semibold tracking-wider text-left text-gray-500 uppercase sm:table-cell">
                                 URL / Slug</th>
-                            {{-- MODIFIED: Hidden on small/medium screens --}}
                             <th scope="col"
                                 class="hidden px-6 py-3 text-xs font-semibold tracking-wider text-left text-gray-500 uppercase lg:table-cell">
                                 Parent</th>
-                            {{-- MODIFIED: Hidden on small/medium screens --}}
                             <th scope="col"
                                 class="hidden px-6 py-3 text-xs font-semibold tracking-wider text-center text-gray-500 uppercase lg:table-cell">
                                 Order</th>
-                            {{-- MODIFIED: Hidden on smallest screens --}}
                             <th scope="col"
                                 class="hidden px-6 py-3 text-xs font-semibold tracking-wider text-center text-gray-500 uppercase sm:table-cell">
                                 Status</th>
@@ -89,256 +115,246 @@
                     </thead>
 
                     <tbody class="bg-white divide-y divide-gray-200">
+                        {{-- Level 1 Loop --}}
                         @forelse($menus->where('parent_id', null)->sortBy('order') as $menu)
-                        <tbody x-data="{ open: true }" class="group">
+                    <tbody x-data="{ open: false }" class="group">
+                        {{-- Level 1 Row --}}
+                        <tr class="transition cursor-pointer bg-gray-50 hover:bg-gray-100" @click="open = !open">
+                            <td class="flex items-center px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">
+                                <i :class="open ? 'bi bi-caret-down-fill' : 'bi bi-caret-right-fill'"
+                                    class="text-gray-600 transition-transform duration-200 me-2"></i>
+                                <i class="text-blue-600 bi bi-folder-fill me-2"></i>
+                                {{ $menu->title }}
+                            </td>
+                            <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">{{ $menu->url }}
+                            </td>
+                            <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">—</td>
+                            <td class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                {{ $menu->order }}</td>
+                            <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                @include('admin.menus.partials.status-toggle', ['item' => $menu])
+                            </td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                @include('admin.menus.partials.action-buttons', ['item' => $menu])
+                            </td>
+                        </tr>
 
-                            {{-- MODIFIED: Cleaner hover state --}}
-                            <tr class="transition cursor-pointer bg-gray-50 hover:bg-gray-100" @click="open = !open">
-                                <td class="flex items-center px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">
-                                    <i :class="open ? 'bi bi-caret-down-fill' : 'bi bi-caret-right-fill'"
-                                        class="text-gray-600 transition-transform duration-200 me-2"></i>
-                                    <i class="text-blue-600 bi bi-folder-fill me-2"></i>
+                        {{-- Level 2 Loop --}}
+                        @foreach ($menus->where('parent_id', $menu->id)->sortBy('order') as $child)
+                            <tr x-show="open" x-transition class="transition bg-white hover:bg-gray-50">
+                                <td class="flex items-center px-10 py-4 text-gray-700 whitespace-nowrap">
+                                    <i class="text-gray-400 bi bi-arrow-return-right me-2"></i>
+                                    {{ $child->title }}
+                                </td>
+                                <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                    {{ $child->url }}
+                                </td>
+                                <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
                                     {{ $menu->title }}
                                 </td>
-                                {{-- ADDED: URL data, responsive --}}
-                                <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
-                                    {{ $menu->url }}
-                                </td>
-                                {{-- MODIFIED: Responsive --}}
-                                <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">—</td>
-                                {{-- MODIFIED: Responsive --}}
                                 <td class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
-                                    {{ $menu->order }}</td>
-                                {{-- MODIFIED: Responsive, themed toggle to blue, added focus rings --}}
+                                    {{ $child->order }}</td>
                                 <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" x-data="{ checked: {{ $menu->status ? 'true' : 'false' }} }" x-model="checked"
-                                            @change="
-                                                    fetch('{{ route('admin.menus.toggle-status', $menu->id) }}', {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'Content-Type': 'application/json',
-                                                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                        },
-                                                        body: JSON.stringify({ status: checked })
-                                                    })
-                                                    .then(res => res.json())
-                                                    .then(data => {
-                                                        if(data.success){
-                                                            $dispatch('notify', { message: 'Status updated!', type: 'success' })
-                                                        } else {
-                                                            $dispatch('notify', { message: 'Failed to update status', type: 'error' })
-                                                        }
-                                                    })
-                                                "
-                                            class="sr-only peer">
-                                        <div
-                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
-                                                    peer peer-checked:after:translate-x-5 peer-checked:after:border-white
-                                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                                                    after:bg-white after:border-gray-300 after:border after:rounded-full
-                                                    after:h-5 after:w-5 after:transition-all
-                                                    peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out">
-                                        </div>
-                                    </label>
+                                    @include('admin.menus.partials.status-toggle', ['item' => $child])
                                 </td>
-                                {{-- MODIFIED: Refined action buttons --}}
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <a href="{{ route('admin.menus.edit', $menu->id) }}"
-                                            class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
-                                            <i class="bi bi-pencil-square"></i> Edit
-                                        </a>
-                                        <form action="{{ route('admin.menus.destroy', $menu->id) }}" method="POST"
-                                            class="inline">
-                                            @csrf @method('DELETE')
-                                            {{-- MODIFIED: Replaced onclick with @click.prevent to trigger custom modal --}}
-                                            <button type="submit"
-                                                @click.prevent="
-                                                    confirmModalTitle = 'Delete Menu';
-                                                    confirmModalMessage = 'Are you sure you want to delete this menu? This action cannot be undone.';
-                                                    formToSubmit = $el.closest('form');
-                                                    showConfirmModal = true;
-                                                "
-                                                class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    </div>
+                                    @include('admin.menus.partials.action-buttons', ['item' => $child])
                                 </td>
                             </tr>
 
-                            {{-- ENHANCED: Added subtle bg-white for striping --}}
-                            @foreach ($menus->where('parent_id', $menu->id)->sortBy('order') as $child)
-                                <tr x-show="open" x-transition class="transition bg-white hover:bg-gray-50">
-                                    <td class="flex items-center px-10 py-4 text-gray-700 whitespace-nowrap">
-                                        <i class="text-gray-400 bi bi-arrow-return-right me-2"></i>
+                            {{-- Level 3 Loop --}}
+                            @foreach ($menus->where('parent_id', $child->id)->sortBy('order') as $subchild)
+                                <tr x-show="open" x-transition class="transition bg-gray-50/50 hover:bg-gray-100">
+                                    <td class="flex items-center py-4 italic text-gray-600 px-14 whitespace-nowrap">
+                                        <i class="text-gray-400 bi bi-dash-lg me-2"></i>
+                                        {{ $subchild->title }}
+                                    </td>
+                                    <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                        {{ $subchild->url }}
+                                    </td>
+                                    <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
                                         {{ $child->title }}
                                     </td>
-                                    {{-- ADDED: URL data, responsive --}}
-                                    <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
-                                        {{ $child->url }}
-                                    </td>
-                                    {{-- MODIFIED: Responsive --}}
-                                    <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
-                                        {{ $menu->title }}</td>
-                                    {{-- MODIFIED: Responsive --}}
                                     <td class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
-                                        {{ $child->order }}</td>
-                                    {{-- MODIFIED: Responsive, themed toggle to blue --}}
+                                        {{ $subchild->order }}</td>
                                     <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" x-data="{ checked: {{ $child->status ? 'true' : 'false' }} }" x-model="checked"
-                                                @change="
-                                                        fetch('{{ route('admin.menus.toggle-status', $child->id) }}', {
-                                                            method: 'POST',
-                                                            headers: {
-                                                                'Content-Type': 'application/json',
-                                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                            },
-                                                            body: JSON.stringify({ status: checked })
-                                                        })
-                                                        .then(res => res.json())
-                                                        .then(data => {
-                                                            if(data.success){
-                                                                $dispatch('notify', { message: 'Status updated!', type: 'success' })
-                                                            } else {
-                                                                $dispatch('notify', { message: 'Failed to update status', type: 'error' })
-                                                            }
-                                                        })
-                                                    "
-                                                class="sr-only peer">
-                                            <div
-                                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
-                                                        peer peer-checked:after:translate-x-5 peer-checked:after:border-white
-                                                        after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                                                        after:bg-white after:border-gray-300 after:border after:rounded-full
-                                                        after:h-5 after:w-5 after:transition-all
-                                                        peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out">
-                                            </div>
-                                        </label>
+                                        @include('admin.menus.partials.status-toggle', [
+                                            'item' => $subchild,
+                                        ])
                                     </td>
                                     <td class="px-6 py-4 text-center whitespace-nowrap">
-                                        <div class="flex items-center justify-center gap-2">
-                                            <a href="{{ route('admin.menus.edit', $child->id) }}"
-                                                class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
-                                                <i class="bi bi-pencil-square"></i> Edit
-                                            </a>
-                                            <form action="{{ route('admin.menus.destroy', $child->id) }}" method="POST"
-                                                class="inline">
-                                                @csrf @method('DELETE')
-                                                {{-- MODIFIED: Replaced onclick with @click.prevent to trigger custom modal --}}
-                                                <button type="submit"
-                                                    @click.prevent="
-                                                        confirmModalTitle = 'Delete Submenu';
-                                                        confirmModalMessage = 'Are you sure you want to delete this submenu? This action cannot be undone.';
-                                                        formToSubmit = $el.closest('form');
-                                                        showConfirmModal = true;
-                                                    "
-                                                    class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
-                                                    <i class="bi bi-trash"></i> Delete
-                                                </button>
-                                            </form>
-                                        </div>
+                                        @include('admin.menus.partials.action-buttons', [
+                                            'item' => $subchild,
+                                        ])
                                     </td>
                                 </tr>
 
-                                {{-- ENHANCED: Added subtle bg-gray-50/50 for striping --}}
-                                @foreach ($menus->where('parent_id', $child->id)->sortBy('order') as $subchild)
-                                    <tr x-show="open" x-transition class="transition bg-gray-50/50 hover:bg-gray-100">
-                                        <td
-                                            class="flex items-center py-4 italic text-gray-600 px-14 whitespace-nowrap">
-                                            <i class="text-gray-400 bi bi-dash-lg me-2"></i>
-                                            {{ $subchild->title }}
+                                {{-- Level 4 Loop --}}
+                                @foreach ($menus->where('parent_id', $subchild->id)->sortBy('order') as $l4)
+                                    <tr x-show="open" x-transition class="transition bg-gray-100/50 hover:bg-gray-200">
+                                        <td class="flex items-center py-4 italic text-gray-500 px-16 whitespace-nowrap">
+                                            <i class="text-gray-300 bi bi-dot me-2 text-xl"></i>
+                                            {{ $l4->title }}
                                         </td>
-                                        {{-- ADDED: URL data, responsive --}}
                                         <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
-                                            {{ $subchild->url }}
-                                        </td>
-                                        {{-- MODIFIED: Responsive --}}
+                                            {{ $l4->url }}</td>
                                         <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
-                                            {{ $child->title }}</td>
-                                        {{-- MODIFIED: Responsive --}}
+                                            {{ $subchild->title }}</td>
                                         <td
                                             class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
-                                            {{ $subchild->order }}</td>
-                                        {{-- MODIFIED: Responsive, themed toggle to blue --}}
+                                            {{ $l4->order }}</td>
                                         <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" x-data="{ checked: {{ $subchild->status ? 'true' : 'false' }} }"
-                                                    x-model="checked"
-                                                    @change="
-                                                            fetch('{{ route('admin.menus.toggle-status', $subchild->id) }}', {
-                                                                method: 'POST',
-                                                                headers: {
-                                                                    'Content-Type': 'application/json',
-                                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                                },
-                                                                body: JSON.stringify({ status: checked })
-                                                            })
-                                                            .then(res => res.json())
-                                                            .then(data => {
-                                                                if(data.success){
-                                                                    $dispatch('notify', { message: 'Status updated!', type: 'success' })
-                                                                } else {
-                                                                    $dispatch('notify', { message: 'Failed to update status', type: 'error' })
-                                                                }
-                                                            })
-                                                        "
-                                                    class="sr-only peer">
-                                                <div
-                                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
-                                                            peer peer-checked:after:translate-x-5 peer-checked:after:border-white
-                                                            after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                                                            after:bg-white after:border-gray-300 after:border after:rounded-full
-                                                            after:h-5 after:w-5 after:transition-all
-                                                            peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out">
-                                                </div>
-                                            </label>
+                                            @include('admin.menus.partials.status-toggle', ['item' => $l4])
                                         </td>
                                         <td class="px-6 py-4 text-center whitespace-nowrap">
-                                            <div class="flex items-center justify-center gap-2">
-                                                <a href="{{ route('admin.menus.edit', $subchild->id) }}"
-                                                    class="px-3 py-1.5 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2">
-                                                    <i class="bi bi-pencil-square"></i> Edit
-                                                </a>
-                                                <form action="{{ route('admin.menus.destroy', $subchild->id) }}"
-                                                    method="POST" class="inline">
-                                                    @csrf @method('DELETE')
-                                                    {{-- MODIFIED: Replaced onclick with @click.prevent to trigger custom modal --}}
-                                                    <button type="submit"
-                                                        @click.prevent="
-                                                            confirmModalTitle = 'Delete Sub-Submenu';
-                                                            confirmModalMessage = 'Are you sure you want to delete this item? This action cannot be undone.';
-                                                            formToSubmit = $el.closest('form');
-                                                            showConfirmModal = true;
-                                                        "
-                                                        class="px-3 py-1.5 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
-                                                        <i class="bi bi-trash"></i> Delete
-                                                    </button>
-                                                </form>
-                                            </div>
+                                            @include('admin.menus.partials.action-buttons', [
+                                                'item' => $l4,
+                                            ])
                                         </td>
                                     </tr>
+
+                                    {{-- Level 5 Loop --}}
+                                    @foreach ($menus->where('parent_id', $l4->id)->sortBy('order') as $l5)
+                                        <tr x-show="open" x-transition
+                                            class="transition bg-gray-100/70 hover:bg-gray-200/70">
+                                            <td
+                                                class="flex items-center py-4 italic text-gray-500 px-20 whitespace-nowrap">
+                                                <i class="text-gray-300 bi bi-dot me-2 text-xl"></i>
+                                                {{ $l5->title }}
+                                            </td>
+                                            <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                                {{ $l5->url }}</td>
+                                            <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
+                                                {{ $l4->title }}</td>
+                                            <td
+                                                class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                                {{ $l5->order }}</td>
+                                            <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                                @include('admin.menus.partials.status-toggle', [
+                                                    'item' => $l5,
+                                                ])
+                                            </td>
+                                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                                @include('admin.menus.partials.action-buttons', [
+                                                    'item' => $l5,
+                                                ])
+                                            </td>
+                                        </tr>
+
+                                        {{-- Level 6 Loop --}}
+                                        @foreach ($menus->where('parent_id', $l5->id)->sortBy('order') as $l6)
+                                            <tr x-show="open" x-transition
+                                                class="transition bg-gray-100/80 hover:bg-gray-200/80">
+                                                <td
+                                                    class="flex items-center py-4 italic text-gray-500 px-24 whitespace-nowrap">
+                                                    <i class="text-gray-300 bi bi-dot me-2 text-xl"></i>
+                                                    {{ $l6->title }}
+                                                </td>
+                                                <td class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                                    {{ $l6->url }}</td>
+                                                <td class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
+                                                    {{ $l5->title }}</td>
+                                                <td
+                                                    class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                                    {{ $l6->order }}</td>
+                                                <td class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                                    @include('admin.menus.partials.status-toggle', [
+                                                        'item' => $l6,
+                                                    ])
+                                                </td>
+                                                <td class="px-6 py-4 text-center whitespace-nowrap">
+                                                    @include('admin.menus.partials.action-buttons', [
+                                                        'item' => $l6,
+                                                    ])
+                                                </td>
+                                            </tr>
+
+                                            {{-- Level 7 Loop --}}
+                                            @foreach ($menus->where('parent_id', $l6->id)->sortBy('order') as $l7)
+                                                <tr x-show="open" x-transition
+                                                    class="transition bg-gray-100/90 hover:bg-gray-200/90">
+                                                    <td
+                                                        class="flex items-center py-4 italic text-gray-500 px-28 whitespace-nowrap">
+                                                        <i class="text-gray-300 bi bi-dot me-2 text-xl"></i>
+                                                        {{ $l7->title }}
+                                                    </td>
+                                                    <td
+                                                        class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                                        {{ $l7->url }}</td>
+                                                    <td
+                                                        class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
+                                                        {{ $l6->title }}</td>
+                                                    <td
+                                                        class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                                        {{ $l7->order }}</td>
+                                                    <td
+                                                        class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                                        @include('admin.menus.partials.status-toggle', [
+                                                            'item' => $l7,
+                                                        ])
+                                                    </td>
+                                                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                                                        @include('admin.menus.partials.action-buttons', [
+                                                            'item' => $l7,
+                                                        ])
+                                                    </td>
+                                                </tr>
+
+                                                {{-- Level 8 Loop --}}
+                                                @foreach ($menus->where('parent_id', $l7->id)->sortBy('order') as $l8)
+                                                    <tr x-show="open" x-transition
+                                                        class="transition bg-gray-100 hover:bg-gray-200">
+                                                        <td
+                                                            class="flex items-center py-4 italic text-gray-500 px-32 whitespace-nowrap">
+                                                            <i class="text-gray-300 bi bi-dot me-2 text-xl"></i>
+                                                            {{ $l8->title }}
+                                                        </td>
+                                                        <td
+                                                            class="hidden px-6 py-4 font-mono text-xs text-gray-600 sm:table-cell">
+                                                            {{ $l8->url }}</td>
+                                                        <td
+                                                            class="hidden px-6 py-4 text-gray-600 whitespace-nowrap lg:table-cell">
+                                                            {{ $l7->title }}</td>
+                                                        <td
+                                                            class="hidden px-6 py-4 text-center text-gray-600 whitespace-nowrap lg:table-cell">
+                                                            {{ $l8->order }}</td>
+                                                        <td
+                                                            class="hidden px-6 py-4 text-center whitespace-nowrap sm:table-cell">
+                                                            @include(
+                                                                'admin.menus.partials.status-toggle',
+                                                                ['item' => $l8]
+                                                            )
+                                                        </td>
+                                                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                                                            @include(
+                                                                'admin.menus.partials.action-buttons',
+                                                                ['item' => $l8]
+                                                            )
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            @endforeach
+                                        @endforeach
+                                    @endforeach
                                 @endforeach
                             @endforeach
-                        </tbody>
-                    @empty
-                        {{-- ADDED: Empty state row --}}
-                        <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                <i class="text-4xl text-gray-300 bi bi-list-ul"></i>
-                                <p class="mt-2 text-lg font-medium">No menus found</p>
-                                <p class="text-sm">Get started by creating a new menu.</p>
-                            </td>
-                        </tr>
+                        @endforeach
+                    </tbody>
+                @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <i class="text-4xl text-gray-300 bi bi-list-ul"></i>
+                            <p class="mt-2 text-lg font-medium">No menus found</p>
+                            <p class="text-sm">Get started by creating a new menu.</p>
+                        </td>
+                    </tr>
                     @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        {{-- ENHANCED: "Sweet" notification toast with progress bar --}}
+        {{-- Toast Notification (Bottom Right) --}}
         <div x-data="{
             show: false,
             message: '',
@@ -348,23 +364,24 @@
             progress: 100
         }"
             @notify.window="
-                message = $event.detail.message;
-                type = $event.detail.type || 'success';
-                show = true;
-                progress = 100;
+                    message = $event.detail.message;
+                    type = $event.detail.type || 'success';
+                    show = true;
+                    progress = 100;
 
-                clearInterval(timer);
+                    clearInterval(timer);
 
-                const startTime = Date.now();
-                timer = setInterval(() => {
-                    const elapsedTime = Date.now() - startTime;
-                    progress = 100 - (elapsedTime / duration) * 100;
-                    if (elapsedTime >= duration) {
-                        show = false;
-                        clearInterval(timer);
-                    }
-                }, 50); // Update progress every 50ms for smooth animation
-            " x-show="show" x-transition:enter="transition ease-out duration-300 transform"
+                    const startTime = Date.now();
+                    timer = setInterval(() => {
+                        const elapsedTime = Date.now() - startTime;
+                        progress = 100 - (elapsedTime / duration) * 100;
+                        if (elapsedTime >= duration) {
+                            show = false;
+                            clearInterval(timer);
+                        }
+                    }, 50);
+                "
+            x-show="show" x-transition:enter="transition ease-out duration-300 transform"
             x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
             x-transition:leave="transition ease-in duration-300 transform"
             x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2"
@@ -372,7 +389,6 @@
             :class="{ 'bg-blue-600': type === 'success', 'bg-red-600': type === 'error' }" role="alert">
 
             <div class="flex items-start p-4">
-                <!-- Icon -->
                 <div class="flex-shrink-0">
                     <template x-if="type === 'success'">
                         <i class="text-2xl text-white bi bi-check-circle-fill"></i>
@@ -382,14 +398,12 @@
                     </template>
                 </div>
 
-                <!-- Message -->
                 <div class="ml-3 w-0 flex-1 pt-0.5">
                     <p class="font-bold text-white" x-text="message"></p>
                     <p class="mt-1 text-sm text-white/80"
                         x-text="type === 'success' ? 'Update successful!' : 'An error occurred.'"></p>
                 </div>
 
-                <!-- Close Button -->
                 <div class="flex flex-shrink-0 ml-4">
                     <button @click="show = false; clearInterval(timer);"
                         class="inline-flex transition rounded-md text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
@@ -400,34 +414,28 @@
                 </div>
             </div>
 
-            <!-- Progress Bar -->
             <div class="h-1" :class="{ 'bg-blue-800/50': type === 'success', 'bg-red-800/50': type === 'error' }">
                 <div class="h-1 bg-white/50" :style="`width: ${progress}%`"></div>
             </div>
         </div>
 
-
-        {{-- ADDED: Beautiful Confirmation Modal --}}
-        <div x-show="showConfirmModal" style="display: none;"
-            x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
-            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-_            class="fixed inset-0 z-40 flex items-center justify-center p-4">
-            <!-- Backdrop -->
+        {{-- Delete Confirmation Modal --}}
+        <div x-show="showConfirmModal" style="display: none;" x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div @click="showConfirmModal = false; formToSubmit = null;" class="absolute inset-0 bg-gray-900/50"></div>
 
-            <!-- Modal Panel -->
-            <div x-show="showConfirmModal"
-                x-transition:enter="ease-out duration-300"
+            <div x-show="showConfirmModal" x-transition:enter="ease-out duration-300"
                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                x-transition:leave="ease-in duration-200"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 class="relative z-50 w-full max-w-md p-6 overflow-hidden bg-white shadow-xl rounded-2xl">
 
                 <div class="sm:flex sm:items-start">
-                    <div class="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-red-100 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                    <div
+                        class="flex items-center justify-center flex-shrink-0 w-12 h-12 mx-auto bg-red-100 rounded-full sm:mx-0 sm:h-10 sm:w-10">
                         <i class="text-xl text-red-600 bi bi-exclamation-triangle-fill"></i>
                     </div>
                     <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
@@ -453,4 +461,3 @@ _            class="fixed inset-0 z-40 flex items-center justify-center p-4">
 
     </div>
 @endsection
-

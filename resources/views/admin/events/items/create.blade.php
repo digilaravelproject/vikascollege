@@ -13,19 +13,14 @@
                 Back to List
             </a>
         </div>
-
+      
         {{-- Validation Errors (Copied from your reference) --}}
-        @if ($errors->any())
+        @if(session('error'))
             <div class="flex p-4 text-sm text-red-700 border border-red-200 rounded-lg bg-red-50" role="alert">
                 <i class="flex-shrink-0 inline w-5 h-5 mr-3 bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
                 <span class="sr-only">Danger</span>
                 <div>
-                    <span class="font-medium">Please fix the following errors:</span>
-                    <ul class="mt-1.5 list-disc list-inside">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                  {{ session('error') }}
                 </div>
             </div>
         @endif

@@ -1,16 +1,24 @@
 <?php
 
+use App\Http\Controllers\Frontend\LeadController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\PdfViewerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TrustController;
-use App\Http\Middleware\VerifyPdfFile;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UniversalPdfController;
 
-Route::get('/', function () {
-    return view('homepage');
-});
+// 1. Root Redirection: '/' will redirect to '/vikas'
+// Route::redirect('/', '/vikas');
+    Route::get('/', function () {
+        return view('homepage');
+    })->name('homepage');
 
+
+// 2. EXCLUDED ROUTES: Dashboard, Profile, Auth, and Admin routes
+// These routes will NOT have the 'vikas' prefix.
+
+Route::get('{any}', [UniversalPdfController::class, 'handle'])
+    ->where('any', '.*\.pdf$');
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -21,21 +29,27 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Route::get('/the-trust', function () {
-//     return "The Trust";
-// })->name('the-trust');
-
-Route::get('/the-trust/{slug?}', [TrustController::class, 'index'])->name('trust.index');
-
-// Route to render the PDF viewer
-// Route::get('/render-pdf', [PdfViewerController::class, 'show'])
-//     ->middleware(VerifyPdfFile::class)
-//     ->name('pdf.viewer');
-
 require __DIR__ . '/auth.php'; // Breeze authentication routes
 require __DIR__ . '/admin.php'; // Admin routes
 
-// 🧩 Finally — the dynamic page slug route
-Route::get('{slug}', [PageController::class, 'show'])
-    ->where('slug', '^[a-zA-Z0-9\-_\/]+$')
-    ->name('page.view');
+// 3. PUBLIC ROUTES GROUP: Applying the 'vikas' prefix to all public URLs
+Route::prefix('vikas')->group(function () {
+  Route::post('/send-otp', [LeadController::class, 'sendOtp'])->name('send.otp');
+    Route::post('/verify-otp', [LeadController::class, 'verifyOtp'])->name('verify.otp');
+    Route::post('/submit-admission', [LeadController::class, 'submitAdmission'])->name('submit.admission');
+    Route::post('/submit-enquiry', [LeadController::class, 'submitEnquiry'])->name('submit.enquiry');
+
+    // URL: /vikas
+    // Route::get('/', function () {
+    //     return view('homepage');
+    // })->name('homepage');
+
+    // URL: /vikas/the-trust
+    Route::get('/the-trust/{slug?}', [TrustController::class, 'index'])->name('trust.index');
+
+    // URL: /vikas/{slug} (Dynamic Pages)
+    // Note: Since the prefix is 'vikas', we only need '/{slug}' here.
+    Route::get('/{slug}', [PageController::class, 'show'])
+        ->where('slug', '^[a-zA-Z0-9\-_\/]+$')
+        ->name('page.view');
+});

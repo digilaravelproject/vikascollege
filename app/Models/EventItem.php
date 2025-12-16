@@ -13,6 +13,7 @@ class EventItem extends Model
         'image',
         'event_date',
         'venue',
+        'link', // <--- Added here
         'short_description',
         'full_content',
         'status',
