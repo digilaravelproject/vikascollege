@@ -336,77 +336,91 @@
                                                         </template>
 
                                                         {{-- START: NEW TABLE SUB-BLOCK TEMPLATE --}}
-                                                        <template x-if="sub.type === 'table'">
-                                                            <div class="space-y-4">
-                                                                {{-- Table Controls --}}
-                                                                <div class="flex flex-wrap gap-2">
-                                                                    <button @click.prevent="addRow(sub)"
-                                                                        class="px-3 py-1 text-sm bg-green-100 rounded hover:bg-green-200">+
-                                                                        Row</button>
-                                                                    <button @click.prevent="removeRow(sub)"
-                                                                        :disabled="sub.data.length <= 1"
-                                                                        class="px-3 py-1 text-sm bg-red-100 rounded hover:bg-red-200 disabled:opacity-50">-
-                                                                        Row</button>
-                                                                    <button @click.prevent="addCol(sub)"
-                                                                        class="px-3 py-1 text-sm bg-green-100 rounded hover:bg-green-200">+
-                                                                        Column</button>
-                                                                    <button @click.prevent="removeCol(sub)"
-                                                                        :disabled="sub.data[0].length <= 1"
-                                                                        class="px-3 py-1 text-sm bg-red-100 rounded hover:bg-red-200 disabled:opacity-50">-
-                                                                        Column</button>
-                                                                </div>
+<template x-if="sub.type === 'table'">
+    <div class="space-y-4">
+        {{-- Table Controls --}}
+        <div class="flex flex-wrap gap-2">
+            <button @click.prevent="addRow(sub)"
+                class="px-3 py-1 text-sm bg-green-100 rounded hover:bg-green-200">+ Row</button>
+            <button @click.prevent="removeRow(sub)" :disabled="sub.data.length <= 1"
+                class="px-3 py-1 text-sm bg-red-100 rounded hover:bg-red-200 disabled:opacity-50">- Row</button>
+            <button @click.prevent="addCol(sub)"
+                class="px-3 py-1 text-sm bg-green-100 rounded hover:bg-green-200">+ Column</button>
+            <button @click.prevent="removeCol(sub)" :disabled="sub.data[0].length <= 1"
+                class="px-3 py-1 text-sm bg-red-100 rounded hover:bg-red-200 disabled:opacity-50">- Column</button>
+        </div>
 
-                                                                {{-- Table Renderer --}}
-                                                                <div class="overflow-x-auto border border-gray-200 rounded">
-                                                                    <table class="min-w-full divide-y divide-gray-200">
-                                                                        <template x-if="sub.data.length > 0">
-                                                                            <thead class="bg-gray-100">
-                                                                                <tr
-                                                                                    class="text-xs text-gray-700 uppercase leading-normal">
-                                                                                    <template
-                                                                                        x-for="(col, colIndex) in sub.data[0]"
-                                                                                        :key="colIndex">
-                                                                                        <th
-                                                                                            class="py-2 px-3 border-r border-gray-200">
-                                                                                            <input type="text"
-                                                                                                x-model.debounce.400ms="sub.data[0][colIndex]"
-                                                                                                @input="pushHistory"
-                                                                                                class="w-full text-center bg-transparent border-none focus:ring-0 p-0 text-sm font-bold"
-                                                                                                placeholder="Header" />
-                                                                                        </th>
-                                                                                    </template>
-                                                                                </tr>
-                                                                            </thead>
-                                                                        </template>
-                                                                        <tbody
-                                                                            class="text-gray-600 text-sm font-light divide-y divide-gray-200">
-                                                                            <template x-for="(row, rowIndex) in sub.data"
-                                                                                :key="rowIndex">
-                                                                                <template x-if="rowIndex > 0">
-                                                                                    <tr class="hover:bg-gray-50">
-                                                                                        <template
-                                                                                            x-for="(cell, colIndex) in row"
-                                                                                            :key="colIndex">
-                                                                                            <td
-                                                                                                class="py-1 px-2 border-r border-gray-200 align-top">
-                                                                                                {{-- Using a textarea for
-                                                                                                multi-line support --}}
-                                                                                                <textarea
-                                                                                                    x-model.debounce.400ms="sub.data[rowIndex][colIndex]"
-                                                                                                    @input="pushHistory"
-                                                                                                    rows="2"
-                                                                                                    class="w-full p-1 text-sm border border-gray-200 rounded focus:border-blue-300 resize-none"></textarea>
-                                                                                            </td>
-                                                                                        </template>
-                                                                                    </tr>
-                                                                                </template>
-                                                                            </template>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                        </template>
-                                                        {{-- END: NEW TABLE SUB-BLOCK TEMPLATE --}}
+        {{-- Table Renderer --}}
+        <div class="overflow-x-auto border border-gray-200 rounded">
+            <table class="min-w-full divide-y divide-gray-200">
+                <template x-if="sub.data.length > 0">
+                    <thead class="bg-gray-100">
+                        <tr class="text-xs text-gray-700 uppercase leading-normal">
+                            <template x-for="(col, colIndex) in sub.data[0]" :key="colIndex">
+                                <th class="py-2 px-3 border-r border-gray-200 min-w-[150px]">
+                                    {{-- Header is also an object now --}}
+                                    <input type="text" 
+                                        x-model.debounce.400ms="sub.data[0][colIndex].text"
+                                        @input="pushHistory"
+                                        class="w-full text-center bg-transparent border-none focus:ring-0 p-0 text-sm font-bold"
+                                        placeholder="Header" />
+                                </th>
+                            </template>
+                        </tr>
+                    </thead>
+                </template>
+                <tbody class="text-gray-600 text-sm font-light divide-y divide-gray-200">
+                    <template x-for="(row, rowIndex) in sub.data" :key="rowIndex">
+                        <template x-if="rowIndex > 0">
+                            <tr class="hover:bg-gray-50">
+                                <template x-for="(cell, colIndex) in row" :key="colIndex">
+                                    <td class="py-2 px-2 border-r border-gray-200 align-top min-w-[150px]">
+                                        
+                                        {{-- 1. IMAGE DISPLAY --}}
+                                        <template x-if="cell.img && cell.img !== ''">
+                                            <div class="mb-2 relative group-img text-center">
+                                                <img :src="cell.img" class="w-16 h-16 object-cover rounded mx-auto border shadow-sm" />
+                                                <button @click="cell.img = ''; pushHistory();" 
+                                                    class="absolute -top-2 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md"
+                                                    title="Remove Image">
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        {{-- 2. TEXT INPUT --}}
+                                        {{-- Note: Binding to cell.text now --}}
+                                        <textarea
+                                            x-model.debounce.400ms="cell.text"
+                                            @input="pushHistory"
+                                            rows="2"
+                                            class="w-full p-2 text-sm border border-gray-200 rounded focus:border-blue-300 focus:ring-2 focus:ring-blue-100 outline-none resize-none transition"
+                                            placeholder="Type text..."></textarea>
+
+                                        {{-- 3. UPLOAD BUTTON --}}
+                                        {{-- Only shows if no image exists --}}
+                                        <template x-if="!cell.img">
+                                            <div class="mt-2 text-center">
+                                                <label class="cursor-pointer inline-flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
+                                                    <span>📷 Add Photo</span>
+                                                    {{-- Passing 'sub' as the block --}}
+                                                    <input type="file" accept="image/*" class="hidden" 
+                                                        @change="handleTableUpload($event, sub, rowIndex, colIndex)">
+                                                </label>
+                                            </div>
+                                        </template>
+
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</template>
+{{-- END: NEW TABLE SUB-BLOCK TEMPLATE --}}
 
 
                                                     </div>
@@ -978,7 +992,83 @@
                 historyStack: [],
                 redoStack: [],
 
-                initAll() {
+initAll() {
+    try {
+        // Robust initial content loading via script[type=application/json]
+        const scriptEl = document.getElementById('pb-initial-content');
+        let initial = null;
+        if (scriptEl) {
+            try {
+                initial = JSON.parse(scriptEl.textContent || '');
+            } catch (_) {
+                initial = null;
+            }
+        }
+
+        if (initial && initial.blocks && Array.isArray(initial.blocks)) {
+            this.blocks = initial.blocks.map(b => ({
+                ...b,
+                id: b.id || this._genId()
+            }));
+        } else if (Array.isArray(initial)) {
+            this.blocks = initial.map(b => ({
+                ...b,
+                id: b.id || this._genId()
+            }));
+        } else {
+            this.blocks = [];
+        }
+
+        // ============================================================
+        // 🔥 FIX FOR OLD DATA (Migration Script)
+        // ============================================================
+        this.blocks.forEach(block => {
+            
+            // 1. Root Level Table Fix
+            if (block.type === 'table' && Array.isArray(block.data)) {
+                block.data = block.data.map(row => {
+                    return row.map(cell => {
+                        // Agar cell String hai (Purana Data), toh usse Object bana do
+                        if (typeof cell !== 'object' || cell === null) {
+                            return { text: cell, img: '' };
+                        }
+                        return cell; // Agar already object hai, toh waisa hi rehne do
+                    });
+                });
+            }
+
+            // 2. Section Level Table Fix (Nested Blocks)
+            if (block.type === 'section' && Array.isArray(block.blocks)) {
+                block.blocks.forEach(sub => {
+                    if (sub.type === 'table' && Array.isArray(sub.data)) {
+                        sub.data = sub.data.map(row => {
+                            return row.map(cell => {
+                                // Agar cell String hai, toh Object bana do
+                                if (typeof cell !== 'object' || cell === null) {
+                                    return { text: cell, img: '' };
+                                }
+                                return cell;
+                            });
+                        });
+                    }
+                });
+            }
+        });
+        // ============================================================
+        // END FIX
+        // ============================================================
+
+        this.$nextTick(() => {
+            this.initAllQuills();
+            this.initSortables();
+            this.pushHistory();
+        });
+    } catch (e) {
+        console.error('initAll failed:', e);
+        Swal.fire('Error', 'Failed to initialize page builder.', 'error');
+    }
+},
+                initAll_old() {
                     try {
                         // Robust initial content loading via script[type=application/json]
                         const scriptEl = document.getElementById('pb-initial-content');
@@ -1088,9 +1178,24 @@
                         // START: New logic for table initialization
                         if (newBlock.type === 'table' && !Array.isArray(newBlock.data)) {
                             newBlock.data = [
-                                ['Header 1', 'Header 2', 'Header 3'],
-                                ['Cell 1,1', 'Cell 1,2', 'Cell 1,3'],
-                                ['Cell 2,1', 'Cell 2,2', 'Cell 2,3'],
+                               // Row 1 (Headers)
+        [
+            { text: 'Header 1', img: '' }, 
+            { text: 'Header 2', img: '' }, 
+            { text: 'Header 3', img: '' }
+        ],
+        // Row 2 (Data)
+        [
+            { text: 'Cell 1,1', img: '' }, 
+            { text: 'Cell 1,2', img: '' }, 
+            { text: 'Cell 1,3', img: '' }
+        ],
+        // Row 3 (Data)
+        [
+            { text: 'Cell 2,1', img: '' }, 
+            { text: 'Cell 2,2', img: '' }, 
+            { text: 'Cell 2,3', img: '' }
+        ],
                             ];
                         }
                         // END: New logic for table initialization
@@ -1137,9 +1242,24 @@
                         // START: New logic for table initialization
                         if (newBlock.type === 'table' && !Array.isArray(newBlock.data)) {
                             newBlock.data = [
-                                ['Header 1', 'Header 2', 'Header 3'],
-                                ['Cell 1,1', 'Cell 1,2', 'Cell 1,3'],
-                                ['Cell 2,1', 'Cell 2,2', 'Cell 2,3'],
+                               // Row 1 (Headers)
+        [
+            { text: 'Header 1', img: '' }, 
+            { text: 'Header 2', img: '' }, 
+            { text: 'Header 3', img: '' }
+        ],
+        // Row 2 (Data)
+        [
+            { text: 'Cell 1,1', img: '' }, 
+            { text: 'Cell 1,2', img: '' }, 
+            { text: 'Cell 1,3', img: '' }
+        ],
+        // Row 3 (Data)
+        [
+            { text: 'Cell 2,1', img: '' }, 
+            { text: 'Cell 2,2', img: '' }, 
+            { text: 'Cell 2,3', img: '' }
+        ],
                             ];
                         }
                         // END: New logic for table initialization
@@ -1572,32 +1692,40 @@ changeGridLayout(block) {
                         const file = e.target.files[0];
                         if (!file) return;
 
-                        const {
-                            value: formValues
-                        } = await Swal.fire({
-                            title: "Upload Options",
-                            html: `
-                                                                                                <input id="custom_name" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
-                                                                                                <select id="base_path" class="swal2-select" style="width: 100%; margin-top: 10px;">
-                                                                                                    <option value="storage" selected>storage</option>
-                                                                                                    <option value="wp-content">wp-content</option>
-                                                                                                </select>
-                                                                                            `,
-                            focusConfirm: false,
-                            preConfirm: () => ({
-                                custom_name: document.getElementById("custom_name").value,
-                                base_path: document.getElementById("base_path").value,
-                            }),
-                            confirmButtonText: "Upload",
-                            showCancelButton: true,
-                        });
+                        // const {
+                        //     value: formValues
+                        // } = await Swal.fire({
+                        //     title: "Upload Options",
+                        //     html: `
+                        //                                                                         <input id="custom_name" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
+                        //                                                                         <select id="base_path" class="swal2-select" style="width: 100%; margin-top: 10px;">
+                        //                                                                             <option value="storage" selected>storage</option>
+                        //                                                                             <option value="wp-content">wp-content</option>
+                        //                                                                         </select>
+                        //                                                                     `,
+                        //     focusConfirm: false,
+                        //     preConfirm: () => ({
+                        //         custom_name: document.getElementById("custom_name").value,
+                        //         base_path: document.getElementById("base_path").value,
+                        //     }),
+                        //     confirmButtonText: "Upload",
+                        //     showCancelButton: true,
+                        // });
 
-                        if (!formValues) return;
+                        // if (!formValues) return;
 
-                        const formData = new FormData();
-                        formData.append("file", file);
-                        formData.append("base_path", formValues.base_path || "storage");
-                        formData.append("custom_name", formValues.custom_name || "");
+                        // const formData = new FormData();
+                        // formData.append("file", file);
+                        // formData.append("base_path", formValues.base_path || "storage");
+                        // formData.append("custom_name", formValues.custom_name || "");
+                        
+                        const basePath = "storage"; 
+        const customName = ""; 
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("base_path", basePath); 
+        formData.append("custom_name", customName);
 
                         Swal.fire({
                             title: 'Uploading...',
@@ -1663,34 +1791,35 @@ changeGridLayout(block) {
         if (!file) return;
 
         // 1. SweetAlert se naam aur path poochna (Same as existing logic)
-        const { value: formValues } = await Swal.fire({
-            title: "Upload Photo",
-            html: `
-                <input id="custom_name_tbl" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
-                <select id="base_path_tbl" class="swal2-select" style="width: 100%; margin-top: 10px;">
-                    <option value="storage" selected>storage</option>
-                    <option value="wp-content">wp-content</option>
-                </select>
-            `,
-            focusConfirm: false,
-            preConfirm: () => ({
-                custom_name: document.getElementById("custom_name_tbl").value,
-                base_path: document.getElementById("base_path_tbl").value,
-            }),
-            confirmButtonText: "Upload",
-            showCancelButton: true,
-        });
+        // const { value: formValues } = await Swal.fire({
+        //     title: "Upload Photo",
+        //     html: `
+        //         <input id="custom_name_tbl" class="swal2-input" placeholder="File name (optional)" style="width: 100%;" />
+        //         <select id="base_path_tbl" class="swal2-select" style="width: 100%; margin-top: 10px;">
+        //             <option value="storage" selected>storage</option>
+        //             <option value="wp-content">wp-content</option>
+        //         </select>
+        //     `,
+        //     focusConfirm: false,
+        //     preConfirm: () => ({
+        //         custom_name: document.getElementById("custom_name_tbl").value,
+        //         base_path: document.getElementById("base_path_tbl").value,
+        //     }),
+        //     confirmButtonText: "Upload",
+        //     showCancelButton: true,
+        // });
 
-        if (!formValues) {
-            e.target.value = null; // Reset input
-            return;
-        }
-
+        // if (!formValues) {
+        //     e.target.value = null; // Reset input
+        //     return;
+        // }
+const basePath = "storage"; 
+        const customName = "";
         // 2. Uploading Animation
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("base_path", formValues.base_path || "storage");
-        formData.append("custom_name", formValues.custom_name || "");
+        formData.append("base_path", basePath);
+        formData.append("custom_name", customName);
 
         Swal.fire({
             title: 'Uploading...',
