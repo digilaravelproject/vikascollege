@@ -274,7 +274,7 @@ Contains: Logo + Search (Desktop) + Hamburger (Mobile)
                     @if ($topBannerImage)
                         {{-- Added loading="lazy" and decoding="async" here --}}
                         <img loading="lazy" decoding="async" src="{{ asset('storage/' . $topBannerImage) }}"
-                            alt="College Banner" class="object-contain object-left w-auto h-24 sm:h-28 md:h-28 lg:h-32">
+                            alt="College Banner" class="object-contain object-left w-auto h-20 sm:h-24 md:h-28 lg:h-32">
                     @else
                         {{-- Fallback --}}
                         <div class="h-24 flex items-center text-[#013954] font-bold text-xl">
