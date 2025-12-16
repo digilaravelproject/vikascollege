@@ -221,6 +221,20 @@
                                         <label for="linkedin_url" class="block mb-1.5 text-sm font-medium text-gray-700">LinkedIn URL</label>
                                         <input type="url" id="linkedin_url" name="linkedin_url" value="{{ old('linkedin_url', $data['linkedin_url']) }}" class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                     </div>
+                                    {{-- Library Toggle --}}
+<div class="flex items-center justify-between p-3 border border-gray-300 rounded-lg bg-gray-50">
+    <div class="flex flex-col">
+        <label for="library_enabled" class="text-sm font-medium text-gray-700">Library Section</label>
+        <span class="text-xs text-gray-500">Enable/Disable Library</span>
+    </div>
+    <label class="relative inline-flex items-center cursor-pointer">
+        {{-- Hidden input ensures '0' is sent if unchecked --}}
+        <input type="hidden" name="library_enabled" value="0">
+        <input type="checkbox" id="library_enabled" name="library_enabled" value="1" class="sr-only peer"
+            {{ old('library_enabled', $data['library_enabled'] ?? 0) ? 'checked' : '' }}>
+        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+    </label>
+</div>
                                 </div>
                             </div>
                         </div>
