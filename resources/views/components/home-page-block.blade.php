@@ -26,8 +26,6 @@
 
 @endphp
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Marcellus&display=swap');
-
     :root {
         --header-font: "Marcellus", serif !important;
     }

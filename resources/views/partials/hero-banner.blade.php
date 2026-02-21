@@ -69,7 +69,9 @@
 
 {{-- 2. DYNAMIC BANNER SECTION (Slider) --}}
 @php
-    $banners = \App\Models\Setting::where('key', 'like', 'banner_media_%')->get();
+    $banners = \Illuminate\Support\Facades\Cache::remember('banner_media_all', 3600, function() {
+        return \App\Models\Setting::where('key', 'like', 'banner_media_%')->get();
+    });
 @endphp
 
 @if ($banners->count())
@@ -79,19 +81,19 @@
     <section class="relative w-full overflow-hidden banner-image">
         <div class="swiper mySwiper">
             <div class="swiper-wrapper">
-                @foreach ($banners as $banner)
+                @foreach ($banners as $index => $banner)
                     @php $data = json_decode($banner->value, true); @endphp
                     <div class="relative swiper-slide">
                         @if ($data['type'] === 'image')
                             <img src="{{ asset('storage/' . $data['path']) }}"
-                                class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center transition-transform duration-700 hover:scale-105" />
+                                class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center transition-transform duration-700 hover:scale-105"
+                                @if($index === 0) fetchpriority="high" @else loading="lazy" @endif />
                         @else
                             <video
                                 class="w-full h-[380px] sm:h-[450px] lg:h-[520px] xl:h-[600px] object-cover object-center your-slider-video"
-                                autoplay muted loop playsinline preload="metadata" ">
-                                                                        <source src=" {{ asset('storage/' . $data['path']) }}"
-                                type="video/mp4" />
-                            Aapka browser video tag support nahi karta.
+                                autoplay muted loop playsinline @if($index === 0) preload="auto" fetchpriority="high" @else preload="metadata" loading="lazy" @endif>
+                                <source src="{{ asset('storage/' . $data['path']) }}" type="video/mp4" />
+                                Aapka browser video tag support nahi karta.
                             </video>
                         @endif
 
@@ -140,7 +142,7 @@
 @endif
 {{-- 4. NOTICE BOARD MODAL --}}
 <div id="notice-modal"
-    class="fixed inset-0 z-[65] flex items-center justify-center p-3 bg-black/50 transition-all duration-300 ease-out hidden opacity-0">
+    class="fixed inset-0 z-[65] items-center justify-center p-3 bg-black/50 transition-all duration-300 ease-out hidden opacity-0">
 
     <div id="notice-modal-content"
         class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col transform transition-all duration-300 ease-out scale-90 opacity-0 overflow-hidden border border-gray-200">

@@ -82,33 +82,30 @@ class HomePageBlock extends Component
         $this->eventCategories = Cache::remember('event_categories_all', 3600, function () {
             return EventCategory::orderBy('id', 'asc')->get(['id', 'name']);
         });
-    
-        // 2. Fetch Events
-        $this->items = Cache::remember('all_events_for_homepage', 3600, function () {
-            $upcoming = EventItem::with('category')
+
+        // 2. Fetch and Map Events (Cached as array to save memory/processing)
+        $this->items = Cache::remember('all_events_for_homepage_v2', 3600, function () {
+            $upcomingQuery = EventItem::with('category')
                 ->where('event_date', '>=', now())
                 ->orderBy('event_date', 'asc')
                 ->get();
-    
-            $recent = EventItem::with('category')
+
+            $recentQuery = EventItem::with('category')
                 ->where('event_date', '<', now())
                 ->orderBy('event_date', 'desc')
                 ->get();
-    
-            return $upcoming->merge($recent);
-        });
-    
-        // 3. Map Data (Added 'link' here)
-        $this->items = $this->items->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'title' => $item->title,
-                'formatted_date' => $item->event_date ? $item->event_date->format('M d, Y') : '', // Shortened date for cards
-                'location' => $item->venue,
-                'category_id' => $item->category->id ?? null,
-                'image_url' => $item->image ? asset('storage/' . $item->image) : 'https://via.placeholder.com/400x250',
-                'link' => $item->link ?? null, // <--- NEW LINK FIELD
-            ];
+
+            return $upcomingQuery->merge($recentQuery)->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'formatted_date' => $item->event_date ? $item->event_date->format('M d, Y') : '',
+                    'location' => $item->venue,
+                    'category_id' => $item->category->id ?? null,
+                    'image_url' => $item->image ? asset('storage/' . $item->image) : 'https://via.placeholder.com/400x250',
+                    'link' => $item->link ?? null,
+                ];
+            });
         });
     }
 

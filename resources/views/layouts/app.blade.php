@@ -9,6 +9,9 @@
     {{-- ... (meta tags, title, description, favicon) ... --}}
     <link rel="icon" href="{{ asset('storage/' . setting('favicon')) }}" type="image/image">
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Marcellus&display=swap" rel="stylesheet">
     @php
         $seoTitle = setting('meta_title');
         $seoDescription = setting('meta_description');
@@ -35,7 +38,6 @@
     @if ($seoImage)
         <meta name="twitter:image" content="{{ asset('storage/' . $seoImage) }}">
     @endif
-    {{-- <script src="https://cdn.tailwindcss.com"></script> --}}
     <script src="https://cdn.tailwindcss.com"></script>
     @stack('styles')
 </head>
