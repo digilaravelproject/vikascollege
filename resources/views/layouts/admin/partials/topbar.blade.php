@@ -16,10 +16,10 @@
 
         <div class="flex items-center gap-3">
 
-            <div class="hidden md:block">
-                <input type="search" placeholder="Search..."
-                    class="w-64 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
-            </div>
+            <!--<div class="hidden md:block">-->
+            <!--    <input type="search" placeholder="Search..."-->
+            <!--        class="w-64 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">-->
+            <!--</div>-->
 
             <button
                 class="p-2 text-gray-500 rounded-md hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">

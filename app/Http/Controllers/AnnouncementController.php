@@ -107,7 +107,7 @@ class AnnouncementController extends Controller
             // Normalize link
             $validated['link'] = $this->normalizeLink($validated['link'] ?? null);
 
-            $validated['status'] = (bool)($validated['status'] ?? $announcement->status);
+            $validated['status'] = $request->has('status');
 
             $announcement->update($validated);
 

@@ -239,15 +239,15 @@
                     @endforeach
                 @else
                     {{-- This is your original fallback content --}}
-                    <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
-                    <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
-                    <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
-                    <span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>
+                    <!--<span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>-->
+                    <!--<span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>-->
+                    <!--<span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>-->
+                    <!--<span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>-->
 
-                    <span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>
-                    <span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>
-                    <span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>
-                    <span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>
+                    <!--<span>🎓 Admissions Open 2025–26 — <a href="#" class="marquee-link">Apply Now</a></span>-->
+                    <!--<span>🏆 Merit List Declared — <a href="#" class="marquee-link">View Results</a></span>-->
+                    <!--<span>🎭 Annual Cultural Fest Coming Soon — <a href="#" class="marquee-link">Know More</a></span>-->
+                    <!--<span>📚 Exam Timetable Released — <a href="#" class="marquee-link">Check Schedule</a></span>-->
                 @endif
             </div>
         </div>
@@ -339,8 +339,6 @@ Contains: Logo + Search (Desktop) + Hamburger (Mobile)
                             No menu items found.
                         </div>
                     </div>
-
-                    {{-- Social Media Icons (Below Search Bar) --}}
                     {{-- Social Media Icons (Below Search Bar) --}}
                     @if ($facebook || $twitter || $instagram || $youtube || $linkedin || $libraryEnabled)
                         <div class="flex justify-center w-full gap-2">
@@ -405,17 +403,17 @@ Contains: Logo + Search (Desktop) + Hamburger (Mobile)
         
         <a href="{{ url('/vikas/library-reading-room') }}" 
            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition border border-[#F59E0B] bg-[#F59E0B] text-white hover:bg-white hover:text-[#F59E0B]" 
-           aria-label="Gallery">
+           aria-label="library-reading-room">
             
             {{-- Updated Gallery/Photo Icon --}}
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21.04 12.13C21.18 12.05 21.26 11.9 21.26 11.74V5.74C21.26 5.33 20.93 5 20.52 5H3.48C3.07 5 2.74 5.33 2.74 5.74V18.26C2.74 18.67 3.07 19 3.48 19H20.52C20.93 19 21.26 18.67 21.26 18.26V15.91C21.26 15.75 21.18 15.6 21.04 15.52L17.2 13.33L21.04 12.13ZM19.78 6.48V10.8L15.34 12.19L12.3 9.76L19.78 6.48ZM17.06 14.59L19.78 16.14V17.52H4.22V6.48H18.16L10.99 9.62C10.79 9.71 10.59 9.71 10.39 9.62L4.22 13.96V12.15L8.74 8.97L15.63 14.48C16.03 14.8 16.61 14.84 17.06 14.59ZM6.44 9.44C7.05 9.44 7.55 8.94 7.55 8.33C7.55 7.72 7.05 7.22 6.44 7.22C5.83 7.22 5.33 7.72 5.33 8.33C5.33 8.94 5.83 9.44 6.44 9.44Z"/>
-            </svg>
+  <path d="M4 6H2V20C2 21.1 2.9 22 4 22H18V20H4V6ZM20 2H8C6.9 2 6 2.9 6 4V16C6 17.1 6.9 18 8 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H8V4H20V16ZM10 6H18V8H10V6ZM10 10H18V12H10V10ZM10 14H15V16H10V14Z"/>
+</svg>
         </a>
 
         {{-- Tooltip (Hover pe dikhega) --}}
         <span class="absolute px-2 py-1 mb-1 text-[10px] font-medium text-white transition-opacity transform -translate-x-1/2 bg-gray-800 rounded opacity-0 pointer-events-none left-1/2 bottom-full group-hover:opacity-100 whitespace-nowrap shadow-lg z-50">
-            Photo Gallery
+            Library
         </span>
     </div>
 @endif

@@ -44,7 +44,10 @@
 
             {{-- COLUMN 1: ONLY DARK BANNER IMAGE --}}
             <div class="space-y-4">
-                <div class="mb-4">
+                
+
+                <p class="mb-1 text-sm leading-relaxed text-gray-200">{{ $footerAbout }}</p>
+                <div class="mb-1">
                     @if ($footerBanner)
                         {{-- Added loading="lazy" and decoding="async" --}}
                         <img loading="lazy" decoding="async" src="{{ asset('storage/' . $footerBanner) }}" alt="{{ $collegeName }}"
@@ -52,10 +55,8 @@
                     @endif
                     
                     {{-- Tagline --}}
-                    <div class="mt-3 text-sm text-gray-200">Shaping futures with excellence</div>
+                    <!--<div class="mt-3 text-sm text-gray-200">Shaping futures with excellence</div>-->
                 </div>
-
-                <p class="text-sm leading-relaxed text-gray-200">{{ $footerAbout }}</p>
 
                 @if ($facebook || $twitter || $instagram || $youtube || $linkedin)
                     <div class="flex gap-3 pt-2">
@@ -141,36 +142,36 @@
             {{-- COLUMN 3: RESOURCES & USEFUL LINKS --}}
             <div>
                 <div class="mb-4 text-sm font-semibold tracking-wider text-white uppercase">Resources</div>
-                <ul class="space-y-3 text-sm">
-                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
-                            href="{{ url('/admissions') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                    clip-rule="evenodd"></path>
-                            </svg> <span>Admissions</span></a></li>
-                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
-                            href="{{ url('/departments') }}"><svg class="w-3 h-3 text-white" fill="currentColor"
-                                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                    clip-rule="evenodd"></path>
-                            </svg> <span>Departments</span></a></li>
-                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
-                            href="{{ url('/events') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                    clip-rule="evenodd"></path>
-                            </svg> <span>Events</span></a></li>
-                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
-                            href="{{ url('/contact') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                    clip-rule="evenodd"></path>
-                            </svg> <span>Contact</span></a></li>
-                </ul>
+                <!--<ul class="space-y-3 text-sm">-->
+                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
+                <!--            href="{{ url('/admissions') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"-->
+                <!--                xmlns="http://www.w3.org/2000/svg">-->
+                <!--                <path fill-rule="evenodd"-->
+                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
+                <!--                    clip-rule="evenodd"></path>-->
+                <!--            </svg> <span>Admissions</span></a></li>-->
+                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
+                <!--            href="{{ url('/departments') }}"><svg class="w-3 h-3 text-white" fill="currentColor"-->
+                <!--                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">-->
+                <!--                <path fill-rule="evenodd"-->
+                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
+                <!--                    clip-rule="evenodd"></path>-->
+                <!--            </svg> <span>Departments</span></a></li>-->
+                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
+                <!--            href="{{ url('/events') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"-->
+                <!--                xmlns="http://www.w3.org/2000/svg">-->
+                <!--                <path fill-rule="evenodd"-->
+                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
+                <!--                    clip-rule="evenodd"></path>-->
+                <!--            </svg> <span>Events</span></a></li>-->
+                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
+                <!--            href="{{ url('/contact') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"-->
+                <!--                xmlns="http://www.w3.org/2000/svg">-->
+                <!--                <path fill-rule="evenodd"-->
+                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
+                <!--                    clip-rule="evenodd"></path>-->
+                <!--            </svg> <span>Contact</span></a></li>-->
+                <!--</ul>-->
 
                 <div class="mt-6 mb-4 text-sm font-semibold tracking-wider text-white uppercase">Useful Links</div>
                 <ul class="space-y-3 text-sm">

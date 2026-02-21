@@ -24,7 +24,38 @@ class PageBuilderController extends Controller
     /**
      * Display a listing of the pages.
      */
-    public function index(): ViewView|RedirectResponse
+     public function index(Request $request): ViewView|JsonResponse|RedirectResponse
+{
+    $this->authorize('view pages');
+    try {
+        $query = Page::query()->latest();
+
+        // Search Logic (Title aur Slug dono par)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                  ->orWhere('slug', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Pagination (10 pages per page)
+        $pages = $query->paginate(10);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.pagebuilder.partials._table_rows', compact('pages'))->render(),
+                'pagination' => (string) $pages->links()
+            ]);
+        }
+
+        return view('admin.pagebuilder.index', compact('pages'));
+    } catch (Exception $e) {
+        Log::error('PageBuilder Index Error: ' . $e->getMessage());
+        return back()->with('error', 'Failed to load pages.');
+    }
+}
+    public function index_old(): ViewView|RedirectResponse
     {
         $this->authorize('view pages');
         try {

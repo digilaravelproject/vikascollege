@@ -196,21 +196,13 @@
         </div>
 
         {{-- 7. Auto-create Page --}}
-        <div>
-            <label class="block mb-1.5 text-sm font-medium text-gray-700">Auto-create Page</label>
-            <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="create_page" value="1" class="sr-only peer" x-model="createPage">
-                <div
-                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full
-                    peer peer-checked:after:translate-x-5 peer-checked:after:border-white
-                    after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                    after:bg-white after:border border-gray-300 after:rounded-full
-                    after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600
-                    transition-colors duration-300 ease-in-out">
-                </div>
-                <span class="ml-3 text-sm font-medium text-gray-700"
-                    x-text="createPage ? 'Enabled' : 'Disabled'"></span>
-            </label>
+      <div x-data="{ createPage: false }"> <label class="block mb-1.5 text-sm font-medium text-gray-700">Auto-create Page</label>
+    <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" name="create_page" value="1" class="sr-only peer" x-model="createPage">
+        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 transition-colors duration-300 ease-in-out"></div>
+        <span class="ml-3 text-sm font-medium text-gray-700" x-text="createPage ? 'Enabled' : 'Disabled'"></span>
+    </label>
+
             <p class="mt-1.5 text-xs text-gray-500">If active, a page will be created if the URL does not exist.</p>
         </div>
 

@@ -32,12 +32,12 @@
                         </label>
                     </div>
 
-                    <div class="flex-1 sm:flex-none">
+                    <div class="flex-1 sm:flex-none hidden">
                         <input type="text" name="custom_name" placeholder="Filename (Optional)"
                             class="w-full px-4 py-2.5 text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm">
                     </div>
 
-                    <div class="flex-1 sm:flex-none min-w-[140px]">
+                    <div class="flex-1 sm:flex-none min-w-[140px] hidden">
                         <select name="destination_disk"
                             class="w-full px-4 py-2.5 text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white">
                             <option value="storage" selected>Storage</option>
@@ -99,7 +99,7 @@
                     <div class="relative aspect-square bg-gray-50 border-b border-gray-100 overflow-hidden">
 
                         {{-- Disk Badge --}}
-                        <div class="absolute top-2 left-2 z-10">
+                        <div class="absolute top-2 left-2 z-10 hidden">
                             <span
                                 class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white rounded-md bg-opacity-90 backdrop-blur-sm shadow-sm {{ $item['disk'] === 'storage' ? 'bg-blue-500' : 'bg-emerald-500' }}">
                                 {{ $item['disk'] === 'storage' ? 'Local' : 'WP' }}
@@ -152,6 +152,13 @@
 
                         {{-- Action Toolbar --}}
                         <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+
+                        <a href="{{ $item['url'] }}" download="{{ $item['name'] }}" title="Download"
+                                class="flex items-center justify-center p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors border border-gray-100">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </a>
 
                             {{-- Copy Button --}}
                             <button type="button" onclick="copyToClipboard('{{ $item['url'] }}', this)"

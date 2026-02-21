@@ -90,7 +90,9 @@
                            {{ $item->title }}
                         </a>
                     @else
-                        {{ $item->title }}
+                    <span class="text-[#0B2B3F] font-medium no-underline cursor-default">
+                            {{ $item->title }}
+                    </span>
                     @endif
                 </p>
             @empty
