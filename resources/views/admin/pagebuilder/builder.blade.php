@@ -359,7 +359,7 @@
                             <template x-for="(col, colIndex) in sub.data[0]" :key="colIndex">
                                 <th class="py-2 px-3 border-r border-gray-200 min-w-[150px]">
                                     {{-- Header is also an object now --}}
-                                    <input type="text" 
+                                    <input type="text"
                                         x-model.debounce.400ms="sub.data[0][colIndex].text"
                                         @input="pushHistory"
                                         class="w-full text-center bg-transparent border-none focus:ring-0 p-0 text-sm font-bold"
@@ -375,12 +375,12 @@
                             <tr class="hover:bg-gray-50">
                                 <template x-for="(cell, colIndex) in row" :key="colIndex">
                                     <td class="py-2 px-2 border-r border-gray-200 align-top min-w-[150px]">
-                                        
+
                                         {{-- 1. IMAGE DISPLAY --}}
                                         <template x-if="cell.img && cell.img !== ''">
                                             <div class="mb-2 relative group-img text-center">
                                                 <img :src="cell.img" class="w-16 h-16 object-cover rounded mx-auto border shadow-sm" />
-                                                <button @click="cell.img = ''; pushHistory();" 
+                                                <button @click="cell.img = ''; pushHistory();"
                                                     class="absolute -top-2 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md"
                                                     title="Remove Image">
                                                     ✕
@@ -404,7 +404,7 @@
                                                 <label class="cursor-pointer inline-flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
                                                     <span>📷 Add Photo</span>
                                                     {{-- Passing 'sub' as the block --}}
-                                                    <input type="file" accept="image/*" class="hidden" 
+                                                    <input type="file" accept="image/*" class="hidden"
                                                         @change="handleTableUpload($event, sub, rowIndex, colIndex)">
                                                 </label>
                                             </div>
@@ -650,11 +650,16 @@
                                                     <tr class="text-xs text-gray-700 uppercase leading-normal">
                                                         <template x-for="(col, colIndex) in block.data[0]" :key="colIndex">
                                                             <th class="py-2 px-3 border-r border-gray-200">
-                                                                <input type="text"
-                                                                    x-model.debounce.400ms="block.data[0][colIndex]"
-                                                                    @input="pushHistory"
-                                                                    class="w-full text-center bg-transparent border-none focus:ring-0 p-0 text-sm font-bold"
-                                                                    placeholder="Header" />
+                                                                    <input type="text"
+                                                                        x-model.debounce.400ms="block.data[0][colIndex].text"
+                                                                        @input="pushHistory"
+                                                                        class="w-full text-center bg-transparent border-none focus:ring-0 p-0 text-sm font-bold"
+                                                                        placeholder="Header" />
+                                                                    <input type="text"
+                                                                        x-model.debounce.400ms="block.data[0][colIndex].href"
+                                                                        @input="pushHistory"
+                                                                        class="w-full mt-1 text-center bg-transparent border-none focus:ring-0 p-0 text-[10px] text-blue-500 placeholder-blue-300"
+                                                                        placeholder="URL" title="Header Link" />
                                                             </th>
                                                         </template>
                                                     </tr>
@@ -666,29 +671,37 @@
             <tr class="hover:bg-gray-50">
                 <template x-for="(cell, colIndex) in row" :key="colIndex">
                     <td class="py-2 px-2 border-r border-gray-200 align-top">
-                        
+
                         <template x-if="cell.img && cell.img !== ''">
                             <div class="mb-2 relative group-img text-center">
                                 <img :src="cell.img" class="w-16 h-16 object-cover rounded mx-auto border shadow-sm" />
-                                <button @click="cell.img = ''; pushHistory();" 
+                                <button @click="cell.img = ''; pushHistory();"
                                         class="absolute -top-2 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs shadow-md">
                                     ✕
                                 </button>
                             </div>
                         </template>
 
-                        <textarea 
+                        <textarea
                             x-model.debounce.400ms="cell.text"
-                            @input="pushHistory" 
+                            @input="pushHistory"
                             rows="2"
                             class="w-full p-2 text-sm border border-gray-200 rounded focus:border-blue-300 focus:ring-2 focus:ring-blue-100 outline-none resize-none transition"
                             placeholder="Type here..."></textarea>
+
+                        <div class="mt-1 relative">
+                            <input type="text"
+                                x-model.debounce.400ms="cell.href"
+                                @input="pushHistory"
+                                class="w-full p-1 text-[11px] border border-gray-100 rounded focus:border-blue-200 outline-none transition bg-gray-50/50"
+                                placeholder="🔗 Link URL" />
+                        </div>
 
                         <template x-if="!cell.img">
                             <div class="mt-2 text-center">
                                 <label class="cursor-pointer inline-flex items-center gap-1 text-xs font-medium text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition">
                                     <span>📷 Add Photo</span>
-                                    <input type="file" accept="image/*" class="hidden" 
+                                    <input type="file" accept="image/*" class="hidden"
                                            @change="handleTableUpload($event, block, rowIndex, colIndex)">
                                 </label>
                             </div>
@@ -734,7 +747,7 @@
         <div class="grid grid-cols-12 gap-4 pt-2">
             <template x-for="(col, colIndex) in block.columns" :key="colIndex">
                 <div :class="`col-span-12 lg:col-span-${col.span}`">
-                    
+
                     {{-- Drop Zone --}}
                     <div :id="`column-drop-${block.id}-${colIndex}`"
                          class="p-3 border-2 border-dashed border-gray-300 rounded bg-gray-50/50 min-h-[150px]"
@@ -753,7 +766,7 @@
                         <div :id="`column-list-${block.id}-${colIndex}`" class="space-y-3">
                             <template x-for="(childBlock, childIndex) in col.blocks" :key="childBlock.id">
                                 <div class="relative p-3 bg-white border rounded shadow-sm group" :data-id="childBlock.id">
-                                    
+
                                     {{-- Child Header (Drag Handle & Controls) --}}
                                     <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-gray-100">
                                         <div class="flex items-center gap-2">
@@ -768,89 +781,166 @@
                                         </div>
                                     </div>
 
-                                    {{-- ✅ ONLY BUTTON BLOCK (Exact Copy of Logic) --}}
+                                    {{-- ✅ CHILD BLOCKS (Expanded Support: Text, Image, Table, Button) --}}
+
+                                    {{-- 1. TEXT / HEADING --}}
+                                    <template x-if="childBlock.type === 'text' || childBlock.type === 'heading'">
+                                        <div class="space-y-2">
+                                            <div :id="'toolbar-' + childBlock.id"
+                                                class="flex flex-wrap items-center gap-1 p-1 mb-2 bg-white rounded shadow-sm">
+                                                <select class="ql-header">
+                                                    <option value="1"></option>
+                                                    <option value="2"></option>
+                                                    <option value="3"></option>
+                                                    <option selected></option>
+                                                </select>
+                                                <button class="ql-bold"></button>
+                                                <button class="ql-italic"></button>
+                                                <button class="ql-underline"></button>
+                                                <button class="ql-strike"></button>
+                                                <button class="ql-list" value="ordered"></button>
+                                                <button class="ql-list" value="bullet"></button>
+                                                <button class="ql-align"></button>
+                                                <button class="ql-link"></button>
+                                                <button @click.prevent="openLinkDialog(childBlock.id)" class="ql-custom">🔗</button>
+                                            </div>
+                                            <div :id="'editor-' + childBlock.id" class="bg-white border rounded quill-editor"
+                                                style="min-height:80px;"></div>
+                                        </div>
+                                    </template>
+
+                                    {{-- 2. IMAGE --}}
+                                    <template x-if="childBlock.type === 'image'">
+                                        <div class="text-center">
+                                            <template x-if="childBlock.src">
+                                                <div class="relative">
+                                                    <img :src="childBlock.src" class="max-w-full mx-auto rounded shadow-md" />
+                                                    <div class="flex justify-center gap-2 mt-2">
+                                                        <button @click="removeMediaFromSub(block.columns[colIndex], childBlock.id)"
+                                                            class="px-2 py-1 text-xs bg-red-100 rounded text-red-600">Remove</button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <template x-if="!childBlock.src">
+                                                <label class="block mt-1 cursor-pointer">
+                                                    <input type="file" accept="image/*"
+                                                        @change="handleFileUpload($event, childBlock.id, 'image', block.columns[colIndex])" class="hidden" />
+                                                    <div class="p-3 border border-gray-300 border-dashed rounded-lg hover:bg-blue-50 transition">
+                                                        <p class="text-xs text-gray-400">📁 Upload Image</p>
+                                                    </div>
+                                                </label>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    {{-- 3. BUTTON --}}
                                     <template x-if="childBlock.type === 'button'">
                                         <div class="space-y-3">
-                                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                                
-                                                {{-- Text Input --}}
+                                            <div class="grid grid-cols-1 gap-3">
                                                 <div>
-                                                    <label class="text-sm font-medium text-gray-600">Button Text</label>
+                                                    <label class="text-[10px] font-medium text-gray-500 uppercase">Text</label>
                                                     <input type="text" x-model="childBlock.text" @input="pushHistory"
-                                                        class="w-full p-2 border rounded" placeholder="Click Here">
+                                                        class="w-full p-1.5 text-sm border rounded" placeholder="Click Here">
                                                 </div>
-
-                                                {{-- Link Input --}}
                                                 <div>
-                                                    <label class="text-sm font-medium text-gray-600">Button Link (URL)</label>
+                                                    <label class="text-[10px] font-medium text-gray-500 uppercase">Link</label>
                                                     <input type="text" x-model="childBlock.href" @input="pushHistory"
-                                                        class="w-full p-2 border rounded" placeholder="https://...">
-                                                </div>
-
-                                                {{-- Alignment --}}
-                                                <div>
-                                                    <label class="text-sm font-medium text-gray-600">Alignment</label>
-                                                    <select x-model="childBlock.align" @change="pushHistory"
-                                                        class="w-full p-2 border rounded bg-white">
-                                                        <option value="left">Left</option>
-                                                        <option value="center">Center</option>
-                                                        <option value="right">Right</option>
-                                                    </select>
-                                                </div>
-
-                                                {{-- Target --}}
-                                                <div>
-                                                    <label class="text-sm font-medium text-gray-600">Target</label>
-                                                    <select x-model="childBlock.target" @change="pushHistory"
-                                                        class="w-full p-2 border rounded bg-white">
-                                                        <option value="_self">Same Tab (_self)</option>
-                                                        <option value="_blank">New Tab (_blank)</option>
-                                                    </select>
-                                                </div>
-
-                                                {{-- Display Mode --}}
-                                                <div>
-                                                    <label class="text-sm font-medium text-gray-600">Display Mode</label>
-                                                    <select x-model="childBlock.displayMode" @change="pushHistory"
-                                                        class="w-full p-2 border rounded bg-white">
-                                                        <option value="default">Default</option>
-                                                        <option value="inline">Inline</option>
-                                                    </select>
+                                                        class="w-full p-1.5 text-sm border rounded" placeholder="https://...">
                                                 </div>
                                             </div>
 
-                                            {{-- Image Section for Button --}}
-                                            <div class="p-3 border border-gray-200 rounded-lg bg-gray-100">
-                                                <h4 class="mb-2 text-sm font-medium text-gray-700">Optional Image/Icon</h4>
-                                                <div class="text-center">
-                                                    
-                                                    {{-- If Image Exists --}}
+                                            <div class="flex items-center justify-between gap-2">
+                                                <select x-model="childBlock.align" @change="pushHistory" class="text-xs p-1 border rounded bg-white">
+                                                    <option value="left">Left</option>
+                                                    <option value="center">Center</option>
+                                                    <option value="right">Right</option>
+                                                </select>
+                                                <button @click="childBlock.expanded = !childBlock.expanded" class="text-[10px] text-blue-500 underline">Settings</button>
+                                            </div>
+
+                                            <div x-show="childBlock.expanded" class="p-2 bg-gray-50 border rounded space-y-2">
+                                                <div>
+                                                    <label class="text-[10px]">Target</label>
+                                                    <select x-model="childBlock.target" @change="pushHistory" class="w-full text-xs p-1 border rounded">
+                                                        <option value="_self">Same Tab</option>
+                                                        <option value="_blank">New Tab</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="text-[10px]">Image/Icon</label>
                                                     <template x-if="childBlock.src">
-                                                        <div>
-                                                            <img :src="childBlock.src" class="max-w-[100px] max-h-[100px] mx-auto rounded" />
-                                                            <div class="flex justify-center gap-2 mt-2">
-                                                                <button @click="removeMediaFromSub(block.columns[colIndex], childBlock.id)"
-                                                                    class="px-2 py-1 text-xs bg-red-100 rounded text-red-600">Remove Image</button>
-                                                            </div>
+                                                        <div class="flex items-center gap-2">
+                                                            <img :src="childBlock.src" class="w-8 h-8 rounded border" />
+                                                            <button @click="removeMediaFromSub(block.columns[colIndex], childBlock.id)" class="text-[9px] text-red-500">Remove</button>
                                                         </div>
                                                     </template>
-
-                                                    {{-- Upload Button --}}
                                                     <template x-if="!childBlock.src">
-                                                        <label class="block cursor-pointer">
-                                                            <input type="file" accept="image/*"
-                                                                @change="handleFileUpload($event, childBlock.id, 'image', block.columns[colIndex])"
-                                                                class="hidden" />
-                                                            <div class="p-4 border border-gray-300 border-dashed rounded-lg hover:bg-blue-100 transition">
-                                                                <p class="text-sm text-gray-500">🖼️ Click to upload button image/icon</p>
-                                                            </div>
-                                                        </label>
+                                                        <input type="file" accept="image/*" @change="handleFileUpload($event, childBlock.id, 'image', block.columns[colIndex])" class="text-[9px]" />
                                                     </template>
-
                                                 </div>
                                             </div>
                                         </div>
                                     </template>
+
+                                    {{-- 4. TABLE --}}
+                                    <template x-if="childBlock.type === 'table'">
+                                        <div class="space-y-3">
+                                            <div class="flex flex-wrap gap-1">
+                                                <button @click.prevent="addRow(childBlock)" class="px-2 py-1 text-[10px] bg-green-50 text-green-700 border border-green-200 rounded">+ R</button>
+                                                <button @click.prevent="removeRow(childBlock)" :disabled="childBlock.data.length <= 1" class="px-2 py-1 text-[10px] bg-red-50 text-red-700 border border-red-200 rounded disabled:opacity-50">- R</button>
+                                                <button @click.prevent="addCol(childBlock)" class="px-2 py-1 text-[10px] bg-green-50 text-green-700 border border-green-200 rounded">+ C</button>
+                                                <button @click.prevent="removeCol(childBlock)" :disabled="childBlock.data[0].length <= 1" class="px-2 py-1 text-[10px] bg-red-50 text-red-700 border border-red-200 rounded disabled:opacity-50">- C</button>
+                                            </div>
+
+                                            <div class="overflow-x-auto border border-gray-200 rounded max-h-[300px]">
+                                                <table class="min-w-full divide-y divide-gray-200 text-[10px]">
+                                                    <thead class="bg-gray-50 sticky top-0">
+                                                        <tr>
+                                                            <template x-for="(h, hi) in childBlock.data[0]" :key="hi">
+                                                                <th class="p-1 border-r border-gray-200 text-center">
+                                                                    <input type="text" x-model.debounce.400ms="childBlock.data[0][hi].text" @input="pushHistory"
+                                                                        class="w-full text-center bg-transparent border-none p-0 font-bold focus:ring-0" />
+                                                                    <input type="text" x-model.debounce.400ms="childBlock.data[0][hi].href" @input="pushHistory"
+                                                                        class="w-full text-center bg-transparent border-none p-0 text-[8px] text-blue-500 placeholder-blue-300"
+                                                                        placeholder="URL" />
+                                                                </th>
+                                                            </template>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-gray-100">
+                                                        <template x-for="(row, ri) in childBlock.data" :key="ri">
+                                                            <template x-if="ri > 0">
+                                                                <tr class="hover:bg-gray-50">
+                                                                    <template x-for="(cell, ci) in row" :key="ci">
+                                                                        <td class="p-1 border-r border-gray-200 align-top">
+                                                                            <template x-if="cell.img">
+                                                                                <div class="relative group mb-1">
+                                                                                    <img :src="cell.img" class="w-8 h-8 object-cover rounded mx-auto border" />
+                                                                                    <button @click="cell.img = ''; pushHistory();" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3 h-3 flex items-center justify-center text-[8px]">×</button>
+                                                                                </div>
+                                                                            </template>
+                                                                            <textarea x-model.debounce.400ms="cell.text" @input="pushHistory" rows="2"
+                                                                                class="w-full p-1 border-gray-100 rounded focus:border-blue-200 focus:ring-1 focus:ring-blue-100 resize-none leading-tight" placeholder="Text"></textarea>
+                                                                            <input type="text" x-model.debounce.400ms="cell.href" @input="pushHistory"
+                                                                                class="w-full mt-1 p-1 text-[9px] border border-gray-50 rounded focus:border-blue-100 outline-none bg-gray-50/50"
+                                                                                placeholder="🔗 Link" />
+                                                                            <template x-if="!cell.img">
+                                                                                <label class="cursor-pointer text-[9px] text-blue-500 mt-1 block text-center hover:underline">
+                                                                                    + Photo
+                                                                                    <input type="file" accept="image/*" class="hidden" @change="handleTableUpload($event, childBlock, ri, ci)" />
+                                                                                </label>
+                                                                            </template>
+                                                                        </td>
+                                                                    </template>
+                                                                </tr>
+                                                            </template>
+                                                        </template>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    {{-- ✅ END CHILD BLOCKS --}}
                                     {{-- END BUTTON --}}
 
                                 </div>
@@ -964,14 +1054,14 @@
     // Ab hum Text string ki jagah Object use karenge { text: '', img: '' }
     data: [
         [
-            { text: 'Header 1', img: '' }, 
-            { text: 'Header 2', img: '' }, 
-            { text: 'Header 3', img: '' }
+            { text: 'Header 1', img: '', href: '' },
+            { text: 'Header 2', img: '', href: '' },
+            { text: 'Header 3', img: '', href: '' }
         ],
         [
-            { text: 'Cell 1', img: '' }, 
-            { text: 'Cell 2', img: '' }, 
-            { text: 'Cell 3', img: '' }
+            { text: 'Cell 1', img: '', href: '' },
+            { text: 'Cell 2', img: '', href: '' },
+            { text: 'Cell 3', img: '', href: '' }
         ],
     ],
 },
@@ -1020,40 +1110,43 @@ initAll() {
         }
 
         // ============================================================
-        // 🔥 FIX FOR OLD DATA (Migration Script)
+        // 🔥 FIX FOR OLD DATA (Migration Script - Recursive)
         // ============================================================
-        this.blocks.forEach(block => {
-            
-            // 1. Root Level Table Fix
+        const migrateTableData = (block) => {
+            // 1. Table Data Fix
             if (block.type === 'table' && Array.isArray(block.data)) {
                 block.data = block.data.map(row => {
                     return row.map(cell => {
                         // Agar cell String hai (Purana Data), toh usse Object bana do
                         if (typeof cell !== 'object' || cell === null) {
-                            return { text: cell, img: '' };
+                            return { text: cell, img: '', href: '' };
                         }
-                        return cell; // Agar already object hai, toh waisa hi rehne do
+                        // Ensure href exists even if cell is object
+                        if (typeof cell.href === 'undefined') {
+                            cell.href = '';
+                        }
+                        return cell;
                     });
                 });
             }
 
-            // 2. Section Level Table Fix (Nested Blocks)
+            // 2. Recursive Fix for Nested Blocks (Sections)
             if (block.type === 'section' && Array.isArray(block.blocks)) {
-                block.blocks.forEach(sub => {
-                    if (sub.type === 'table' && Array.isArray(sub.data)) {
-                        sub.data = sub.data.map(row => {
-                            return row.map(cell => {
-                                // Agar cell String hai, toh Object bana do
-                                if (typeof cell !== 'object' || cell === null) {
-                                    return { text: cell, img: '' };
-                                }
-                                return cell;
-                            });
-                        });
+                block.blocks.forEach(sub => migrateTableData(sub));
+            }
+
+            // 3. Recursive Fix for Layout Grid Blocks
+            if (block.type === 'layout_grid' && Array.isArray(block.columns)) {
+                block.columns.forEach(col => {
+                    if (Array.isArray(col.blocks)) {
+                        col.blocks.forEach(child => migrateTableData(child));
                     }
                 });
             }
-        });
+        };
+
+        this.blocks.forEach(block => migrateTableData(block));
+
         // ============================================================
         // END FIX
         // ============================================================
@@ -1180,21 +1273,21 @@ initAll() {
                             newBlock.data = [
                                // Row 1 (Headers)
         [
-            { text: 'Header 1', img: '' }, 
-            { text: 'Header 2', img: '' }, 
-            { text: 'Header 3', img: '' }
+            { text: 'Header 1', img: '', href: '' },
+            { text: 'Header 2', img: '', href: '' },
+            { text: 'Header 3', img: '', href: '' }
         ],
         // Row 2 (Data)
         [
-            { text: 'Cell 1,1', img: '' }, 
-            { text: 'Cell 1,2', img: '' }, 
-            { text: 'Cell 1,3', img: '' }
+            { text: 'Cell 1,1', img: '', href: '' },
+            { text: 'Cell 1,2', img: '', href: '' },
+            { text: 'Cell 1,3', img: '', href: '' }
         ],
         // Row 3 (Data)
         [
-            { text: 'Cell 2,1', img: '' }, 
-            { text: 'Cell 2,2', img: '' }, 
-            { text: 'Cell 2,3', img: '' }
+            { text: 'Cell 2,1', img: '', href: '' },
+            { text: 'Cell 2,2', img: '', href: '' },
+            { text: 'Cell 2,3', img: '', href: '' }
         ],
                             ];
                         }
@@ -1244,21 +1337,21 @@ initAll() {
                             newBlock.data = [
                                // Row 1 (Headers)
         [
-            { text: 'Header 1', img: '' }, 
-            { text: 'Header 2', img: '' }, 
-            { text: 'Header 3', img: '' }
+            { text: 'Header 1', img: '', href: '' },
+            { text: 'Header 2', img: '', href: '' },
+            { text: 'Header 3', img: '', href: '' }
         ],
         // Row 2 (Data)
         [
-            { text: 'Cell 1,1', img: '' }, 
-            { text: 'Cell 1,2', img: '' }, 
-            { text: 'Cell 1,3', img: '' }
+            { text: 'Cell 1,1', img: '', href: '' },
+            { text: 'Cell 1,2', img: '', href: '' },
+            { text: 'Cell 1,3', img: '', href: '' }
         ],
         // Row 3 (Data)
         [
-            { text: 'Cell 2,1', img: '' }, 
-            { text: 'Cell 2,2', img: '' }, 
-            { text: 'Cell 2,3', img: '' }
+            { text: 'Cell 2,1', img: '', href: '' },
+            { text: 'Cell 2,2', img: '', href: '' },
+            { text: 'Cell 2,3', img: '', href: '' }
         ],
                             ];
                         }
@@ -1283,7 +1376,7 @@ addRow(block) {
     try {
         const numCols = block.data[0] ? block.data[0].length : 3;
         // String ki jagah object push karein
-        const newRow = Array(numCols).fill(null).map(() => ({ text: 'New Cell', img: '' }));
+        const newRow = Array(numCols).fill(null).map(() => ({ text: 'New Cell', img: '', href: '' }));
         block.data.push(newRow);
         this.pushHistory();
     } catch (e) { console.error('addRow failed:', e); }
@@ -1301,7 +1394,7 @@ addRow(block) {
 addCol(block) {
     try {
         // String ki jagah object push karein
-        block.data.forEach(row => row.push({ text: 'New Cell', img: '' }));
+        block.data.forEach(row => row.push({ text: 'New Cell', img: '', href: '' }));
         this.pushHistory();
     } catch (e) { console.error('addCol failed:', e); }
 },
@@ -1316,7 +1409,7 @@ addCol(block) {
                     } catch (e) { console.error('removeCol failed:', e); }
                 },
                 // END: NEW TABLE MANIPULATION FUNCTIONS
-                
+
 changeGridLayout(block) {
     if (!block || !block.layout) return;
     const spans = ('' + block.layout).split('-').map(s => parseInt(s, 10) || 12);
@@ -1332,7 +1425,7 @@ changeGridLayout(block) {
             newColumns.push({ span: spans[i], blocks: [] });
         }
     }
-    
+
     // Agar columns kam ho gaye hain, to extra blocks ko aakhri column mein move karein
     if (oldColumns.length > newColumns.length) {
         for (let i = newColumns.length; i < oldColumns.length; i++) {
@@ -1343,7 +1436,7 @@ changeGridLayout(block) {
         }
     }
     block.columns = newColumns;
-    this.pushHistory(); 
+    this.pushHistory();
     this.$nextTick(() => this.initSortables());
 },
 // Layout Grid
@@ -1387,7 +1480,7 @@ changeGridLayout(block) {
                 block.columns.forEach((col, colIndex) => {
                     // Unique ID: `column-list-BLOCK_ID-COL_INDEX`
                     const colList = document.getElementById(`column-list-${block.id}-${colIndex}`);
-                    
+
                     if (colList && !colList._sortable) {
                         colList._sortable = Sortable.create(colList, {
                             // Home page builder mein aapne 'shared-blocks' group use kiya tha.
@@ -1397,19 +1490,19 @@ changeGridLayout(block) {
                             animation: 150,
                             draggable: '[data-id]',
                             dataIdAttr: 'data-id',
-                            
+
                             onEnd: (evt) => {
                                 // 1. Updated order ke IDs ko fetch karein
                                 const ids = Array.from(colList
                                     .querySelectorAll(':scope > div[data-id]'))
                                     .map(el => el.getAttribute('data-id'));
-                                
+
                                 // 2. Data model mein blocks ko reorder karein
                                 const map = {};
                                 // Make sure 'col.blocks' array exists before mapping
                                 (col.blocks || []).forEach(b => map[b.id] = b);
                                 col.blocks = ids.map(id => map[id]).filter(Boolean);
-                                
+
                                 // 3. History push karein aur Quills ko re-initialize karein
                                 this.pushHistory();
                                 this.$nextTick(() => this.initAllQuills());
@@ -1718,13 +1811,13 @@ changeGridLayout(block) {
                         // formData.append("file", file);
                         // formData.append("base_path", formValues.base_path || "storage");
                         // formData.append("custom_name", formValues.custom_name || "");
-                        
-                        const basePath = "storage"; 
-        const customName = ""; 
+
+                        const basePath = "storage";
+        const customName = "";
 
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("base_path", basePath); 
+        formData.append("base_path", basePath);
         formData.append("custom_name", customName);
 
                         Swal.fire({
@@ -1813,7 +1906,7 @@ changeGridLayout(block) {
         //     e.target.value = null; // Reset input
         //     return;
         // }
-const basePath = "storage"; 
+const basePath = "storage";
         const customName = "";
         // 2. Uploading Animation
         const formData = new FormData();
@@ -1845,7 +1938,7 @@ const basePath = "storage";
         if (data.success) {
             // Check karein agar cell abhi string hai ya object
             let currentCell = block.data[rowIndex][colIndex];
-            
+
             // Agar purana data sirf text tha, usse object banao
             if (typeof currentCell !== 'object') {
                 currentCell = { text: currentCell, img: '' };
@@ -2088,7 +2181,7 @@ const basePath = "storage";
                         console.error('pushHistory failed:', e);
                     }
                 },
-                
+
                 undo() {
                     try {
                         if (this.historyStack.length <= 1) return Swal.fire('Nothing to undo', '', 'info');

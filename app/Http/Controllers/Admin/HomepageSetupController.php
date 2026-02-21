@@ -42,6 +42,9 @@ class HomepageSetupController extends Controller
 
             Setting::set('homepage_layout', $jsonContentToSave);
 
+            // Clear Cache
+            \Illuminate\Support\Facades\Cache::forget('homepage_layout_blocks');
+
             // Success response dein
             return response()->json([
                 'success' => true,

@@ -87,7 +87,7 @@
                 @if (!empty($block['columns']) && is_array($block['columns']))
                     @foreach ($block['columns'] as $col)
                         @php
-                            // Span logic: Default to 12 if missing. 
+                            // Span logic: Default to 12 if missing.
                             // Using md:col-span-X so it stacks on mobile (grid-cols-1)
                             $span = $col['span'] ?? 12;
                             $colClass = "md:col-span-{$span}";
@@ -466,7 +466,11 @@
                             <th class="px-6 py-3 font-semibold uppercase tracking-wide text-left border border-[#013954]">
                                 {{-- Check: Agar Header array hai (new format) ya string (old format) --}}
                                 @if(is_array($header))
-                                    {{ $header['text'] ?? '' }}
+                                    @if(!empty($header['href']))
+                                        <a href="{{ $header['href'] }}" target="_blank" class="hover:underline">{{ $header['text'] ?? '' }}</a>
+                                    @else
+                                        {{ $header['text'] ?? '' }}
+                                    @endif
                                 @else
                                     {{ $header }}
                                 @endif
@@ -482,19 +486,30 @@
                             @foreach ($row as $cell)
                                 <td class="px-6 py-4 align-top leading-relaxed border border-gray-300">
                                     <div class="prose prose-sm max-w-none">
-                                        
+
                                         @if(is_array($cell))
+                                            {{-- Support for Links --}}
+                                            @php $cellLink = !empty($cell['href']) ? $cell['href'] : null; @endphp
+
+                                            @if($cellLink)
+                                                <a href="{{ $cellLink }}" target="_blank" class="hover:underline text-blue-600 block">
+                                            @endif
+
                                             {{-- 1. New Format: Image Check --}}
                                             @if(!empty($cell['img']))
                                                 <div class="mb-3">
-                                                    <img src="{{ $cell['img'] }}" 
-                                                         alt="Image" 
+                                                    <img src="{{ $cell['img'] }}"
+                                                         alt="Image"
                                                          class="w-24 h-24 object-cover rounded-lg border border-gray-200 shadow-sm block">
                                                 </div>
                                             @endif
 
                                             {{-- 2. New Format: Text --}}
                                             {!! nl2br(e($cell['text'] ?? '')) !!}
+
+                                            @if($cellLink)
+                                                </a>
+                                            @endif
                                         @else
                                             {{-- 3. Old Format (Backward Compatibility) --}}
                                             {!! nl2br(e($cell)) !!}
