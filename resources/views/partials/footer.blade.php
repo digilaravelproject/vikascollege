@@ -9,8 +9,8 @@
     $collegeName = setting('college_name', config('app.name'));
 
     // Dark Banner Image
-    $footerBanner = setting('top_banner_image_dark'); 
-    
+    $footerBanner = setting('top_banner_image_dark');
+
     $address = setting('address');
     $email = setting('email');
     $phone = setting('phone');
@@ -20,17 +20,17 @@
     $youtube = setting('youtube_url');
     $linkedin = setting('linkedin_url');
     $footerAbout = setting('footer_about', 'Committed to academic excellence, innovation, and holistic development.');
-    
+
     // Map URL from Admin Settings
     $mapUrl = setting('map_embed_url');
-    
+
     $footerLinksRaw = setting('footer_links');
     $footerLinks = $footerLinksRaw ? json_decode($footerLinksRaw, true) : [];
 @endphp
 
 {{-- Background #013954 --}}
 <footer class="mt-10 bg-[#013954] text-white">
-    
+
     {{-- SVG Wave #013954 --}}
     <div class="relative">
         <svg aria-hidden="true" focusable="false" class="w-full h-8 text-[#013954]" preserveAspectRatio="none"
@@ -44,16 +44,16 @@
 
             {{-- COLUMN 1: ONLY DARK BANNER IMAGE --}}
             <div class="space-y-4">
-                
+
 
                 <p class="mb-1 text-sm leading-relaxed text-gray-200">{{ $footerAbout }}</p>
                 <div class="mb-1">
                     @if ($footerBanner)
                         {{-- Added loading="lazy" and decoding="async" --}}
                         <img loading="lazy" decoding="async" src="{{ asset('storage/' . $footerBanner) }}" alt="{{ $collegeName }}"
-                            class="object-contain w-full h-auto md:w-auto md:h-20"> 
+                            class="object-contain w-full h-auto md:w-auto md:h-20">
                     @endif
-                    
+
                     {{-- Tagline --}}
                     <!--<div class="mt-3 text-sm text-gray-200">Shaping futures with excellence</div>-->
                 </div>
@@ -141,37 +141,37 @@
 
             {{-- COLUMN 3: RESOURCES & USEFUL LINKS --}}
             <div>
-                <div class="mb-4 text-sm font-semibold tracking-wider text-white uppercase">Resources</div>
-                <!--<ul class="space-y-3 text-sm">-->
-                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
-                <!--            href="{{ url('/admissions') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"-->
-                <!--                xmlns="http://www.w3.org/2000/svg">-->
-                <!--                <path fill-rule="evenodd"-->
-                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
-                <!--                    clip-rule="evenodd"></path>-->
-                <!--            </svg> <span>Admissions</span></a></li>-->
-                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
-                <!--            href="{{ url('/departments') }}"><svg class="w-3 h-3 text-white" fill="currentColor"-->
-                <!--                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">-->
-                <!--                <path fill-rule="evenodd"-->
-                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
-                <!--                    clip-rule="evenodd"></path>-->
-                <!--            </svg> <span>Departments</span></a></li>-->
-                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
-                <!--            href="{{ url('/events') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"-->
-                <!--                xmlns="http://www.w3.org/2000/svg">-->
-                <!--                <path fill-rule="evenodd"-->
-                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
-                <!--                    clip-rule="evenodd"></path>-->
-                <!--            </svg> <span>Events</span></a></li>-->
-                <!--    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"-->
-                <!--            href="{{ url('/contact') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"-->
-                <!--                xmlns="http://www.w3.org/2000/svg">-->
-                <!--                <path fill-rule="evenodd"-->
-                <!--                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"-->
-                <!--                    clip-rule="evenodd"></path>-->
-                <!--            </svg> <span>Contact</span></a></li>-->
-                <!--</ul>-->
+                {{-- <div class="mb-4 text-sm font-semibold tracking-wider text-white uppercase">Resources</div>
+                <ul class="space-y-3 text-sm">
+                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
+                            href="{{ url('/admissions') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg> <span>Admissions</span></a></li>
+                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
+                            href="{{ url('/departments') }}"><svg class="w-3 h-3 text-white" fill="currentColor"
+                                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg> <span>Departments</span></a></li>
+                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
+                            href="{{ url('/events') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg> <span>Events</span></a></li>
+                    <li><a class="flex items-center gap-2 text-gray-200 transition hover:text-white hover:underline"
+                            href="{{ url('/contact') }}"><svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg> <span>Contact</span></a></li>
+                </ul> --}}
 
                 <div class="mt-6 mb-4 text-sm font-semibold tracking-wider text-white uppercase">Useful Links</div>
                 <ul class="space-y-3 text-sm">
