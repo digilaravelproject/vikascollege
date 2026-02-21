@@ -5,48 +5,109 @@
 @section('content')
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
+        {{-- 0. STORAGE STATISTICS CARD --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-5">
+                <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7c0-2-1.5-3-3.5-3h-9C5.5 4 4 5 4 7z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Occupied Storage</h3>
+                    <p class="text-xl font-bold text-gray-900">{{ $storageStats['used_readable'] }}</p>
+                    <p class="text-xs text-blue-600 font-medium">{{ $storageStats['percent'] }}% of media</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-5">
+                <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500">Available Storage</h3>
+                    <p class="text-xl font-bold text-gray-900">{{ $storageStats['free_readable'] }}</p>
+                    <p class="text-xs text-gray-400">Total: {{ $storageStats['total_readable'] }}</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-medium text-gray-700">Server Capacity</h3>
+                    <span class="text-xs font-bold text-gray-900">{{ $storageStats['overall_percent'] }}%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: {{ $storageStats['overall_percent'] }}%"></div>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-2 italic">*Based on server disk space</p>
+            </div>
+        </div>
+
         {{-- 1. MODERN UPLOAD HEADER --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-8">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
-                <div>
+                <div class="flex-1 w-full lg:w-auto">
                     <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Media Library</h1>
-                    <p class="text-sm text-gray-500 mt-1">Manage your uploads and assets.</p>
+
+                    {{-- SEARCH BAR --}}
+                    <div class="mt-4 relative max-w-md">
+                        <form action="{{ route('admin.media.index') }}" method="GET" class="relative group">
+                            <input type="text" name="search" value="{{ $search }}" placeholder="Search files..."
+                                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all group-hover:border-gray-400">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            @if($search)
+                                <a href="{{ route('admin.media.index') }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </a>
+                            @endif
+                        </form>
+                    </div>
                 </div>
 
                 <form id="uploadForm" action="{{ route('admin.media.store') }}" method="POST" enctype="multipart/form-data"
-                    class="w-full lg:w-auto flex flex-col sm:flex-row items-stretch gap-3">
+                    class="w-full lg:w-auto flex flex-col sm:flex-row items-end gap-3">
                     @csrf
 
-                    {{-- Custom File Input for better UI --}}
-                    <div class="relative group w-full sm:w-auto">
+                    <div class="flex flex-col gap-1 w-full sm:w-auto">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">File</label>
                         <label for="media_file"
-                            class="flex items-center justify-center px-4 py-2.5 bg-gray-50 text-gray-700 rounded-xl border border-gray-300 border-dashed cursor-pointer hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 transition-all duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            class="flex items-center justify-center px-4 py-2 text-gray-700 rounded-xl border border-gray-300 border-dashed cursor-pointer hover:bg-blue-50 hover:border-blue-400 hover:text-blue-600 transition-all duration-200 min-h-[42px]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                             </svg>
-                            <span class="text-sm font-medium truncate max-w-[150px]" id="file-label">Choose File</span>
+                            <span class="text-xs font-medium truncate max-w-[100px]" id="file-label">Choose</span>
                             <input type="file" name="media_file" id="media_file" required class="hidden"
                                 onchange="document.getElementById('file-label').innerText = this.files[0].name">
                         </label>
                     </div>
 
-                    <div class="flex-1 sm:flex-none hidden">
-                        <input type="text" name="custom_name" placeholder="Filename (Optional)"
-                            class="w-full px-4 py-2.5 text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                    </div>
-
-                    <div class="flex-1 sm:flex-none min-w-[140px] hidden">
+                    {{-- <div class="flex flex-col gap-1 w-full sm:w-40">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Custom Name</label>
+                        <input type="text" name="custom_name" placeholder="Optional"
+                            class="w-full px-3 py-2 text-xs border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                    </div> --}}
+{{--
+                    <div class="flex flex-col gap-1 w-full sm:w-32">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Destination</label>
                         <select name="destination_disk"
-                            class="w-full px-4 py-2.5 text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white">
+                            class="w-full px-3 py-2 text-xs border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white">
                             <option value="storage" selected>Storage</option>
                             <option value="wp-content">WP-Content</option>
                         </select>
-                    </div>
+                    </div> --}}
 
                     <button type="submit" id="uploadBtn"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm whitespace-nowrap flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 font-bold text-xs uppercase whitespace-nowrap h-[42px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
                         <span>Upload</span>
                     </button>
                 </form>
@@ -290,7 +351,7 @@
                         onUploadProgress: function(progressEvent) {
                             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent
                                 .total);
-                            
+
                             // Visual update
                             progressBar.style.width = percentCompleted + '%';
                             progressText.innerText = percentCompleted + '%';

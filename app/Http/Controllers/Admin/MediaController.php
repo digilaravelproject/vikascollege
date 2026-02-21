@@ -15,88 +15,84 @@ class MediaController extends Controller
     /**
      * Fetch media from storage/app/public/uploads and public/vikas/wp-content
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             $mediaItems = collect();
+            $search = $request->query('search');
 
             // -----------------------------
             // 1. Files from storage/app/public
             // -----------------------------
-            // Note: allFiles() can be slow if there are thousands of files. 
             $storageFiles = Storage::disk('public')->allFiles();
 
             foreach ($storageFiles as $filePath) {
                 if (Str::startsWith($filePath, 'uploads/')) {
-
                     $mediaItems->push([
                         'disk'      => 'storage',
                         'path'      => $filePath,
                         'name'      => basename($filePath),
-                        'url'       => Storage::disk('public')->url($filePath),
+                        'url'       => asset('storage/' . $filePath),
                         'type'      => strtolower(pathinfo($filePath, PATHINFO_EXTENSION)),
+                        'size_bytes'=> Storage::disk('public')->size($filePath),
                         'size'      => $this->formatBytes(Storage::disk('public')->size($filePath)),
                         'timestamp' => Storage::disk('public')->lastModified($filePath),
                     ]);
                 }
             }
+
             // -----------------------------
-            // OLD FILES: public/wp-content
+            // 2. Files from public/vikas/wp-content
             // -----------------------------
-            $oldWpPath = public_path('wp-content');
-            
-            if (File::exists($oldWpPath)) {
-            
-                $oldFiles = File::allFiles($oldWpPath);
-            
-                foreach ($oldFiles as $file) {
-            
+            $wpPath = public_path('vikas/wp-content');
+            if (File::exists($wpPath)) {
+                $publicFiles = File::allFiles($wpPath);
+                foreach ($publicFiles as $file) {
                     $relativePath = str_replace('\\', '/', $file->getRelativePathname());
-                    $filePath = 'wp-content/' . $relativePath;
-            
+                    $filePath = 'vikas/wp-content/' . $relativePath;
                     $mediaItems->push([
                         'disk'      => 'public_wp',
                         'path'      => $filePath,
                         'name'      => $file->getFilename(),
                         'url'       => asset($filePath),
                         'type'      => strtolower($file->getExtension()),
+                        'size_bytes'=> $file->getSize(),
                         'size'      => $this->formatBytes($file->getSize()),
                         'timestamp' => $file->getMTime(),
                     ]);
                 }
             }
-            // -----------------------------
-            // 2. Files from public/vikas/wp-content
-            // -----------------------------
-            $wpPath = public_path('vikas/wp-content');
 
-            if (File::exists($wpPath)) {
+            // --- STORAGE STATS (Virtual Capped at 20GB) ---
+            $mediaUsedBytes = $mediaItems->sum('size_bytes');
+            $virtualTotalBytes = 20 * 1024 * 1024 * 1024; // Virtual Limit: 20 GB
 
-                $publicFiles = File::allFiles($wpPath);
+            // Calculate percentage based on 20GB
+            $usedPercent = $virtualTotalBytes > 0 ? round(($mediaUsedBytes / $virtualTotalBytes) * 100, 1) : 0;
+            $freeBytes = max(0, $virtualTotalBytes - $mediaUsedBytes);
 
-                foreach ($publicFiles as $file) {
+            $storageStats = [
+                'used_bytes'      => $mediaUsedBytes,
+                'used_readable'   => $this->formatBytes($mediaUsedBytes),
+                'total_bytes'     => $virtualTotalBytes,
+                'total_readable'  => "20 GB",
+                'free_bytes'      => $freeBytes,
+                'free_readable'   => $this->formatBytes($freeBytes),
+                'percent'         => $usedPercent,
+                'overall_percent' => $usedPercent,
+            ];
 
-                    $relativePath = str_replace('\\', '/', $file->getRelativePathname());
-
-                    // IMPORTANT: update filePath
-                    $filePath = 'vikas/wp-content/' . $relativePath;
-
-                    $mediaItems->push([
-                        'disk'      => 'public_wp',
-                        'path'      => $filePath,
-                        'name'      => $file->getFilename(),
-                        'url'       => asset($filePath),
-                        'type'      => strtolower($file->getExtension()),
-                        'size'      => $this->formatBytes($file->getSize()),
-                        'timestamp' => $file->getMTime(),
-                    ]);
-                }
+            // --- SEARCH FILTER ---
+            if ($search) {
+                $mediaItems = $mediaItems->filter(function ($item) use ($search) {
+                    return Str::contains(strtolower($item['name']), strtolower($search));
+                });
             }
 
             // Sort newest first
             $mediaItems = $mediaItems->sortByDesc('timestamp')->values();
 
-            return view('admin.media.index', compact('mediaItems'));
+            return view('admin.media.index', compact('mediaItems', 'storageStats', 'search'));
         } catch (Exception $e) {
             Log::error('Media Index Error: ' . $e->getMessage());
             return back()->with('error', 'Failed to load media files.');
