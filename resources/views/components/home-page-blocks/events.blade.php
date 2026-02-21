@@ -38,10 +38,10 @@
             <p class="text-lg text-gray-500">No events found for this category.</p>
         </div>
     </template>
-    
+
     {{-- NEW: Wrapper for Slider and Controls --}}
     <div class="flex items-center justify-center">
-        
+
         {{-- Slider Control: PREV (Hidden on small screens) --}}
         <div x-show="maxPages > 1" class="hidden pr-4 lg:block">
             <button @click="prevPage()" :disabled="currentPage === 1"
@@ -58,11 +58,18 @@
                 <template x-for="(item, index) in paginatedEvents" :key="item.id">
                     <div class="flex flex-col overflow-hidden transition-all duration-300 bg-white border border-gray-200 rounded-none shadow-lg hover:shadow-2xl hover:-translate-y-1 group"
                         data-aos="zoom-in" :data-aos-delay="index * 100" data-aos-duration="700">
-                        {{-- Event Image --}}
+                        {{-- Event Image or Fallback --}}
                         <a :href="item.link || '#'" class="relative block overflow-hidden aspect-square">
-                            <img :src="item.image_url" :alt="item.title"
-                                class="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-                                loading="lazy">
+                            <template x-if="item.image_url">
+                                <img :src="item.image_url" :alt="item.title"
+                                    class="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                                    loading="lazy">
+                            </template>
+                            <template x-if="!item.image_url">
+                                <div class="flex items-center justify-center w-full h-full p-6 text-center text-white bg-gradient-to-br from-[#013954] to-[#012740] transition-transform duration-700 group-hover:scale-105">
+                                    <h4 class="text-xl font-bold leading-tight uppercase" x-text="item.title"></h4>
+                                </div>
+                            </template>
                             <div class="absolute inset-0 transition-colors duration-300 bg-black/0 group-hover:bg-black/10">
                             </div>
                         </a>
@@ -90,7 +97,7 @@
                 </template>
             </div>
         </div>
-        
+
         {{-- Slider Control: NEXT (Hidden on small screens) --}}
         <div x-show="maxPages > 1" class="hidden pl-4 lg:block">
             <button @click="nextPage()" :disabled="currentPage === maxPages"
@@ -100,7 +107,7 @@
                 </svg>
             </button>
         </div>
-        
+
     </div>
     {{-- NEW: Mobile Controls (Show on small screens, below grid) --}}
     <div x-show="maxPages > 1" class="flex justify-center mt-6 space-x-4 lg:hidden" data-aos="fade-up" data-aos-delay="200">
@@ -149,7 +156,7 @@
                     this.activeCategoryId = this.eventCategories[0].id;
                 }
             },
-            
+
             // Function to handle category click and reset page (Updated)
             setActiveCategory(categoryId) {
                 this.activeCategoryId = categoryId;

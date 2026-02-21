@@ -83,15 +83,19 @@ class HomePageBlock extends Component
             return EventCategory::orderBy('id', 'asc')->get(['id', 'name']);
         });
 
-        // 2. Fetch and Map Events (Cached as array to save memory/processing)
-        $this->items = Cache::remember('all_events_for_homepage_v2', 3600, function () {
+        // 2. Fetch and Map Events (Cached with preference_order sorting)
+        $this->items = Cache::remember('all_events_for_homepage_v4', 3600, function () {
             $upcomingQuery = EventItem::with('category')
+                ->where('status', 1)
                 ->where('event_date', '>=', now())
+                ->orderBy('preference_order', 'asc')
                 ->orderBy('event_date', 'asc')
                 ->get();
 
             $recentQuery = EventItem::with('category')
+                ->where('status', 1)
                 ->where('event_date', '<', now())
+                ->orderBy('preference_order', 'asc')
                 ->orderBy('event_date', 'desc')
                 ->get();
 
@@ -102,7 +106,7 @@ class HomePageBlock extends Component
                     'formatted_date' => $item->event_date ? $item->event_date->format('M d, Y') : '',
                     'location' => $item->venue,
                     'category_id' => $item->category->id ?? null,
-                    'image_url' => $item->image ? asset('storage/' . $item->image) : 'https://via.placeholder.com/400x250',
+                    'image_url' => $item->image ? asset('storage/' . $item->image) : null,
                     'link' => $item->link ?? null,
                 ];
             });

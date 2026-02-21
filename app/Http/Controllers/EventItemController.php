@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class EventItemController extends Controller
 {
@@ -62,6 +64,7 @@ class EventItemController extends Controller
                 'short_description' => 'nullable|string',
                 'full_content' => 'nullable|string',
                 'status' => 'nullable|boolean',
+                'preference_order' => 'nullable|integer',
                 'meta_title' => 'nullable|string|max:255',
                 'meta_description' => 'nullable|string|max:500',
             ]);
@@ -75,11 +78,15 @@ class EventItemController extends Controller
 
             EventItem::create($validated);
 
+            // Clear Cache for Homepage and Event Items
+            Cache::forget('all_events_for_homepage_v4');
+            Cache::forget('homepage_layout_blocks');
+
             return redirect()->route('admin.event-items.index')->with('success', 'Event created successfully.');
         } catch (\Exception $e) {
             Log::error("Error creating event item: " . $e->getMessage());
-            $error_message = app()->environment('local') 
-            ? 'Failed to create event. Details: ' . $e->getMessage() 
+            $error_message = app()->environment('local')
+            ? 'Failed to create event. Details: ' . $e->getMessage()
             : 'Failed to create event. Please check the application logs for details.';
 
         return back()->withInput()->with('error', $error_message);
@@ -120,6 +127,7 @@ class EventItemController extends Controller
                 'short_description' => 'nullable|string',
                 'full_content' => 'nullable|string',
                 'status' => 'nullable|boolean',
+                'preference_order' => 'nullable|integer',
                 'meta_title' => 'nullable|string|max:255',
                 'meta_description' => 'nullable|string|max:500',
             ]);
@@ -127,10 +135,22 @@ class EventItemController extends Controller
             $validated['status'] = $request->has('status');
 
             if ($request->hasFile('image')) {
+                if ($eventItem->image) {
+                    Storage::disk('public')->delete($eventItem->image);
+                }
                 $validated['image'] = $request->file('image')->store('uploads/events', 'public');
+            } elseif ($request->has('remove_image')) {
+                if ($eventItem->image) {
+                    Storage::disk('public')->delete($eventItem->image);
+                }
+                $validated['image'] = null;
             }
 
             $eventItem->update($validated);
+
+            // Clear Cache for Homepage and Event Items
+            Cache::forget('all_events_for_homepage_v4');
+            Cache::forget('homepage_layout_blocks');
 
             return redirect()->route('admin.event-items.index')->with('success', 'Event updated successfully.');
         } catch (\Exception $e) {
@@ -147,6 +167,11 @@ class EventItemController extends Controller
         try {
             $this->authorize('delete events');
             $eventItem->delete();
+
+            // Clear Cache for Homepage and Event Items
+            Cache::forget('all_events_for_homepage_v4');
+            Cache::forget('homepage_layout_blocks');
+
             return back()->with('success', 'Event deleted successfully.');
         } catch (\Exception $e) {
             Log::error("Error deleting event item: " . $e->getMessage());

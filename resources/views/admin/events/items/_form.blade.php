@@ -8,7 +8,8 @@
         title: '{{ old('title', $item?->title ?? '') }}',
         slug: '{{ old('slug', $item?->slug ?? '') }}',
         status: {{ old('status', $item?->status ?? true) ? 'true' : 'false' }},
-        imagePreview: '{{ $item?->image ? Storage::url($item->image) : '' }}'
+        imagePreview: '{{ $item?->image ? Storage::url($item->image) : '' }}',
+        removeImage: false
     })" x-init="init()">
 
     {{-- Main Content Card --}}
@@ -100,6 +101,14 @@
                         placeholder="Enter venue"
                         class="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
+
+                {{-- Preference Order (NEW) --}}
+                <div>
+                    <label for="preference_order" class="block mb-1.5 text-sm font-medium text-gray-700">Preference Order</label>
+                    <input type="number" id="preference_order" name="preference_order" value="{{ old('preference_order', $item?->preference_order ?? 0) }}"
+                        class="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">Lower numbers appear first (e.g. 1 is before 10).</p>
+                </div>
                 {{-- External Link (NEW CODE) --}}
                 <div>
                     <label for="link" class="block mb-1.5 text-sm font-medium text-gray-700">
@@ -115,9 +124,23 @@
                     <label for="image" class="block mb-1.5 text-sm font-medium text-gray-700">Featured Image</label>
                     <input type="file" id="image" name="image" accept="image/*" @change="previewImage($event)"
                         class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors cursor-pointer">
+
                     <template x-if="imagePreview">
-                        <img :src="imagePreview"
-                            class="object-cover w-full h-32 mt-3 border border-gray-200 rounded-lg shadow-sm">
+                        <div class="relative mt-3 group">
+                            <img :src="imagePreview"
+                                class="object-cover w-full h-32 border border-gray-200 rounded-lg shadow-sm"
+                                :class="{ 'opacity-50 grayscale': removeImage }">
+
+                            {{-- Remove Toggle --}}
+                            @if($item?->image)
+                                <div class="mt-2">
+                                    <label class="inline-flex items-center text-xs font-medium text-red-600 cursor-pointer hover:text-red-700">
+                                        <input type="checkbox" name="remove_image" value="1" x-model="removeImage" class="w-3 h-3 mr-1 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                                        Remove Current & Use Fallback
+                                    </label>
+                                </div>
+                            @endif
+                        </div>
                     </template>
                 </div>
             </div>
@@ -167,6 +190,7 @@
             slug: initialData.slug || '',
             status: initialData.status ?? true,
             imagePreview: initialData.imagePreview || '',
+            removeImage: initialData.removeImage || false,
             userManuallyEditedSlug: false,
 
             init() {
@@ -198,6 +222,7 @@
             previewImage(event) {
                 const file = event.target.files[0];
                 if (file) {
+                    this.removeImage = false; // Reset if new image is picked
                     const reader = new FileReader();
                     reader.onload = e => this.imagePreview = e.target.result;
                     reader.readAsDataURL(file);

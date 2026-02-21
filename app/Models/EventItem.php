@@ -17,6 +17,7 @@ class EventItem extends Model
         'short_description',
         'full_content',
         'status',
+        'preference_order',
         'meta_title',
         'meta_description'
     ];
