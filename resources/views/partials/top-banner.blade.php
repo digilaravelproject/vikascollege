@@ -57,6 +57,7 @@
     $youtube = setting('youtube_url');
     $linkedin = setting('linkedin_url');
     $libraryEnabled = setting('library_enabled');
+    $collegeSongLyrics = setting('college_song_lyrics');
 
     // --- 4. Flatten Menus for Real-Time Search (Desktop Search Bar) ---
     $searchableMenus = collect();
@@ -180,22 +181,31 @@
                 }
             }
          }">
-        <button @click="toggleMusic()"
-            class="flex items-center gap-2 px-2 py-1 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-300 text-[#013954] focus:outline-none group">
-            <svg x-show="!playing" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-            </svg>
-            <svg x-show="playing" x-cloak class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-            </svg>
-            <span class="text-xs font-bold tracking-wider uppercase"
-                x-text="playing ? 'College Song Pause' : 'College Song Play'"></span>
-            <div x-show="playing" x-cloak class="flex gap-[2px] h-3 items-end ml-1">
-                <span class="w-[2px] bg-[#013954] animate-[music-bar_0.5s_ease-in-out_infinite]"></span>
-                <span class="w-[2px] bg-[#013954] animate-[music-bar_0.7s_ease-in-out_infinite]"></span>
-                <span class="w-[2px] bg-[#013954] animate-[music-bar_0.4s_ease-in-out_infinite]"></span>
-            </div>
-        </button>
+        <div class="flex items-center bg-white/20 rounded-full pr-3 group ring-1 ring-white/30">
+            <button @click="toggleMusic()"
+                class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/30 transition-all duration-300 text-[#013954] focus:outline-none">
+                <svg x-show="!playing" class="w-5 h-5 fill-current text-[#013954] " viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
+                <svg x-show="playing" x-cloak class="w-5 h-5 fill-current text-white" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+                <span class="text-xs font-bold tracking-wider uppercase text-[#013954] ">College Song</span>
+                <div x-show="playing" x-cloak class="flex gap-[1px] h-3 items-end ml-1">
+                    <span class="w-[2px] bg-white animate-[music-bar_0.5s_ease-in-out_infinite]"></span>
+                    <span class="w-[2px] bg-white animate-[music-bar_0.7s_ease-in-out_infinite]"></span>
+                    <span class="w-[2px] bg-white animate-[music-bar_0.4s_ease-in-out_infinite]"></span>
+                </div>
+            </button>
+
+            @if($collegeSongLyrics)
+                <div class="w-[1px] h-4 bg-white/30 mx-1"></div>
+                <a href="{{ $collegeSongLyrics }}" target="_blank"
+                   class="text-[10px] font-bold uppercase tracking-widest text-[#013954] hover:text-blue-900 transition-colors px-2 py-1">
+                    Lyrics
+                </a>
+            @endif
+        </div>
     </div>
 
     <div
@@ -400,11 +410,11 @@ Contains: Logo + Search (Desktop) + Hamburger (Mobile)
 @if ($libraryEnabled)
     {{-- Tooltip Wrapper --}}
     <div class="relative group">
-        
-        <a href="{{ url('/vikas/library-reading-room') }}" 
-           class="inline-flex items-center justify-center w-8 h-8 rounded-full transition border border-[#F59E0B] bg-[#F59E0B] text-white hover:bg-white hover:text-[#F59E0B]" 
+
+        <a href="{{ url('/vikas/library-reading-room') }}"
+           class="inline-flex items-center justify-center w-8 h-8 rounded-full transition border border-[#F59E0B] bg-[#F59E0B] text-white hover:bg-white hover:text-[#F59E0B]"
            aria-label="library-reading-room">
-            
+
             {{-- Updated Gallery/Photo Icon --}}
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
   <path d="M4 6H2V20C2 21.1 2.9 22 4 22H18V20H4V6ZM20 2H8C6.9 2 6 2.9 6 4V16C6 17.1 6.9 18 8 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H8V4H20V16ZM10 6H18V8H10V6ZM10 10H18V12H10V10ZM10 14H15V16H10V14Z"/>
@@ -491,10 +501,30 @@ Contains: Logo + Search (Desktop) + Hamburger (Mobile)
                     <span class="w-[2px] bg-[#013954] animate-[music-bar_0.4s_ease-in-out_infinite]"></span>
                 </div>
             </div>
-            <button @click="toggleMusic()"
-                class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#013954]/20 text-[#013954] shadow-sm active:scale-95 transition-all">
-                <span class="text-xs font-bold" x-text="playing ? 'Pause' : 'Play'"></span>
-            </button>
+            <div class="flex items-center gap-2">
+                <button @click="toggleMusic()"
+                    class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#013954] text-white shadow-md active:scale-95 transition-all">
+                    <svg x-show="!playing" class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                    <svg x-show="playing" x-cloak class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                    </svg>
+                    <span class="text-xs font-bold tracking-wide uppercase">College Song</span>
+                    <div x-show="playing" x-cloak class="flex gap-[1px] h-2.5 items-end">
+                        <span class="w-[1.5px] bg-white animate-[music-bar_0.5s_ease-in-out_infinite]"></span>
+                        <span class="w-[1.5px] bg-white animate-[music-bar_0.7s_ease-in-out_infinite]"></span>
+                        <span class="w-[1.5px] bg-white animate-[music-bar_0.4s_ease-in-out_infinite]"></span>
+                    </div>
+                </button>
+
+                @if($collegeSongLyrics)
+                    <a href="{{ $collegeSongLyrics }}" target="_blank"
+                       class="px-4 py-2 rounded-full border border-[#013954]/20 text-[#013954] text-xs font-bold uppercase tracking-wide bg-white shadow-sm active:scale-95 transition-all">
+                        Lyrics
+                    </a>
+                @endif
+            </div>
         </div>
 
         {{-- Mobile Menu Items --}}

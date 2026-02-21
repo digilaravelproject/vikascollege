@@ -394,6 +394,15 @@
                                                 </div>
                                             @endif
                                         </div>
+
+                                        <div class="mt-6 pt-6 border-t border-gray-100">
+                                            <label for="college_song_lyrics" class="block mb-1.5 text-sm font-medium text-gray-700">College Song Lyrics Link (PDF URL)</label>
+                                            <input type="url" id="college_song_lyrics" name="college_song_lyrics"
+                                                value="{{ old('college_song_lyrics', $data['college_song_lyrics']) }}"
+                                                placeholder="https://example.com/lyrics.pdf"
+                                                class="w-full px-3 py-2 text-sm text-gray-900 transition-colors bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <p class="mt-1.5 text-xs text-gray-500">Copy the link of your PDF from Media library and paste it here.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

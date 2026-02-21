@@ -29,16 +29,17 @@ class WebsiteSettingController extends Controller
             'banner_button_text' => Setting::get('banner_button_text'),
             'banner_button_link' => Setting::get('banner_button_link'),
             'college_logo' => Setting::get('college_logo'),
-            
+
             // MODIFIED: Fetch Light and Dark Images
             'top_banner_image' => Setting::get('top_banner_image'), // Light
             'top_banner_image_dark' => Setting::get('top_banner_image_dark'), // Dark (New)
-            
+
             'favicon' => Setting::get('favicon'),
             'banner_media' => $this->getBannerMedia(),
-            
+
             // MODIFIED: Fetch Background Audio
             'background_audio' => Setting::get('background_audio'),
+            'college_song_lyrics' => Setting::get('college_song_lyrics'),
 
             // Contact & Social & Footer
             'address' => Setting::get('address'),
@@ -73,20 +74,21 @@ class WebsiteSettingController extends Controller
             'banner_subheading' => 'nullable|string|max:255',
             'banner_button_text' => 'nullable|string|max:100',
             'banner_button_link' => 'nullable|url',
-            
+
             'college_logo' => 'nullable|mimes:jpg,jpeg,png,webp,svg|max:2048',
-            
+
             // MODIFIED: Validation for both images
             'top_banner_image' => 'nullable|mimes:jpg,jpeg,png,webp,svg|max:2048',
             'top_banner_image_dark' => 'nullable|mimes:jpg,jpeg,png,webp,svg|max:2048', // New Dark Mode Image
 
             'favicon' => 'nullable|mimes:jpg,jpeg,png,ico,webp,svg|max:1024',
-            
+
             'banner_media' => 'nullable|array',
             'banner_media.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,svg,mp4,mov,avi|max:51200',
 
             // MODIFIED: Validation for Audio
             'background_audio' => 'nullable|mimes:mp3,wav,ogg,mpeg|mimetypes:audio/mpeg,audio/wav,audio/ogg|max:20480',// 20MB Max
+            'college_song_lyrics' => 'nullable|string|max:500',
 
             // Contact & Social & Footer
             'address' => 'nullable|string|max:500',
@@ -117,12 +119,12 @@ class WebsiteSettingController extends Controller
             foreach ($validated as $key => $value) {
                 // MODIFIED: Added new keys to skip list so we handle them manually
                 if (in_array($key, [
-                    'college_logo', 
-                    'top_banner_image', 
+                    'college_logo',
+                    'top_banner_image',
                     'top_banner_image_dark', // Skip
-                    'favicon', 
-                    'banner_media', 
-                    'meta_image', 
+                    'favicon',
+                    'banner_media',
+                    'meta_image',
                     'background_audio' // Skip
                 ])) {
                     continue;
@@ -176,7 +178,7 @@ class WebsiteSettingController extends Controller
                 if ($oldAudio = Setting::get('background_audio')) {
                     Storage::disk('public')->delete($oldAudio);
                 }
-                
+
                 // Store in 'music' folder
                 $path = $request->file('background_audio')->store('music', 'public');
                 Setting::set('background_audio', $path);
@@ -187,7 +189,7 @@ class WebsiteSettingController extends Controller
                 if ($oldImage = Setting::get('meta_image')) {
                     Storage::disk('public')->delete($oldImage);
                 }
-                
+
                 $file = $request->file('meta_image');
                 $path = $file->store('seo', 'public');
 
