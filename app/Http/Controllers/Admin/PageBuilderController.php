@@ -243,29 +243,61 @@ class PageBuilderController extends Controller
      */
     public function saveBuilder(Request $request, Page $page): JsonResponse
     {
-        $this->authorize('edit pages');
-
-        $validated = $request->validate([
-            'content' => 'required|json',
-        ]);
-
         try {
-            $page->update(['content' => $validated['content']]);
+            $this->authorize('edit pages');
 
-            // Clear cache and queue a warm-up
+            // Capture raw input for debugging
+            Log::debug('PageBuilder Save Request Received', [
+                'page_id' => $page->id,
+                'content_length' => strlen($request->input('content', '')),
+                'content_type' => $request->header('Content-Type')
+            ]);
+
+            // Explicit validation so we can catch and log errors
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'content' => 'required|json',
+            ]);
+
+            if ($validator->fails()) {
+                Log::warning('PageBuilder Validation Failed', [
+                    'errors' => $validator->errors()->toArray(),
+                    'page_id' => $page->id
+                ]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid data format.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $page->update(['content' => $request->input('content')]);
+
+            // Clear cache for the current page and its menu hierarchy
             $this->clearAllCaches($page);
-            Artisan::queue('cache:warm-pages');
+            
+            // Log success
+            Log::info('PageBuilder Save Successful', ['page_id' => $page->id, 'slug' => $page->slug]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Page saved! Cache is rebuilding in background.',
+                'message' => 'Page saved successfully! Cache cleared.',
             ]);
-        } catch (Exception $e) {
-            Log::error('PageBuilder Save Error: ' . $e->getMessage());
+
+        } catch (\Throwable $e) {
+            Log::error('PageBuilder Save Fatal Error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => substr($e->getTraceAsString(), 0, 1000),
+                'page_id' => $page->id ?? 'unknown'
+            ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save content.',
+                'message' => 'Server Error: ' . $e->getMessage(),
+                'debug' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]
             ], 500);
         }
     }
@@ -392,26 +424,43 @@ class PageBuilderController extends Controller
         try {
             // Clear specific page view cache
             Cache::forget('page:view:' . $page->slug);
-            Log::info('Cache cleared for page: ' . $page->slug);
+            Log::info('Cache cleared for dynamic page view: ' . $page->slug);
 
             // If the page is linked to a menu, clear menu-related caches
+            // We use 'load' to ensure we have the menu relationship
+            $page->load('menu'); 
+            
             if ($page->menu) {
                 $menu = $page->menu;
 
-                // Clear top parent cache
+                // Clear top parent cache for this specific menu item
                 Cache::forget('menu:top_parent:' . $menu->id);
 
-                // Find top parent to clear sidebar cache
+                // Find top parent to clear sidebar cache safely
                 $current = $menu;
-                while ($current->parent_id && $current->parent) {
-                    $current = $current->parent;
+                $safetyLimit = 0;
+                
+                // Traverse up to find the root menu item
+                while ($current && $current->parent_id && $safetyLimit < 10) {
+                    $parent = $current->parent; // This will trigger a load if not already loaded
+                    if (!$parent) {
+                        Log::warning("Broken menu hierarchy detected for menu ID: " . $current->id);
+                        break;
+                    }
+                    $current = $parent;
+                    $safetyLimit++;
+                    
+                    // Clear intermediate caches if they exist
+                    Cache::forget('menu:top_parent:' . $current->id);
                 }
 
-                Cache::forget('menu:sidebar:' . $current->id);
-                Log::info('Cache cleared for sidebar menu: ' . $current->id);
+                if ($current) {
+                    Cache::forget('menu:sidebar:' . $current->id);
+                    Log::info('Menu cache cleared for root: ' . $current->id);
+                }
             }
-        } catch (Exception $e) {
-            Log::error('Failed to clear menu cache for page ID ' . $page->id . ': ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Failed to clear caches for page ID ' . $page->id . ': ' . $e->getMessage());
         }
     }
 }

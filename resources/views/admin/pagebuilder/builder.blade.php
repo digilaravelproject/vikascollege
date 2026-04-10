@@ -2028,7 +2028,9 @@ const basePath = "storage";
                         const payload = {
                             blocks: this.blocks
                         };
-                        document.getElementById('pageContent').value = JSON.stringify(payload);
+                        const jsonPayload = JSON.stringify({
+                            content: JSON.stringify({ blocks: this.blocks })
+                        });
 
                         // Show saving indicator
                         Swal.fire({
@@ -2038,23 +2040,33 @@ const basePath = "storage";
                             allowOutsideClick: false
                         });
 
-                        // Use fetch to submit the form for better UX
+                        // Use fetch with JSON payload for better reliability
                         const form = document.getElementById('saveForm');
                         fetch(form.action, {
-                            method: form.method,
+                            method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'Accept': 'application/json',
-                                'Content-Type': 'application/x-www-form-urlencoded'
+                                'Content-Type': 'application/json'
                             },
-                            body: new URLSearchParams(new FormData(form))
+                            body: jsonPayload
                         })
-                            .then(res => {
+                            .then(async res => {
+                                const contentType = res.headers.get('content-type');
                                 if (!res.ok) {
-                                    // If server returns an error, show it
-                                    return res.json().then(err => { throw new Error(err.message || 'Save failed') });
+                                    if (contentType && contentType.includes('application/json')) {
+                                        const err = await res.json();
+                                        throw new Error(err.message || 'Save failed');
+                                    } else {
+                                        const text = await res.text();
+                                        console.error('Server Error Response:', text);
+                                        throw new Error('Server error (500). Please check logs.');
+                                    }
                                 }
-                                return res.json();
+                                if (contentType && contentType.includes('application/json')) {
+                                    return res.json();
+                                }
+                                throw new Error('Unexpected response format from server');
                             })
                             .then(data => {
                                 // Check for a success flag from the controller
